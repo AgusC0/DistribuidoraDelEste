@@ -1,0 +1,6 @@
+# msw lo trae una dependencia de desarrollo de shadcn; no necesita correr scripts de instalación.
+allowBuilds:
+  msw: false
+
+overrides:
+  hono: 4.12.25

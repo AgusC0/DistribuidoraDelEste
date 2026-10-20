@@ -1,0 +1,115 @@
+export type StockStatus = 'disponible' | 'bajo' | 'sin_stock'
+
+export type Category = {
+  id: string
+  name: string
+  slug: string
+  description: string
+  order: number
+}
+
+/** Variante de un producto: medida, color, capacidad… con su propio precio y stock. */
+export type Variant = {
+  id: string
+  name: string
+  price: number | null
+  stock: StockStatus
+}
+
+export type Product = {
+  id: string
+  slug: string
+  name: string
+  categoryId: string
+  description: string
+  /** Precio en pesos. `null` = "Consultar precio". Con variantes, es el precio de referencia. */
+  price: number | null
+  promo: boolean
+  featured: boolean
+  active: boolean
+  stock: StockStatus
+  /** Foto principal (siempre igual a `images[0]`). */
+  image: string
+  /** Galería completa; la primera es la principal. */
+  images: string[]
+  variants: Variant[]
+  /** Palabras clave y sinónimos que alimentan el buscador. */
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export type LeadStatus = 'nuevo' | 'contactado' | 'cerrado'
+
+export type Lead = {
+  id: string
+  name: string
+  phone: string
+  product: string
+  message: string
+  status: LeadStatus
+  notes: string
+  createdAt: string
+}
+
+/** Horarios por día de la semana, 0 = domingo. Formato: "08:00-12:00, 15:00-19:00". Vacío = cerrado. */
+export type WeeklyHours = [string, string, string, string, string, string, string]
+
+export type Settings = {
+  businessName: string
+  tagline: string
+  phoneDisplay: string
+  whatsappNumber: string
+  email: string
+  address: string
+  mapsUrl: string
+  mapsEmbedUrl: string
+  instagram: string
+  instagramHandle: string
+  facebook: string
+  hours: WeeklyHours
+  heroTitle: string
+  heroSubtitle: string
+  announcementEnabled: boolean
+  announcementText: string
+  /** Email que recibe el aviso de cada consulta nueva. */
+  notifyEmail: string
+  /** ID de Google Analytics 4 (G-XXXXXXX). */
+  gaId: string
+  /** Código de verificación de Google Search Console (meta google-site-verification). */
+  googleVerification: string
+  /** Enlace para dejar una reseña en Google. */
+  googleReviewUrl: string
+}
+
+/** Un ítem del pedido que arma el cliente en el sitio. */
+export type OrderItem = {
+  productId: string
+  variantId?: string
+  name: string
+  variantName?: string
+  price: number | null
+  quantity: number
+}
+
+export type TrackEvent =
+  | { type: 'search'; ts: string; q: string; results: number }
+  | { type: 'wa_click'; ts: string; productId?: string; source: string }
+  | { type: 'view'; ts: string; productId: string }
+
+export type Database = {
+  version: number
+  settings: Settings
+  categories: Category[]
+  products: Product[]
+  leads: Lead[]
+  events: TrackEvent[]
+}
+
+/** Lo que el sitio público necesita: sin consultas ni métricas. */
+export type PublicCatalog = {
+  settings: Settings
+  categories: Category[]
+  products: Product[]
+  popularSearches: string[]
+}

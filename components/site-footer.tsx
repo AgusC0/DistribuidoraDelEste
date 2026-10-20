@@ -1,0 +1,111 @@
+import Link from 'next/link'
+import { Clock, Map, Mail, MapPin } from 'lucide-react'
+import { Logo } from '@/components/logo'
+import { WaLink } from '@/components/wa-link'
+import { WhatsappIcon } from '@/components/whatsapp-icon'
+import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
+import { groupHours } from '@/lib/site'
+import type { Category, Settings } from '@/lib/types'
+
+const LINKS = [
+  { label: 'Inicio', href: '/#inicio' },
+  { label: 'Productos', href: '/productos' },
+  { label: 'Nosotros', href: '/#nosotros' },
+  { label: 'Contacto', href: '/#contacto' },
+]
+
+const iconClass =
+  'flex size-10 items-center justify-center rounded-lg bg-primary-foreground/10 transition-colors hover:bg-primary-foreground/20'
+const linkClass = 'text-sm text-primary-foreground/75 transition-colors hover:text-primary-foreground'
+const titleClass = 'font-heading text-sm font-semibold uppercase tracking-widest text-aqua'
+
+export function SiteFooter({ settings, categories }: { settings: Settings; categories: Category[] }) {
+  return (
+    <footer className="bg-brand-blue text-primary-foreground">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+        <div className="flex flex-col gap-4">
+          <Logo variant="light" />
+          <p className="max-w-xs text-sm leading-relaxed text-primary-foreground/75">{settings.tagline}. Calidad y asesoramiento para tu hogar o proyecto.</p>
+          <div className="flex gap-2">
+            {settings.facebook && (
+              <a href={settings.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className={iconClass}>
+                <FacebookIcon className="size-4" />
+              </a>
+            )}
+            {settings.instagram && (
+              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={iconClass}>
+                <InstagramIcon className="size-4" />
+              </a>
+            )}
+            <WaLink source="footer" aria-label="WhatsApp" className={iconClass}>
+              <WhatsappIcon className="size-4" />
+            </WaLink>
+            <a href={settings.mapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Google Maps" className={iconClass}>
+              <Map className="size-4" />
+            </a>
+          </div>
+        </div>
+
+        <nav aria-label="Enlaces del pie" className="flex flex-col gap-3">
+          <p className={titleClass}>Enlaces</p>
+          <ul className="flex flex-col gap-2">
+            {LINKS.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className={linkClass}>
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <nav aria-label="Categorías" className="flex flex-col gap-3">
+          <p className={titleClass}>Categorías</p>
+          <ul className="flex flex-col gap-2">
+            {categories.map((c) => (
+              <li key={c.id}>
+                <Link href={`/productos?categoria=${c.slug}`} className={linkClass}>
+                  {c.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="flex flex-col gap-3">
+          <p className={titleClass}>Contacto</p>
+          <WaLink source="footer" className={`flex items-center gap-2 ${linkClass}`}>
+            <WhatsappIcon className="size-4 shrink-0" />
+            {settings.phoneDisplay}
+          </WaLink>
+          <a href={`mailto:${settings.email}`} className={`flex items-center gap-2 break-all ${linkClass}`}>
+            <Mail aria-hidden="true" className="size-4 shrink-0" />
+            {settings.email}
+          </a>
+          <p className="flex items-start gap-2 text-sm text-primary-foreground/75">
+            <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {settings.address}
+          </p>
+          <div className="flex items-start gap-2 text-sm text-primary-foreground/75">
+            <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <ul>
+              {groupHours(settings.hours).map((h) => (
+                <li key={h.label}>
+                  {h.short}: {h.time}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-primary-foreground/10">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+          <p className="text-center text-xs text-primary-foreground/65">
+            © {new Date().getFullYear()} {settings.businessName}. Todos los derechos reservados.
+          </p>
+        </div>
+      </div>
+    </footer>
+  )
+}
