@@ -72,6 +72,8 @@ export type Settings = {
   heroSubtitle: string
   announcementEnabled: boolean
   announcementText: string
+  /** `false` oculta todos los montos del sitio público (tarjetas, fichas, pedido y WhatsApp). */
+  showPrices: boolean
   /** Email que recibe el aviso de cada consulta nueva. */
   notifyEmail: string
   /** ID de Google Analytics 4 (G-XXXXXXX). */

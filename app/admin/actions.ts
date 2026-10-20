@@ -401,7 +401,7 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
   })
   if (Object.keys(errors).length) return { errors, message: 'Revisá los campos marcados.' }
 
-  const settings: Settings = {
+  const settings: Omit<Settings, 'showPrices'> = {
     businessName: str(fd, 'businessName', 100),
     tagline: str(fd, 'tagline', 160),
     phoneDisplay: str(fd, 'phoneDisplay', 40),
@@ -424,10 +424,20 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
     googleReviewUrl: str(fd, 'googleReviewUrl', 300),
   }
   await mutateDb((db) => {
-    db.settings = settings
+    // "Mostrar precios" se maneja con su propio switch; el formulario de ajustes no lo toca.
+    db.settings = { ...settings, showPrices: db.settings.showPrices }
   })
   refreshSite()
   return { ok: true, message: 'Ajustes guardados. El sitio ya muestra los cambios.' }
+}
+
+/** Muestra u oculta todos los precios del sitio público. */
+export async function setShowPrices(show: boolean) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    db.settings.showPrices = show
+  })
+  refreshSite()
 }
 
 export async function testNotification(): Promise<FormState> {

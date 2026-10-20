@@ -415,6 +415,7 @@ function groupOptions(options: Option[]) {
 }
 
 function OptionContent({ opt, query }: { opt: Option; query: string }) {
+  const { settings } = useCatalog()
   switch (opt.kind) {
     case 'recent':
     case 'popular': {
@@ -453,14 +454,16 @@ function OptionContent({ opt, query }: { opt: Option; query: string }) {
             </span>
             <span className="block truncate text-xs text-muted-foreground">{opt.categoryName}</span>
           </span>
-          <span
-            className={cn(
-              'shrink-0 text-xs font-semibold',
-              hasPrice(opt.product) ? 'text-primary' : 'text-muted-foreground',
-            )}
-          >
-            {displayPrice(opt.product)}
-          </span>
+          {settings.showPrices && (
+            <span
+              className={cn(
+                'shrink-0 text-xs font-semibold',
+                hasPrice(opt.product) ? 'text-primary' : 'text-muted-foreground',
+              )}
+            >
+              {displayPrice(opt.product)}
+            </span>
+          )}
         </>
       )
     case 'all':

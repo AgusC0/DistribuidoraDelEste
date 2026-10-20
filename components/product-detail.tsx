@@ -9,6 +9,7 @@ import { AddToOrderButton } from '@/components/add-to-order'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { displayPrice, formatPrice, hasPrice, productWaMessage, STOCK_LABEL } from '@/lib/site'
+import { useCatalog } from '@/components/catalog-provider'
 import { cn } from '@/lib/utils'
 import type { Product, StockStatus } from '@/lib/types'
 
@@ -104,6 +105,7 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   const [quantity, setQuantity] = useState(1)
   const variant = product.variants.find((v) => v.id === variantId)
 
+  const { settings } = useCatalog()
   const price = variant ? variant.price : null
   const stock = variant ? variant.stock : product.stock
   const needsChoice = hasVariants && !variant
@@ -111,17 +113,21 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-3">
-        <p
-          className={cn(
-            'font-heading font-bold',
-            (variant ? price != null : hasPrice(product))
-              ? cn(compact ? 'text-2xl' : 'text-3xl', 'text-primary')
-              : 'text-xl text-muted-foreground',
-          )}
-          aria-live="polite"
-        >
-          {variant ? formatPrice(price) : displayPrice(product)}
-        </p>
+        {settings.showPrices ? (
+          <p
+            className={cn(
+              'font-heading font-bold',
+              (variant ? price != null : hasPrice(product))
+                ? cn(compact ? 'text-2xl' : 'text-3xl', 'text-primary')
+                : 'text-xl text-muted-foreground',
+            )}
+            aria-live="polite"
+          >
+            {variant ? formatPrice(price) : displayPrice(product)}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Sumalo a tu pedido y te enviamos el presupuesto por WhatsApp.</p>
+        )}
         <span className={stockClass(stock)}>{STOCK_LABEL[stock]}</span>
       </div>
 

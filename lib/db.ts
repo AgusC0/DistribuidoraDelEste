@@ -77,10 +77,14 @@ export function mutateDb<T>(fn: (db: Database) => T | Promise<T>): Promise<T> {
 
 export async function getPublicCatalog(): Promise<PublicCatalog> {
   const db = await readDb()
+  const active = db.products.filter((p) => p.active)
   return {
     settings: db.settings,
     categories: [...db.categories].sort((a, b) => a.order - b.order),
-    products: db.products.filter((p) => p.active),
+    // Con los precios ocultos no se mandan al navegador: tampoco aparecen en el código de la página.
+    products: db.settings.showPrices
+      ? active
+      : active.map((p) => ({ ...p, price: null, variants: p.variants.map((v) => ({ ...v, price: null })) })),
     popularSearches: topSearches(db.events, 30, 6).map((s) => s.term),
   }
 }

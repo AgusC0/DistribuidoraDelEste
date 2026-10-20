@@ -4,6 +4,7 @@ import { FileSpreadsheet, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/admin/ui'
 import { ProductTable } from '@/components/admin/product-table'
+import { PriceVisibilityToggle } from '@/components/admin/price-visibility'
 import { readDb } from '@/lib/db'
 
 export const metadata: Metadata = { title: 'Productos' }
@@ -28,6 +29,7 @@ export default async function ProductsPage() {
           </>
         }
       />
+      <PriceVisibilityToggle showPrices={db.settings.showPrices} className="mb-6" />
       <ProductTable products={db.products} categories={[...db.categories].sort((a, b) => a.order - b.order)} />
     </>
   )

@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowDownRight, ArrowUpRight, Eye, Inbox, Package, Plus,
 import { Button } from '@/components/ui/button'
 import { BarList, ColumnChart } from '@/components/admin/charts'
 import { PageHeader, Panel } from '@/components/admin/ui'
+import { PriceVisibilityToggle } from '@/components/admin/price-visibility'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { readDb, topSearches } from '@/lib/db'
 import { dailySeries, periodCompare, productRanking } from '@/lib/metrics'
@@ -89,6 +90,8 @@ export default async function AdminHome() {
           </Button>
         }
       />
+
+      <PriceVisibilityToggle showPrices={db.settings.showPrices} className="mb-6" />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi

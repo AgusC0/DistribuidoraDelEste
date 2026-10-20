@@ -58,7 +58,7 @@ export function orderWaMessage(items: OrderItem[], name?: string, note?: string)
     '',
     priced.length
       ? `Total estimado: ${formatPrice(total)}${priced.length < items.length ? ' (más los productos a consultar)' : ''}`
-      : 'Quedo a la espera de los precios.',
+      : 'Quedo a la espera del presupuesto.',
     note ? `\nComentario: ${note}` : '',
   ]
     .filter((l, i, arr) => !(l === '' && arr[i - 1] === ''))

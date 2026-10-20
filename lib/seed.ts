@@ -33,6 +33,7 @@ export function createSeed(): Database {
         'Diseño y calidad para tu hogar o proyecto. Marcas nacionales e importadas, asesoramiento técnico y atención personalizada.',
       announcementEnabled: false,
       announcementText: 'Promo del mes: monocomando de cocina a $38.000',
+      showPrices: true,
       notifyEmail: 'distribuidoradeleste23@gmail.com',
       gaId: '',
       googleVerification: '',

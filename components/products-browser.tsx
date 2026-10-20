@@ -60,7 +60,8 @@ function toUrl(f: Filters) {
 
 /** Catálogo completo: búsqueda, filtros, orden y paginación, todo reflejado en la URL. */
 export function ProductsBrowser() {
-  const { products, categories, index } = useCatalog()
+  const { products, categories, index, settings } = useCatalog()
+  const sorts = settings.showPrices ? SORTS : SORTS.filter((s) => !s.value.startsWith('precio'))
   const [f, setF] = useState<Filters>(DEFAULTS)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const ready = useRef(false)
@@ -105,7 +106,7 @@ export function ProductsBrowser() {
 
   const results = useMemo(() => {
     const list = activeCategory ? matching.filter((p) => p.categoryId === activeCategory.id) : matching
-    if (f.sort === 'relevancia') return list
+    if (f.sort === 'relevancia' || (!settings.showPrices && f.sort.startsWith('precio'))) return list
     const priced = (p: Product, dir: 1 | -1) => {
       const price = minPrice(p)
       return price == null ? Infinity : price * dir
@@ -116,7 +117,7 @@ export function ProductsBrowser() {
       if (f.sort === 'nuevos') return b.createdAt.localeCompare(a.createdAt)
       return a.name.localeCompare(b.name, 'es')
     })
-  }, [matching, activeCategory, f.sort])
+  }, [matching, activeCategory, f.sort, settings.showPrices])
 
   const totalPages = Math.max(1, Math.ceil(results.length / f.perPage))
   const page = Math.min(f.page, totalPages)
@@ -263,12 +264,12 @@ export function ProductsBrowser() {
                 </Dialog.Portal>
               </Dialog.Root>
               <select
-                value={f.sort}
+                value={sorts.some((s) => s.value === f.sort) ? f.sort : 'relevancia'}
                 onChange={(e) => update({ sort: e.target.value as Sort })}
                 aria-label="Ordenar por"
                 className="h-12 flex-1 rounded-xl border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 sm:flex-none"
               >
-                {SORTS.map((s) => (
+                {sorts.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>

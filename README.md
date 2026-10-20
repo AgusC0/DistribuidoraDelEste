@@ -48,6 +48,7 @@ Todo (productos, categorías, consultas, ajustes y métricas) vive en `data/db.j
 
 ## Panel de administración
 
+- **Mostrar / ocultar precios**: switch en Resumen y Productos. Con los precios ocultos el sitio muestra sólo los productos (sin montos en tarjetas, fichas, pedido ni mensajes de WhatsApp) y los precios no se envían al navegador.
 - **Resumen**: consultas nuevas, clics a WhatsApp, vistas, ranking de productos más consultados, búsquedas sin resultados y alertas (productos sin foto, sin stock, etc.).
 - **Productos**: alta, edición, galería de fotos, opciones/variantes con precio y stock propio, importar/exportar con Excel (CSV), palabras clave para el buscador, stock, promo, destacado, publicar/ocultar, duplicar, editar precio en la tabla y ajuste masivo de precios por porcentaje.
 - **Categorías**: crear, renombrar, ordenar y eliminar.

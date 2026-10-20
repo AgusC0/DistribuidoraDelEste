@@ -195,9 +195,11 @@ export function OrderDrawer() {
                               <Plus className="size-3.5" />
                             </button>
                           </div>
-                          <span className={cn('text-sm font-semibold tabular-nums', item.price == null && 'font-normal text-muted-foreground')}>
-                            {item.price != null ? formatPrice(item.price * item.quantity) : 'A consultar'}
-                          </span>
+                          {settings.showPrices && (
+                            <span className={cn('text-sm font-semibold tabular-nums', item.price == null && 'font-normal text-muted-foreground')}>
+                              {item.price != null ? formatPrice(item.price * item.quantity) : 'A consultar'}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </li>
@@ -206,13 +208,22 @@ export function OrderDrawer() {
               </ul>
 
               <div className="flex flex-col gap-3 border-t border-border bg-secondary/40 p-5">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-muted-foreground">Total estimado</span>
-                  <span className="font-heading text-2xl font-bold tabular-nums text-primary">{formatPrice(total)}</span>
-                </div>
-                {priced.length < items.length && (
-                  <p className="-mt-2 text-xs text-muted-foreground">
-                    Sin incluir {items.length - priced.length} producto(s) con precio a consultar.
+                {settings.showPrices ? (
+                  <>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-sm text-muted-foreground">Total estimado</span>
+                      <span className="font-heading text-2xl font-bold tabular-nums text-primary">{formatPrice(total)}</span>
+                    </div>
+                    {priced.length < items.length && (
+                      <p className="-mt-2 text-xs text-muted-foreground">
+                        Sin incluir {items.length - priced.length} producto(s) con precio a consultar.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {items.reduce((n, i) => n + i.quantity, 0)} unidades en tu pedido. Te respondemos por WhatsApp con el presupuesto y la
+                    disponibilidad.
                   </p>
                 )}
                 <input

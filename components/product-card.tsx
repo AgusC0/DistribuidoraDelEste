@@ -25,7 +25,7 @@ export function ProductCard({
   query?: string
   priority?: boolean
 }) {
-  const { categories } = useCatalog()
+  const { categories, settings } = useCatalog()
   const { add } = useOrder()
   const { open } = useQuickView()
   const media = useRef<HTMLDivElement>(null)
@@ -154,9 +154,11 @@ export function ProductCard({
             )}
           </Link>
         </h3>
-        <p className={cn('mt-auto pt-2 font-semibold tabular-nums', hasPrice(product) ? 'text-foreground' : 'text-sm font-normal text-muted-foreground')}>
-          {displayPrice(product)}
-        </p>
+        {settings.showPrices && (
+          <p className={cn('mt-auto pt-2 font-semibold tabular-nums', hasPrice(product) ? 'text-foreground' : 'text-sm font-normal text-muted-foreground')}>
+            {displayPrice(product)}
+          </p>
+        )}
       </div>
     </article>
   )
