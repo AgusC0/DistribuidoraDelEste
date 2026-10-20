@@ -11,6 +11,7 @@ import { VariantsEditor } from '@/components/admin/variants-editor'
 import { FieldError, FormMessage, inputClass, Panel, SubmitButton, submitKeepingValues } from '@/components/admin/ui'
 import { saveProduct, type FormState } from '@/app/admin/actions'
 import { formatPrice, slugify, STOCK_LABEL } from '@/lib/site'
+import { childCategories, rootCategories } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 import type { Category, Product, StockStatus } from '@/lib/types'
 
@@ -21,10 +22,16 @@ export function ProductForm({
   product,
   categories,
   created,
+  brands = [],
+  attributeSuggestions = {},
 }: {
   product?: Product
   categories: Category[]
   created?: boolean
+  /** Marcas ya cargadas, para sugerirlas y evitar "Tigre" / "tigre" / "TIGRE". */
+  brands?: string[]
+  /** Valores usados en otros productos por cada filtro (tipo → Codo, Tee…). */
+  attributeSuggestions?: Record<string, string[]>
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
     saveProduct,
@@ -37,6 +44,21 @@ export function ProductForm({
   const [description, setDescription] = useState(product?.description ?? '')
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? '')
   const [promo, setPromo] = useState(product?.promo ?? false)
+  const [originalPrice, setOriginalPrice] = useState(product?.promotion.originalPrice?.toString() ?? '')
+  const [manualPercent, setManualPercent] = useState(product?.promotion.discountPercent?.toString() ?? '')
+  const [attrs, setAttrs] = useState<Record<string, string>>(() =>
+    Object.fromEntries(Object.entries(product?.attributes ?? {}).map(([k, v]) => [k, v.join(', ')])),
+  )
+  const roots = rootCategories(categories)
+  const selectedCategory = categories.find((c) => c.id === categoryId)
+  const categoryFilters = selectedCategory?.filters ?? []
+  const attributesValue = JSON.stringify(
+    Object.fromEntries(
+      categoryFilters
+        .map((f) => [f.key, (attrs[f.key] ?? '').split(',').map((v) => v.trim()).filter(Boolean)] as const)
+        .filter(([, v]) => v.length),
+    ),
+  )
   const [tags, setTags] = useState<string[]>(product?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
   const [preview, setPreview] = useState(product?.image ?? '')
@@ -47,6 +69,13 @@ export function ProductForm({
 
   const e = state.errors ?? {}
   const priceNumber = price.replace(/\D/g, '') ? Number(price.replace(/\D/g, '')) : null
+  const originalNumber = originalPrice ? Number(originalPrice) : null
+  const promoPercent =
+    originalNumber && priceNumber != null && originalNumber > priceNumber
+      ? Math.round(((originalNumber - priceNumber) / originalNumber) * 100)
+      : manualPercent
+        ? Number(manualPercent)
+        : null
 
   function addTag(raw: string) {
     const parts = raw
@@ -117,13 +146,43 @@ export function ProductForm({
                 aria-invalid={!!e.categoryId}
                 className={inputClass}
               >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {roots.map((root) => {
+                  const children = childCategories(categories, root.id)
+                  return children.length ? (
+                    <optgroup key={root.id} label={root.name}>
+                      {children.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    <option key={root.id} value={root.id}>
+                      {root.name}
+                    </option>
+                  )
+                })}
               </select>
               <FieldError message={e.categoryId} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="brand" className={labelClass}>
+                Marca
+              </label>
+              <input
+                id="brand"
+                name="brand"
+                list="brand-list"
+                defaultValue={product?.brand ?? ''}
+                placeholder="Ej: Tigre, FV, Rotoplas"
+                className={inputClass}
+              />
+              <datalist id="brand-list">
+                {brands.map((b) => (
+                  <option key={b} value={b} />
+                ))}
+              </datalist>
+              <p className={hintClass}>Aparece como filtro “Marca” en el catálogo.</p>
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="price" className={labelClass}>
@@ -207,6 +266,44 @@ export function ProductForm({
         </Panel>
 
         <Panel className="flex flex-col gap-4">
+          <input type="hidden" name="attributes" value={attributesValue} />
+          <div>
+            <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Filtros del catálogo</h2>
+            <p className={hintClass}>
+              Lo que se completa acá aparece como filtro en {selectedCategory?.name ?? 'la categoría'}. Varios valores separados por
+              coma (ej: 20 mm, 25 mm).
+            </p>
+          </div>
+          {categoryFilters.length ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {categoryFilters.map((f) => (
+                <div key={f.key} className="flex flex-col gap-1.5">
+                  <label htmlFor={`attr-${f.key}`} className={labelClass}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`attr-${f.key}`}
+                    list={`attr-list-${f.key}`}
+                    value={attrs[f.key] ?? ''}
+                    onChange={(ev) => setAttrs((a) => ({ ...a, [f.key]: ev.target.value }))}
+                    className={inputClass}
+                  />
+                  <datalist id={`attr-list-${f.key}`}>
+                    {(attributeSuggestions[f.key] ?? []).map((v) => (
+                      <option key={v} value={v} />
+                    ))}
+                  </datalist>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-lg bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+              Esta categoría no tiene filtros propios. Se configuran en Panel → Categorías.
+            </p>
+          )}
+        </Panel>
+
+        <Panel className="flex flex-col gap-4">
           <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Fotos</h2>
           <GalleryEditor
             key={product?.updatedAt ?? 'nuevo'}
@@ -240,13 +337,6 @@ export function ProductForm({
               </span>
             </label>
           ))}
-          <label className="flex cursor-pointer items-start gap-3">
-            <input type="checkbox" name="promo" checked={promo} onChange={(ev) => setPromo(ev.target.checked)} className="mt-0.5 size-4 accent-primary" />
-            <span>
-              <span className="block text-sm font-medium">En promoción</span>
-              <span className={hintClass}>Muestra la etiqueta "Promo"</span>
-            </span>
-          </label>
           <div className="flex flex-col gap-2">
             <label htmlFor="stock" className={labelClass}>
               Stock
@@ -261,12 +351,100 @@ export function ProductForm({
           </div>
         </Panel>
 
+        <Panel className={cn('flex flex-col gap-4 transition-colors', promo && 'ring-2 ring-promo/40')}>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input type="checkbox" name="promo" checked={promo} onChange={(ev) => setPromo(ev.target.checked)} className="mt-0.5 size-4 accent-promo" />
+            <span>
+              <span className="block font-heading text-base font-semibold uppercase tracking-wide">En promoción</span>
+              <span className={hintClass}>Aparece primero en “Ofertas” y con su badge en todo el catálogo. No cambia la categoría.</span>
+            </span>
+          </label>
+          <div className={cn('flex flex-col gap-4', !promo && 'hidden')}>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="promoOriginalPrice" className={labelClass}>
+                Precio anterior (tachado)
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                <input
+                  id="promoOriginalPrice"
+                  name="promoOriginalPrice"
+                  inputMode="numeric"
+                  value={originalPrice}
+                  onChange={(ev) => setOriginalPrice(ev.target.value.replace(/[^\d]/g, ''))}
+                  aria-invalid={!!e.promoOriginalPrice}
+                  placeholder="Ej: 120000"
+                  className={cn(inputClass, 'pl-7 tabular-nums')}
+                />
+              </div>
+              <FieldError message={e.promoOriginalPrice} />
+              <p className={hintClass}>El precio promocional es el “Precio” de arriba.</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="promoDiscountPercent" className={labelClass}>
+                % OFF (si no hay precio anterior)
+              </label>
+              <input
+                id="promoDiscountPercent"
+                name="promoDiscountPercent"
+                inputMode="numeric"
+                value={manualPercent}
+                onChange={(ev) => setManualPercent(ev.target.value.replace(/[^\d]/g, '').slice(0, 2))}
+                placeholder="Ej: 20"
+                className={cn(inputClass, 'tabular-nums')}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="promoStartsAt" className={labelClass}>
+                  Desde
+                </label>
+                <input id="promoStartsAt" name="promoStartsAt" type="date" defaultValue={product?.promotion.startsAt ?? ''} className={inputClass} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="promoEndsAt" className={labelClass}>
+                  Hasta
+                </label>
+                <input
+                  id="promoEndsAt"
+                  name="promoEndsAt"
+                  type="date"
+                  defaultValue={product?.promotion.endsAt ?? ''}
+                  aria-invalid={!!e.promoEndsAt}
+                  className={inputClass}
+                />
+                <FieldError message={e.promoEndsAt} />
+              </div>
+            </div>
+            <p className={cn(hintClass, '-mt-2')}>Opcional. Fuera de esas fechas la promo se oculta sola.</p>
+            <label className="flex cursor-pointer items-center gap-3">
+              <input
+                type="checkbox"
+                name="promoLimitedStock"
+                defaultChecked={product?.promotion.limitedStock ?? false}
+                className="size-4 accent-promo"
+              />
+              <span className="text-sm font-medium">Mostrar “Hasta agotar stock”</span>
+            </label>
+            {promoPercent != null && (
+              <p className="rounded-lg bg-promo/10 px-3 py-2 text-sm font-semibold text-promo">
+                Se muestra como {promoPercent}% OFF
+                {originalNumber && priceNumber != null && ` · antes ${formatPrice(originalNumber)}, ahora ${formatPrice(priceNumber)}`}
+              </p>
+            )}
+          </div>
+        </Panel>
+
         <Panel>
           <h2 className="mb-3 font-heading text-base font-semibold uppercase tracking-wide">Vista previa</h2>
           <div className="overflow-hidden rounded-xl border border-border bg-background">
             <div className="relative aspect-[4/3] bg-secondary">
               {preview && <Image src={preview} alt="" fill sizes="320px" className="object-cover" unoptimized={preview.startsWith('blob:')} />}
-              {promo && <Badge className="absolute left-3 top-3 bg-promo uppercase text-promo-foreground">Promo</Badge>}
+              {promo && (
+                <Badge className="absolute left-3 top-3 bg-promo uppercase text-promo-foreground">
+                  {promoPercent ? `-${promoPercent}%` : 'Oferta'}
+                </Badge>
+              )}
             </div>
             <div className="flex flex-col gap-1 p-3">
               <p className="font-heading text-sm font-semibold uppercase tracking-wide">{name || 'Nombre del producto'}</p>

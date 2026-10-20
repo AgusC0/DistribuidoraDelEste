@@ -1,5 +1,6 @@
 import { normalize } from '@/lib/search'
 import { slugify } from '@/lib/site'
+import { categoryPath, EMPTY_PROMOTION } from '@/lib/catalog'
 import type { Category, Product, StockStatus, Variant } from '@/lib/types'
 
 /** Columnas de la planilla de productos (exportar / importar). */
@@ -7,7 +8,9 @@ export const COLUMNS = [
   'id',
   'nombre',
   'categoria',
+  'marca',
   'precio',
+  'precio_anterior',
   'stock',
   'publicado',
   'promo',
@@ -15,6 +18,7 @@ export const COLUMNS = [
   'descripcion',
   'etiquetas',
   'opciones',
+  'atributos',
 ] as const
 
 const STOCK_IN: Record<string, StockStatus> = {
@@ -56,12 +60,38 @@ function variantsFromCell(cell: string, previous: Variant[]): Variant[] {
     })
 }
 
+/** Atributos en una celda: "tipo=Codo; medida=20 mm, 25 mm". */
+export function attributesToCell(attributes: Record<string, string[]>) {
+  return Object.entries(attributes)
+    .map(([key, values]) => `${key}=${values.join(', ')}`)
+    .join('; ')
+}
+
+function attributesFromCell(cell: string): Record<string, string[]> {
+  const out: Record<string, string[]> = {}
+  for (const part of cell.split(';')) {
+    const [rawKey, rawValues] = part.split('=')
+    const key = slugify(rawKey ?? '')
+    const values = (rawValues ?? '').split(',').map((v) => v.trim()).filter(Boolean)
+    if (key && values.length) out[key] = values
+  }
+  return out
+}
+
+/** "Agua y cañerías > Cañerías" para subcategorías; el nombre solo para rubros. */
+function categoryLabel(categories: Category[], id: string) {
+  const path = categoryPath(categories, id)
+  return path.map((c) => c.name).join(' > ')
+}
+
 export function productRow(p: Product, categories: Category[]) {
   return [
     p.id,
     p.name,
-    categories.find((c) => c.id === p.categoryId)?.name ?? '',
+    categoryLabel(categories, p.categoryId),
+    p.brand,
     p.price ?? '',
+    p.promotion.originalPrice ?? '',
     p.stock === 'disponible' ? 'disponible' : p.stock === 'bajo' ? 'bajo' : 'sin stock',
     p.active ? 'si' : 'no',
     p.promo ? 'si' : 'no',
@@ -69,7 +99,40 @@ export function productRow(p: Product, categories: Category[]) {
     p.description,
     p.tags.join(', '),
     variantsToCell(p.variants),
+    attributesToCell(p.attributes),
   ]
+}
+
+/**
+ * Busca la categoría de la planilla. Acepta "Rubro > Subcategoría" o sólo el nombre.
+ * Si no existe, la crea (y su rubro, si hace falta).
+ */
+function resolveCategory(categories: Category[], label: string, result: ImportResult): Category {
+  const parts = label.split('>').map((p) => p.trim()).filter(Boolean)
+  let parent: Category | undefined
+  for (const [i, name] of parts.entries()) {
+    const isLast = i === parts.length - 1
+    let cat = categories.find(
+      (c) => normalize(c.name) === normalize(name) && (parts.length === 1 ? true : (c.parentId ?? null) === (parent?.id ?? null)),
+    )
+    if (!cat) {
+      let slug = slugify(name) || 'categoria'
+      for (let n = 2; categories.some((c) => c.slug === slug); n++) slug = `${slugify(name)}-${n}`
+      cat = {
+        id: slug,
+        slug,
+        name,
+        description: '',
+        order: categories.filter((c) => (c.parentId ?? null) === (parent?.id ?? null)).length,
+        parentId: parent?.id ?? null,
+        filters: [],
+      }
+      categories.push(cat)
+      result.newCategories.push(isLast && parent ? `${parent.name} > ${name}` : name)
+    }
+    parent = cat
+  }
+  return parent!
 }
 
 export type ImportMode = 'todo' | 'precios'
@@ -131,6 +194,9 @@ export function applyImport(
         description: '',
         price: null,
         promo: false,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: '',
+        attributes: {},
         featured: false,
         active: true,
         stock: 'disponible',
@@ -144,6 +210,8 @@ export function applyImport(
 
     const price = get('precio')
     if (price !== undefined) target.price = priceIn(price)
+    const previous = get('precio_anterior')
+    if (previous !== undefined) target.promotion = { ...target.promotion, originalPrice: priceIn(previous) }
     const options = get('opciones')
     if (options !== undefined && mode === 'precios' && options) {
       // En modo precios sólo actualiza el precio de opciones que ya existen.
@@ -160,16 +228,7 @@ export function applyImport(
         return
       }
       const catName = get('categoria')
-      if (catName) {
-        let cat = categories.find((c) => normalize(c.name) === normalize(catName))
-        if (!cat) {
-          const slug = slugify(catName)
-          cat = { id: slug, slug, name: catName, description: '', order: categories.length }
-          categories.push(cat)
-          result.newCategories.push(catName)
-        }
-        target.categoryId = cat.id
-      }
+      if (catName) target.categoryId = resolveCategory(categories, catName, result).id
       if (!target.categoryId) {
         result.errors.push(`Fila ${line}: "${target.name}" no tiene categoría.`)
         return
@@ -191,6 +250,10 @@ export function applyImport(
           .map((t) => t.trim().toLowerCase())
           .filter(Boolean)
       if (options !== undefined) target.variants = variantsFromCell(options, target.variants)
+      const brand = get('marca')
+      if (brand !== undefined) target.brand = brand.slice(0, 60)
+      const attrs = get('atributos')
+      if (attrs !== undefined) target.attributes = attributesFromCell(attrs)
     }
 
     if (!existing) {

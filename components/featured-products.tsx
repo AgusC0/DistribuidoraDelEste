@@ -1,20 +1,27 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/fade-in'
 import { ProductCard } from '@/components/product-card'
 import { SearchBox } from '@/components/search-box'
+import { PromotionsSection } from '@/components/promotions-section'
 import { useCatalog } from '@/components/catalog-provider'
+import { categoryUrl, descendantIds, isOnPromotion, rootCategories } from '@/lib/catalog'
 
 const MAX = 8
 
 /** Portada: buscador, accesos por categoría y una selección de productos destacados. */
 export function FeaturedProducts() {
   const { products, categories } = useCatalog()
+  const router = useRouter()
+  const promos = products.filter((p) => isOnPromotion(p))
+  // Las ofertas ya tienen su bloque: acá van los destacados que no están en promo.
   const featured = [...products]
-    .sort((a, b) => Number(b.featured) - Number(a.featured) || Number(b.promo) - Number(a.promo))
+    .filter((p) => !isOnPromotion(p) || promos.length === 0)
+    .sort((a, b) => Number(b.featured) - Number(a.featured))
     .slice(0, MAX)
 
   return (
@@ -38,15 +45,15 @@ export function FeaturedProducts() {
 
         <FadeIn delay={60} className="mt-8">
           <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
-            {categories.map((c) => (
+            {rootCategories(categories).map((c) => (
               <li key={c.id} className="shrink-0">
                 <Link
-                  href={`/productos?categoria=${c.slug}`}
+                  href={categoryUrl(categories, c.id)}
                   className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-muted"
                 >
                   {c.name}
                   <span className="text-xs tabular-nums text-muted-foreground">
-                    {products.filter((p) => p.categoryId === c.id).length}
+                    {products.filter((p) => descendantIds(categories, c.id).has(p.categoryId)).length}
                   </span>
                 </Link>
               </li>
@@ -54,7 +61,16 @@ export function FeaturedProducts() {
           </ul>
         </FadeIn>
 
-        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+        {promos.length > 0 && (
+          <FadeIn delay={80} className="mt-8">
+            <PromotionsSection products={promos} onSeeAll={() => router.push('/productos?oferta=1')} />
+          </FadeIn>
+        )}
+
+        {promos.length > 0 && (
+          <h3 className="mt-12 font-heading text-xl font-bold uppercase tracking-tight text-foreground">Más productos</h3>
+        )}
+        <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
           {featured.map((product, i) => (
             <FadeIn key={product.id} delay={Math.min(i, 6) * 50} className="h-full">
               <ProductCard product={product} />

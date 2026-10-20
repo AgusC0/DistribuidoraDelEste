@@ -7,6 +7,7 @@ import { Dialog } from '@base-ui/react/dialog'
 import { ArrowRight, ChevronDown, X } from 'lucide-react'
 import { ProductPurchase } from '@/components/product-detail'
 import { useCatalog } from '@/components/catalog-provider'
+import { discountPercent, isOnPromotion } from '@/lib/catalog'
 import { categoryName } from '@/lib/site'
 import { track } from '@/lib/track'
 import { cn } from '@/lib/utils'
@@ -110,9 +111,9 @@ function QuickViewDialog({
                   className={cn('object-cover transition-opacity duration-300', i === shot ? 'opacity-100' : 'opacity-0')}
                 />
               ))}
-              {product.promo && (
+              {isOnPromotion(product) && (
                 <span className="absolute left-4 top-4 rounded-full bg-promo px-3 py-1 text-xs font-bold uppercase text-promo-foreground">
-                  Promo
+                  {discountPercent(product) ? `-${discountPercent(product)}%` : 'Oferta'}
                 </span>
               )}
               {images.length > 1 && (

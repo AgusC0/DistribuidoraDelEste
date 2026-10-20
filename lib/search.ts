@@ -1,3 +1,4 @@
+import { isOnPromotion } from '@/lib/catalog'
 import type { Category, Product } from '@/lib/types'
 
 /**
@@ -85,6 +86,8 @@ export function buildIndex(products: Product[], categories: Category[]): SearchI
       fields: [
         field(product.name, 4),
         field([...product.tags, ...product.variants.map((v) => v.name)].join(' '), 2.5),
+        field(product.brand, 3),
+        field(Object.values(product.attributes).flat().join(' '), 2),
         field(categoryName, 2.5),
         field(product.description, 1),
       ],
@@ -138,7 +141,7 @@ export function search(index: SearchIndex, query: string): Hit[] {
     }
     if (!ok) continue
     if (item.product.featured) total += 0.5
-    if (item.product.promo) total += 0.3
+    if (isOnPromotion(item.product)) total += 0.3
     if (item.product.stock === 'sin_stock') total -= 1
     hits.push({ product: item.product, categoryName: item.categoryName, score: total })
   }

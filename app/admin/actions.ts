@@ -10,9 +10,21 @@ import { applyImport, type ImportMode, type ImportResult } from '@/lib/catalog-i
 import { parseCsv } from '@/lib/csv'
 import { sendTestEmail } from '@/lib/notify'
 import { mutateDb, newId, readDb, UPLOADS_DIR } from '@/lib/db'
+import { createDemoProducts } from '@/lib/demo-catalog'
+import { createCategories } from '@/lib/seed'
 import { requireAdmin } from '@/lib/session'
 import { slugify } from '@/lib/site'
-import type { Database, LeadStatus, Product, Settings, StockStatus, Variant, WeeklyHours } from '@/lib/types'
+import type {
+  CategoryFilter,
+  Database,
+  LeadStatus,
+  Product,
+  Promotion,
+  Settings,
+  StockStatus,
+  Variant,
+  WeeklyHours,
+} from '@/lib/types'
 
 export type FormState = { ok?: boolean; message?: string; errors?: Record<string, string> }
 
@@ -138,6 +150,33 @@ export async function saveProduct(_prev: FormState, fd: FormData): Promise<FormS
   if (Object.keys(errors).length) return { errors, message: 'Revisá los campos marcados.' }
 
   const stock = isStock(str(fd, 'stock')) ? (str(fd, 'stock') as StockStatus) : 'disponible'
+  const price = priceRaw ? Number(priceRaw) : null
+
+  // Promoción: estado del producto, con precio anterior, % y vigencia opcionales.
+  const isDate = (v: string) => (/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null)
+  const originalRaw = str(fd, 'promoOriginalPrice', 20).replace(/[^\d]/g, '')
+  const percentRaw = Number(str(fd, 'promoDiscountPercent', 5).replace(/[^\d]/g, ''))
+  const promotion: Promotion = {
+    originalPrice: originalRaw ? Number(originalRaw) : null,
+    discountPercent: percentRaw >= 1 && percentRaw <= 99 ? percentRaw : null,
+    startsAt: isDate(str(fd, 'promoStartsAt', 10)),
+    endsAt: isDate(str(fd, 'promoEndsAt', 10)),
+    limitedStock: fd.get('promoLimitedStock') === 'on',
+  }
+  if (promotion.originalPrice != null && price != null && promotion.originalPrice <= price) {
+    return { errors: { promoOriginalPrice: 'El precio anterior tiene que ser mayor al precio actual.' }, message: 'Revisá los campos marcados.' }
+  }
+  if (promotion.startsAt && promotion.endsAt && promotion.endsAt < promotion.startsAt) {
+    return { errors: { promoEndsAt: 'La fecha de fin es anterior a la de inicio.' }, message: 'Revisá los campos marcados.' }
+  }
+
+  // Atributos para los filtros de la categoría: { tipo: ['Codo'], medida: ['20 mm', '25 mm'] }.
+  const attributes: Record<string, string[]> = {}
+  for (const [key, values] of Object.entries(parseJson<Record<string, unknown>>(fd.get('attributes'), {}))) {
+    if (!/^[a-z0-9-]{1,40}$/.test(key) || !Array.isArray(values)) continue
+    const clean = [...new Set(values.map((v) => String(v).trim().slice(0, 60)).filter(Boolean))].slice(0, 30)
+    if (clean.length) attributes[key] = clean
+  }
 
   const savedId = await mutateDb((db) => {
     const now = new Date().toISOString()
@@ -145,8 +184,11 @@ export async function saveProduct(_prev: FormState, fd: FormData): Promise<FormS
       name,
       categoryId,
       description: str(fd, 'description', 1000),
-      price: priceRaw ? Number(priceRaw) : null,
+      price,
       promo: fd.get('promo') === 'on',
+      promotion,
+      brand: str(fd, 'brand', 60),
+      attributes,
       featured: fd.get('featured') === 'on',
       active: fd.get('active') === 'on',
       stock,
@@ -303,23 +345,42 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
   const id = str(fd, 'id', 80)
   const name = str(fd, 'name', 60)
   if (name.length < 2) return { errors: { name: 'Ingresá un nombre.' } }
+  // Filtros propios: la clave sale del nombre ("Tipo de sanitario" → tipo-de-sanitario).
+  const filters: CategoryFilter[] = []
+  for (const label of parseJson<unknown[]>(fd.get('filters'), [])) {
+    const clean = String(label).trim().slice(0, 40)
+    const key = slugify(clean)
+    if (key && !filters.some((x) => x.key === key)) filters.push({ key, label: clean })
+  }
   const result = await mutateDb((db): FormState => {
     const slug = slugify(name)
     if (db.categories.some((c) => c.slug === slug && c.id !== id)) {
       return { errors: { name: 'Ya existe una categoría con ese nombre.' } }
     }
+    const parentRaw = str(fd, 'parentId', 80)
+    const parent = db.categories.find((c) => c.id === parentRaw && !c.parentId && c.id !== id)
+    if (parentRaw && !parent) return { errors: { parentId: 'Elegí un rubro válido.' } }
     const existing = db.categories.find((c) => c.id === id)
+    if (existing && parent && db.categories.some((c) => c.parentId === existing.id)) {
+      return { errors: { parentId: 'Este rubro tiene subcategorías: no puede pasar a ser subcategoría.' } }
+    }
+    const parentId = parent?.id ?? null
     if (existing) {
+      if (existing.parentId !== parentId) existing.order = db.categories.filter((c) => c.parentId === parentId).length
       existing.name = name
       existing.slug = slug
       existing.description = str(fd, 'description', 200)
+      existing.parentId = parentId
+      existing.filters = filters
     } else {
       db.categories.push({
         id: slug,
         name,
         slug,
         description: str(fd, 'description', 200),
-        order: db.categories.length,
+        order: db.categories.filter((c) => (c.parentId ?? null) === parentId).length,
+        parentId,
+        filters,
       })
     }
     return { ok: true, message: existing ? 'Categoría actualizada.' : 'Categoría creada.' }
@@ -331,13 +392,17 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
 export async function moveCategory(id: string, dir: -1 | 1) {
   await requireAdmin()
   await mutateDb((db) => {
-    const list = [...db.categories].sort((a, b) => a.order - b.order)
+    // Se ordena entre hermanos (rubros entre rubros, subcategorías dentro de su rubro).
+    const target = db.categories.find((c) => c.id === id)
+    if (!target) return
+    const list = db.categories
+      .filter((c) => (c.parentId ?? null) === (target.parentId ?? null))
+      .sort((a, b) => a.order - b.order)
     const i = list.findIndex((c) => c.id === id)
     const j = i + dir
-    if (i < 0 || j < 0 || j >= list.length) return
+    if (j < 0 || j >= list.length) return
     ;[list[i], list[j]] = [list[j], list[i]]
     list.forEach((c, order) => (c.order = order))
-    db.categories = list
   })
   refreshSite()
 }
@@ -345,6 +410,8 @@ export async function moveCategory(id: string, dir: -1 | 1) {
 export async function deleteCategory(id: string): Promise<FormState> {
   await requireAdmin()
   const result = await mutateDb((db): FormState => {
+    const children = db.categories.filter((c) => c.parentId === id).length
+    if (children) return { message: `No se puede eliminar: tiene ${children} subcategoría(s). Movelas o eliminalas primero.` }
     const used = db.products.filter((p) => p.categoryId === id).length
     if (used) return { message: `No se puede eliminar: tiene ${used} producto(s). Movelos a otra categoría primero.` }
     db.categories = db.categories.filter((c) => c.id !== id)
@@ -455,6 +522,18 @@ export async function clearEvents() {
     db.events = []
   })
   revalidatePath('/admin', 'layout')
+}
+
+/** Reemplaza categorías y productos por el catálogo de demostración (no toca consultas ni ajustes). */
+export async function loadDemoCatalog(): Promise<FormState> {
+  await requireAdmin()
+  const count = await mutateDb((db) => {
+    db.categories = createCategories()
+    db.products = createDemoProducts()
+    return db.products.length
+  })
+  refreshSite()
+  return { ok: true, message: `Catálogo de demostración cargado: ${count} productos.` }
 }
 
 export async function restoreBackup(_prev: FormState, fd: FormData): Promise<FormState> {

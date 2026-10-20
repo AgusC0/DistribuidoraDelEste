@@ -4,6 +4,7 @@ import { Logo } from '@/components/logo'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
+import { categoryUrl, rootCategories } from '@/lib/catalog'
 import { groupHours } from '@/lib/site'
 import type { Category, Settings } from '@/lib/types'
 
@@ -62,9 +63,9 @@ export function SiteFooter({ settings, categories }: { settings: Settings; categ
         <nav aria-label="Categorías" className="flex flex-col gap-3">
           <p className={titleClass}>Categorías</p>
           <ul className="flex flex-col gap-2">
-            {categories.map((c) => (
+            {rootCategories(categories).map((c) => (
               <li key={c.id}>
-                <Link href={`/productos?categoria=${c.slug}`} className={linkClass}>
+                <Link href={categoryUrl(categories, c.id)} className={linkClass}>
                   {c.name}
                 </Link>
               </li>

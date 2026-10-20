@@ -10,6 +10,7 @@ import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { displayPrice, formatPrice, hasPrice, productWaMessage, STOCK_LABEL } from '@/lib/site'
 import { useCatalog } from '@/components/catalog-provider'
+import { discountPercent, isOnPromotion, promotionEndsLabel } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 import type { Product, StockStatus } from '@/lib/types'
 
@@ -39,8 +40,10 @@ export function ProductGallery({ product }: { product: Product }) {
             aria-hidden={i !== index}
           />
         ))}
-        {product.promo && (
-          <Badge className="absolute left-4 top-4 bg-promo uppercase tracking-wide text-promo-foreground">Promo</Badge>
+        {isOnPromotion(product) && (
+          <Badge className="absolute left-4 top-4 h-auto bg-promo px-3 py-1 text-sm uppercase tracking-wide text-promo-foreground">
+            {discountPercent(product) ? `-${discountPercent(product)}%` : 'Oferta'}
+          </Badge>
         )}
         {images.length > 1 && (
           <>
@@ -109,16 +112,32 @@ export function ProductPurchase({ product, compact = false }: { product: Product
   const price = variant ? variant.price : null
   const stock = variant ? variant.stock : product.stock
   const needsChoice = hasVariants && !variant
+  const onPromo = isOnPromotion(product)
+  const pct = onPromo ? discountPercent(product) : null
+  const endsLabel = onPromo ? promotionEndsLabel(product) : null
+  const showOldPrice = settings.showPrices && onPromo && !variant && product.promotion.originalPrice != null && product.price != null
 
   return (
     <div className="flex flex-col gap-5">
+      {onPromo && (
+        <div className="-mb-2 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-promo">
+          <span className="rounded-full bg-promo px-2.5 py-1 text-promo-foreground">{pct ? `${pct}% OFF` : 'Oferta'}</span>
+          {product.promotion.limitedStock && <span>Hasta agotar stock</span>}
+          {endsLabel && <span>· {endsLabel}</span>}
+        </div>
+      )}
+      {showOldPrice && (
+        <p className="-mb-4 text-sm text-muted-foreground">
+          Antes <s className="tabular-nums">{formatPrice(product.promotion.originalPrice)}</s>
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         {settings.showPrices ? (
           <p
             className={cn(
               'font-heading font-bold',
               (variant ? price != null : hasPrice(product))
-                ? cn(compact ? 'text-2xl' : 'text-3xl', 'text-primary')
+                ? cn(compact ? 'text-2xl' : 'text-3xl', onPromo ? 'text-promo' : 'text-primary')
                 : 'text-xl text-muted-foreground',
             )}
             aria-live="polite"

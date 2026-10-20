@@ -51,11 +51,15 @@ Todo (productos, categorías, consultas, ajustes y métricas) vive en `data/db.j
 - **Mostrar / ocultar precios**: switch en Resumen y Productos. Con los precios ocultos el sitio muestra sólo los productos (sin montos en tarjetas, fichas, pedido ni mensajes de WhatsApp) y los precios no se envían al navegador.
 - **Resumen**: consultas nuevas, clics a WhatsApp, vistas, ranking de productos más consultados, búsquedas sin resultados y alertas (productos sin foto, sin stock, etc.).
 - **Productos**: alta, edición, galería de fotos, opciones/variantes con precio y stock propio, importar/exportar con Excel (CSV), palabras clave para el buscador, stock, promo, destacado, publicar/ocultar, duplicar, editar precio en la tabla y ajuste masivo de precios por porcentaje.
-- **Categorías**: crear, renombrar, ordenar y eliminar.
+- **Categorías**: árbol de rubros y subcategorías (Baño y cocina → Griferías). Cada subcategoría define sus propios filtros (Tipo, Medida, Material…), que aparecen sólo al navegar esa categoría.
+- **Promociones**: se activan en cada producto (no son una categoría), con precio anterior tachado o % OFF, fechas de vigencia y "Hasta agotar stock". En cada categoría, las ofertas se muestran primero.
+- **Catálogo de demostración**: en Ajustes, carga productos de ejemplo con marcas, medidas y ofertas para presentar el sitio.
 - **Consultas**: lo que llega del formulario de contacto, con estados, notas internas, responder por WhatsApp y exportar a CSV (Excel).
 - **Búsquedas**: lo más buscado, lo que no se encuentra y qué botones generan más consultas.
 - **Ajustes**: datos de contacto, WhatsApp, email de avisos (con prueba), Google Analytics, Search Console, enlace de reseñas, horarios (alimentan el "Abierto ahora"), textos de portada, barra de anuncio y respaldo/restauración.
 
 ## Para el cliente en el sitio
+
+- **Catálogo por categorías**: `/categoria/rubro/subcategoria`, con filtros propios de cada categoría (Marca, Tipo, Medida…), chips de filtros activos, ofertas primero y después todos los productos.
 
 - **Mi pedido**: el cliente suma productos (y la opción elegida) con cantidades y manda la lista completa por WhatsApp para pedir presupuesto. El pedido queda guardado también en **Consultas**.

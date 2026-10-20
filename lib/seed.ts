@@ -1,4 +1,6 @@
-import type { Database } from '@/lib/types'
+import { EMPTY_PROMOTION } from '@/lib/catalog'
+import { slugify } from '@/lib/site'
+import type { Category, Database } from '@/lib/types'
 
 const now = '2026-01-01T00:00:00.000Z'
 
@@ -39,14 +41,7 @@ export function createSeed(): Database {
       googleVerification: '',
       googleReviewUrl: '',
     },
-    categories: [
-      { id: 'griferias', name: 'Griferías', slug: 'griferias', description: 'Monocomandos, canillas y juegos para baño y cocina.', order: 0 },
-      { id: 'purificadores', name: 'Purificadores', slug: 'purificadores', description: 'Purificadores y filtros de agua para el hogar.', order: 1 },
-      { id: 'claraboyas', name: 'Claraboyas', slug: 'claraboyas', description: 'Domos de acrílico para iluminación natural.', order: 2 },
-      { id: 'puertas-pvc', name: 'Puertas PVC', slug: 'puertas-pvc', description: 'Puertas plegadizas de PVC.', order: 3 },
-      { id: 'canerias', name: 'Cañerías', slug: 'canerias', description: 'Caños, conexiones y accesorios.', order: 4 },
-      { id: 'termotanques', name: 'Termotanques', slug: 'termotanques', description: 'Termotanques a gas y eléctricos.', order: 5 },
-    ],
+    categories: createCategories(),
     products: [
       {
         id: 'monocomando-cocina',
@@ -56,6 +51,9 @@ export function createSeed(): Database {
         description: 'Grifería monocomando cromada para cocina. Caño alto giratorio y cierre cerámico.',
         price: 38000,
         promo: true,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: '',
+        attributes: { tipo: ['Monocomando'], color: ['Cromado'] },
         featured: true,
         active: true,
         stock: 'disponible',
@@ -74,6 +72,9 @@ export function createSeed(): Database {
         description: 'Purificador de agua Rotoplas modelo Max. Sistema de filtrado de alto rendimiento para toda la familia.',
         price: 241442,
         promo: false,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: 'Rotoplas',
+        attributes: { tipo: ['Purificador de agua'] },
         featured: true,
         active: true,
         stock: 'disponible',
@@ -92,6 +93,9 @@ export function createSeed(): Database {
         description: 'Purificador de agua Rotoplas modelo Essential. Diseño compacto ideal para el hogar.',
         price: 141376,
         promo: false,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: 'Rotoplas',
+        attributes: { tipo: ['Purificador de agua'] },
         featured: false,
         active: true,
         stock: 'disponible',
@@ -110,6 +114,9 @@ export function createSeed(): Database {
         description: 'Domos de acrílico para iluminación natural. Medidas 40x40, 40x60, 50x38, 50x60 y 60x60.',
         price: null,
         promo: false,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: '',
+        attributes: { medida: ['40x40 cm', '40x60 cm', '50x38 cm', '50x60 cm', '60x60 cm'], material: ['Acrílico'] },
         featured: false,
         active: true,
         stock: 'disponible',
@@ -133,6 +140,9 @@ export function createSeed(): Database {
         description: 'Puertas plegadizas de PVC, prácticas y resistentes. Disponibles en color Cedro y Blanco.',
         price: null,
         promo: false,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: '',
+        attributes: { color: ['Cedro', 'Blanco'], tipo: ['Plegadiza'] },
         featured: false,
         active: true,
         stock: 'disponible',
@@ -154,6 +164,9 @@ export function createSeed(): Database {
         description: 'Línea completa de caños, conexiones y accesorios para conducción de agua y desagüe.',
         price: null,
         promo: false,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: '',
+        attributes: {},
         featured: false,
         active: true,
         stock: 'disponible',
@@ -172,6 +185,9 @@ export function createSeed(): Database {
         description: 'Termotanques de marcas nacionales e importadas. Varias capacidades disponibles.',
         price: null,
         promo: false,
+        promotion: { ...EMPTY_PROMOTION },
+        brand: '',
+        attributes: { tipo: ['Gas', 'Eléctrico'] },
         featured: true,
         active: true,
         stock: 'disponible',
@@ -186,4 +202,45 @@ export function createSeed(): Database {
     leads: [],
     events: [],
   }
+}
+
+const f = (...labels: string[]) => labels.map((label) => ({ key: slugify(label), label }))
+
+/** Rubros y subcategorías. Cada subcategoría define sus propios filtros. */
+export function createCategories(): Category[] {
+  const root = (id: string, name: string, description: string, order: number): Category => ({
+    id,
+    name,
+    slug: id,
+    description,
+    order,
+    parentId: null,
+    filters: [],
+  })
+  const sub = (parentId: string, id: string, name: string, description: string, order: number, filters: Category['filters']): Category => ({
+    id,
+    name,
+    slug: id,
+    description,
+    order,
+    parentId,
+    filters,
+  })
+  return [
+    root('bano-y-cocina', 'Baño y cocina', 'Griferías, sanitarios, bachas y accesorios para renovar el baño y la cocina.', 0),
+    sub('bano-y-cocina', 'griferias', 'Griferías', 'Monocomandos, canillas y juegos para baño y cocina.', 0, f('Tipo', 'Línea', 'Color', 'Material', 'Instalación')),
+    sub('bano-y-cocina', 'sanitarios', 'Sanitarios', 'Inodoros, bidets, mochilas y depósitos.', 1, f('Tipo', 'Línea', 'Color', 'Sistema', 'Instalación')),
+    sub('bano-y-cocina', 'lavatorios-y-bachas', 'Lavatorios y bachas', 'Lavatorios, bachas y piletas de cocina.', 2, f('Tipo', 'Material', 'Medida', 'Instalación')),
+    sub('bano-y-cocina', 'accesorios-bano', 'Accesorios para baño', 'Toalleros, portarrollos, jaboneras y espejos.', 3, f('Tipo', 'Material', 'Color')),
+
+    root('agua-y-canerias', 'Agua y cañerías', 'Conducción de agua, agua caliente y tratamiento del agua.', 1),
+    sub('agua-y-canerias', 'canerias', 'Cañerías', 'Caños, conexiones y accesorios para agua y desagüe.', 0, f('Tipo', 'Medida', 'Material')),
+    sub('agua-y-canerias', 'tanques-de-agua', 'Tanques de agua', 'Tanques tricapa y bicapa para agua potable.', 1, f('Capacidad', 'Material', 'Color')),
+    sub('agua-y-canerias', 'termotanques', 'Termotanques', 'Termotanques a gas y eléctricos.', 2, f('Tipo', 'Capacidad', 'Instalación')),
+    sub('agua-y-canerias', 'purificadores', 'Purificadores', 'Purificadores y filtros de agua para el hogar.', 3, f('Tipo', 'Instalación')),
+
+    root('aberturas-y-techos', 'Aberturas y techos', 'Puertas, claraboyas e iluminación natural.', 2),
+    sub('aberturas-y-techos', 'puertas-pvc', 'Puertas PVC', 'Puertas plegadizas de PVC.', 0, f('Tipo', 'Color', 'Medida')),
+    sub('aberturas-y-techos', 'claraboyas', 'Claraboyas', 'Domos de acrílico para iluminación natural.', 1, f('Medida', 'Material')),
+  ]
 }

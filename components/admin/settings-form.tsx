@@ -1,10 +1,10 @@
 'use client'
 
 import { useActionState, useState, useTransition } from 'react'
-import { Download, Upload } from 'lucide-react'
+import { Download, Sparkles, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { FieldError, FormMessage, inputClass, Panel, SubmitButton, submitKeepingValues } from '@/components/admin/ui'
-import { restoreBackup, saveSettings, testNotification, type FormState } from '@/app/admin/actions'
+import { ConfirmButton, FieldError, FormMessage, inputClass, Panel, SubmitButton, submitKeepingValues } from '@/components/admin/ui'
+import { loadDemoCatalog, restoreBackup, saveSettings, testNotification, type FormState } from '@/app/admin/actions'
 import { DAY_NAMES, groupHours } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Settings, WeeklyHours } from '@/lib/types'
@@ -275,6 +275,35 @@ export function BackupPanel({ stats }: { stats: { products: number; leads: numbe
           </SubmitButton>
         </form>
       </div>
+      <div className="mt-3">
+        <FormMessage state={state} />
+      </div>
+    </Panel>
+  )
+}
+
+/** Carga un catálogo de ejemplo para presentar el sitio (filtros, marcas y ofertas). */
+export function DemoCatalogPanel() {
+  const [state, setState] = useState<FormState>({})
+  return (
+    <Panel className="mt-6">
+      <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Catálogo de demostración</h2>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Carga unos 25 productos de ejemplo con marcas, medidas y ofertas para mostrar cómo funcionan los filtros y las promociones.
+        Reemplaza las categorías y los productos actuales (no toca consultas ni ajustes). Descargá un respaldo antes si tenés datos
+        reales.
+      </p>
+      <ConfirmButton
+        variant="outline"
+        className="h-10 px-4"
+        title="¿Cargar el catálogo de demostración?"
+        description="Se reemplazan todas las categorías y productos por datos de ejemplo. Las consultas y los ajustes se mantienen."
+        confirmLabel="Cargar demostración"
+        onConfirm={async () => setState(await loadDemoCatalog())}
+      >
+        <Sparkles className="size-4" />
+        Cargar catálogo de demostración
+      </ConfirmButton>
       <div className="mt-3">
         <FormMessage state={state} />
       </div>

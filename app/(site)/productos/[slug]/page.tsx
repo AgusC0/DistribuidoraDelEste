@@ -6,6 +6,7 @@ import { ProductCard } from '@/components/product-card'
 import { ProductGallery, ProductPurchase } from '@/components/product-detail'
 import { ProductView } from '@/components/product-view'
 import { getPublicCatalog } from '@/lib/db'
+import { categoryPath, categoryUrl } from '@/lib/catalog'
 import { categoryName, SITE_URL } from '@/lib/site'
 
 export const revalidate = 3600
@@ -80,16 +81,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               Productos
             </Link>
           </li>
-          {category && (
-            <>
+          {categoryPath(catalog.categories, product.categoryId).map((c) => (
+            <li key={c.id} className="flex items-center gap-1">
               <ChevronRight aria-hidden="true" className="size-4" />
-              <li>
-                <Link href={`/productos?categoria=${category.slug}`} className="hover:text-foreground">
-                  {category.name}
-                </Link>
-              </li>
-            </>
-          )}
+              <Link href={categoryUrl(catalog.categories, c.id)} className="hover:text-foreground">
+                {c.name}
+              </Link>
+            </li>
+          ))}
           <ChevronRight aria-hidden="true" className="size-4" />
           <li aria-current="page" className="font-medium text-foreground">
             {product.name}

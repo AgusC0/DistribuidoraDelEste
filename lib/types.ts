@@ -1,11 +1,37 @@
 export type StockStatus = 'disponible' | 'bajo' | 'sin_stock'
 
+/** Filtro propio de una categoría (ej: Tipo, Medida, Material). `key` es el atributo del producto. */
+export type CategoryFilter = {
+  key: string
+  label: string
+}
+
+/** Categorías en árbol: rubro (parentId = null) → subcategoría. */
 export type Category = {
   id: string
   name: string
   slug: string
   description: string
   order: number
+  parentId: string | null
+  /** Filtros específicos que se muestran al navegar esta categoría. */
+  filters: CategoryFilter[]
+}
+
+/**
+ * Detalle de una promoción. La promo es un estado del producto (`product.promo`), no una categoría:
+ * se activa o desactiva sin tocar dónde está el producto.
+ */
+export type Promotion = {
+  /** Precio anterior, que se muestra tachado. El precio promocional es `product.price`. */
+  originalPrice: number | null
+  /** % OFF a mostrar cuando no hay precio anterior (ej: "20% OFF en toda la línea"). */
+  discountPercent: number | null
+  /** Fechas ISO (YYYY-MM-DD). Fuera de ese rango la promo no se muestra. */
+  startsAt: string | null
+  endsAt: string | null
+  /** Muestra "Hasta agotar stock". */
+  limitedStock: boolean
 }
 
 /** Variante de un producto: medida, color, capacidad… con su propio precio y stock. */
@@ -22,9 +48,15 @@ export type Product = {
   name: string
   categoryId: string
   description: string
-  /** Precio en pesos. `null` = "Consultar precio". Con variantes, es el precio de referencia. */
+  /** Precio en pesos. `null` = "Consultar precio". Con variantes, es el precio de referencia. En promo, es el precio promocional. */
   price: number | null
+  /** Promoción activa (isPromotion). Los detalles van en `promotion`. */
   promo: boolean
+  promotion: Promotion
+  /** Marca (Tigre, FV, Rotoplas…). */
+  brand: string
+  /** Valores de los filtros de su categoría: { tipo: ['Codo'], medida: ['20 mm', '25 mm'] }. */
+  attributes: Record<string, string[]>
   featured: boolean
   active: boolean
   stock: StockStatus

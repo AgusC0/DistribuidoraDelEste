@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, Clock, CornerDownLeft, Search, Sparkles, TrendingUp, X } from 'lucide-react'
 import { useCatalog } from '@/components/catalog-provider'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
+import { categoryUrl, descendantIds } from '@/lib/catalog'
 import { correction, highlight, matchCategories, normalize, search } from '@/lib/search'
 import { displayPrice, hasPrice, waLink } from '@/lib/site'
 import { track } from '@/lib/track'
@@ -122,7 +123,7 @@ export function SearchBox({
       kind: 'category' as const,
       key: `c-${category.id}`,
       category,
-      count: products.filter((p) => p.categoryId === category.id).length,
+      count: products.filter((p) => descendantIds(categories, category.id).has(p.categoryId)).length,
     }))
     const prods = hits.slice(0, MAX_PRODUCTS).map((h) => ({
       kind: 'product' as const,
@@ -206,7 +207,7 @@ export function SearchBox({
         saveRecent(opt.category.name)
         close()
         setQuery('')
-        goToCatalog({ categoria: opt.category.slug })
+        navigate(() => router.push(categoryUrl(categories, opt.category.id)))
         return
       case 'product':
         saveRecent(query)

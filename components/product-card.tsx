@@ -8,7 +8,8 @@ import { useCatalog } from '@/components/catalog-provider'
 import { useOrder } from '@/components/order-provider'
 import { useQuickView } from '@/components/quick-view'
 import { highlight } from '@/lib/search'
-import { categoryName, displayPrice, hasPrice, STOCK_LABEL } from '@/lib/site'
+import { discountPercent, isOnPromotion, promotionEndsLabel } from '@/lib/catalog'
+import { categoryName, displayPrice, formatPrice, hasPrice, STOCK_LABEL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 
@@ -20,10 +21,13 @@ export function ProductCard({
   product,
   query = '',
   priority = false,
+  variant = 'default',
 }: {
   product: Product
   query?: string
   priority?: boolean
+  /** `promo`: versión destacada para la sección de ofertas. */
+  variant?: 'default' | 'promo'
 }) {
   const { categories, settings } = useCatalog()
   const { add } = useOrder()
@@ -35,14 +39,27 @@ export function ProductCard({
   const images = product.images.length ? product.images : [product.image || '/placeholder.svg']
   const many = images.length > 1
 
+  const onPromo = isOnPromotion(product)
+  const pct = onPromo ? discountPercent(product) : null
+  const endsLabel = onPromo ? promotionEndsLabel(product) : null
+  const isPromoCard = variant === 'promo'
+
   const go = (dir: 1 | -1) => setIndex((i) => (i + dir + images.length) % images.length)
   const openQuick = () => media.current && open(product, media.current.getBoundingClientRect())
 
   return (
-    <article className="group/card flex h-full flex-col">
+    <article
+      className={cn(
+        'group/card flex h-full flex-col',
+        isPromoCard && 'rounded-3xl bg-card p-2.5 shadow-sm ring-1 ring-promo/25 transition-shadow hover:shadow-xl hover:ring-promo/50',
+      )}
+    >
       <div
         ref={media}
-        className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary shadow-xs ring-1 ring-border/60 transition-shadow group-hover/card:shadow-lg"
+        className={cn(
+          'relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary shadow-xs ring-1 ring-border/60 transition-shadow group-hover/card:shadow-lg',
+          isPromoCard && 'aspect-square shadow-none ring-0 group-hover/card:shadow-none',
+        )}
       >
         <Link href={href} className="absolute inset-0 z-[1]" aria-label={`Ver ${product.name}`} tabIndex={-1} />
         {images.map((src, i) => (
@@ -62,9 +79,14 @@ export function ProductCard({
 
         {/* etiquetas */}
         <div className="pointer-events-none absolute inset-x-3 top-3 z-[2] flex items-start justify-between gap-2">
-          {product.promo ? (
-            <span className="rounded-full bg-promo px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-promo-foreground">
-              Promo
+          {onPromo ? (
+            <span
+              className={cn(
+                'rounded-full bg-promo font-bold uppercase tracking-wide text-promo-foreground shadow-sm',
+                isPromoCard ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-[0.7rem]',
+              )}
+            >
+              {pct ? `-${pct}%` : 'Oferta'}
             </span>
           ) : (
             <span />
@@ -124,10 +146,10 @@ export function ProductCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-1 pt-3.5">
+      <div className={cn('flex flex-1 flex-col px-1 pt-3.5', isPromoCard && 'px-2 pb-1.5')}>
         <div className="flex items-center justify-between gap-2">
           <p className="truncate text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {categoryName(categories, product.categoryId)}
+            {product.brand || categoryName(categories, product.categoryId)}
           </p>
           {product.stock !== 'sin_stock' && (
             <span
@@ -154,11 +176,42 @@ export function ProductCard({
             )}
           </Link>
         </h3>
-        {settings.showPrices && (
-          <p className={cn('mt-auto pt-2 font-semibold tabular-nums', hasPrice(product) ? 'text-foreground' : 'text-sm font-normal text-muted-foreground')}>
-            {displayPrice(product)}
-          </p>
-        )}
+        <div className="mt-auto pt-2">
+          {settings.showPrices &&
+            (onPromo && product.promotion.originalPrice && product.price != null ? (
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">
+                  {isPromoCard && 'Antes '}
+                  <s className="tabular-nums">{formatPrice(product.promotion.originalPrice)}</s>
+                </span>
+                <span className="flex flex-wrap items-baseline gap-x-2">
+                  <span className={cn('font-bold tabular-nums text-promo', isPromoCard ? 'text-2xl' : 'text-lg')}>
+                    {formatPrice(product.price)}
+                  </span>
+                  {pct && <span className="text-xs font-bold text-promo">{pct}% OFF</span>}
+                </span>
+              </div>
+            ) : (
+              <p className="flex flex-wrap items-baseline gap-x-2">
+                <span
+                  className={cn(
+                    'font-semibold tabular-nums',
+                    !hasPrice(product) ? 'text-sm font-normal text-muted-foreground' : onPromo ? 'font-bold text-promo' : 'text-foreground',
+                    onPromo && isPromoCard && hasPrice(product) && 'text-2xl',
+                  )}
+                >
+                  {displayPrice(product)}
+                </span>
+                {onPromo && pct && <span className="text-xs font-bold text-promo">{pct}% OFF</span>}
+              </p>
+            ))}
+          {onPromo && (product.promotion.limitedStock || endsLabel) && (
+            <p className="mt-1 flex flex-wrap gap-x-2 text-[0.7rem] font-semibold uppercase tracking-wide text-promo">
+              {product.promotion.limitedStock && <span>Hasta agotar stock</span>}
+              {endsLabel && <span>{endsLabel}</span>}
+            </p>
+          )}
+        </div>
       </div>
     </article>
   )

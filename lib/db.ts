@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { EMPTY_PROMOTION } from '@/lib/catalog'
 import { createSeed } from '@/lib/seed'
 import type { Database, PublicCatalog, TrackEvent } from '@/lib/types'
 
@@ -21,10 +22,17 @@ let queue: Promise<unknown> = Promise.resolve()
 function migrate(db: Database): Database {
   const defaults = createSeed().settings
   db.settings = { ...defaults, ...db.settings }
+  for (const c of db.categories) {
+    c.parentId ??= null
+    c.filters ??= []
+  }
   for (const p of db.products) {
     p.images = p.images?.length ? p.images : p.image ? [p.image] : []
     p.image = p.images[0] ?? '/placeholder.svg'
     p.variants ??= []
+    p.brand ??= ''
+    p.attributes ??= {}
+    p.promotion = { ...EMPTY_PROMOTION, ...p.promotion }
   }
   return db
 }
@@ -84,7 +92,12 @@ export async function getPublicCatalog(): Promise<PublicCatalog> {
     // Con los precios ocultos no se mandan al navegador: tampoco aparecen en el código de la página.
     products: db.settings.showPrices
       ? active
-      : active.map((p) => ({ ...p, price: null, variants: p.variants.map((v) => ({ ...v, price: null })) })),
+      : active.map((p) => ({
+          ...p,
+          price: null,
+          promotion: { ...p.promotion, originalPrice: null },
+          variants: p.variants.map((v) => ({ ...v, price: null })),
+        })),
     popularSearches: topSearches(db.events, 30, 6).map((s) => s.term),
   }
 }

@@ -15,6 +15,7 @@ import {
   toggleProduct,
 } from '@/app/admin/actions'
 import { buildIndex, search } from '@/lib/search'
+import { categoryPath, childCategories, descendantIds, rootCategories } from '@/lib/catalog'
 import { categoryName, formatPrice, STOCK_LABEL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Category, Product, StockStatus } from '@/lib/types'
@@ -82,13 +83,16 @@ export function ProductTable({ products, categories }: { products: Product[]; ca
 
   const rows = useMemo(() => {
     let list = query.trim() ? search(index, query).map((h) => h.product) : products
-    if (category) list = list.filter((p) => p.categoryId === category)
+    if (category) {
+      const ids = descendantIds(categories, category)
+      list = list.filter((p) => ids.has(p.categoryId))
+    }
     if (status === 'publicados') list = list.filter((p) => p.active)
     if (status === 'ocultos') list = list.filter((p) => !p.active)
     if (status === 'promo') list = list.filter((p) => p.promo)
     if (status === 'sin_stock') list = list.filter((p) => p.stock === 'sin_stock')
     return list
-  }, [products, index, query, category, status])
+  }, [products, categories, index, query, category, status])
 
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id))
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)))
@@ -129,10 +133,15 @@ export function ProductTable({ products, categories }: { products: Product[]; ca
           className={cn(inputClass, 'lg:w-48')}
         >
           <option value="">Todas las categorías</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
+          {rootCategories(categories).map((root) => (
+            <optgroup key={root.id} label={root.name}>
+              <option value={root.id}>Todo {root.name}</option>
+              {childCategories(categories, root.id).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>
@@ -232,7 +241,12 @@ export function ProductTable({ products, categories }: { products: Product[]; ca
                       <Link href={`/admin/productos/${p.id}`} className="block truncate font-medium text-foreground hover:text-primary">
                         {p.name}
                       </Link>
-                      <span className="text-xs text-muted-foreground">{categoryName(categories, p.categoryId)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {categoryPath(categories, p.categoryId)
+                          .map((c) => c.name)
+                          .join(' › ') || categoryName(categories, p.categoryId)}
+                        {p.brand && ` · ${p.brand}`}
+                      </span>
                     </div>
                   </div>
                 </td>
