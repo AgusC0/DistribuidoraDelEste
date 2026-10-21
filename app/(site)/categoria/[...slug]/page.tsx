@@ -20,7 +20,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const ids = descendantIds(categories, category.id)
   const brands = [...new Set(products.filter((p) => ids.has(p.categoryId)).map((p) => p.brand).filter(Boolean))].slice(0, 4)
   // Título con la búsqueda real ("Inodoros en Villa María") y descripción con marcas: así compiten en Google.
-  const title = `${category.name} en Villa María`
+  // Si otra categoría se llama igual (Griferías de Baño y de Cocina), se aclara el rubro para no repetir títulos.
+  const parent = categories.find((c) => c.id === category.parentId)
+  const repeated = parent && categories.some((c) => c.id !== category.id && c.name === category.name)
+  const title = `${category.name}${repeated ? ` de ${parent.name.toLowerCase()}` : ''} en Villa María`
   const description = [
     category.description || `${category.name} para tu obra o reforma.`,
     brands.length ? `Marcas: ${brands.join(', ')}.` : '',
@@ -32,6 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     description,
     alternates: { canonical: `/categoria/${slug.join('/')}` },
+    // Una categoría sin productos existe (para cargarle productos), pero Google no la indexa.
+    ...(products.some((p) => ids.has(p.categoryId)) ? {} : { robots: { index: false, follow: true } }),
     openGraph: { title: `${title} | Distribuidora del Este`, description, type: 'website' },
   }
 }

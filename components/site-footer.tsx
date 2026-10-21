@@ -19,7 +19,16 @@ const iconClass =
 const linkClass = 'text-sm text-primary-foreground/75 transition-colors hover:text-primary-foreground'
 const titleClass = 'font-heading text-sm font-semibold uppercase tracking-widest text-aqua'
 
-export function SiteFooter({ settings, categories }: { settings: Settings; categories: Category[] }) {
+export function SiteFooter({
+  settings,
+  categories,
+  categoryCounts,
+}: {
+  settings: Settings
+  categories: Category[]
+  /** Productos por categoría: las vacías no se listan. */
+  categoryCounts: Record<string, number>
+}) {
   return (
     <footer className="bg-brand-blue text-primary-foreground">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
@@ -65,13 +74,15 @@ export function SiteFooter({ settings, categories }: { settings: Settings; categ
         <nav aria-label="Categorías" className="flex flex-col gap-3">
           <p className={titleClass}>Categorías</p>
           <ul className="flex flex-col gap-2">
-            {rootCategories(categories).map((c) => (
-              <li key={c.id}>
-                <Link href={categoryUrl(categories, c.id)} className={linkClass}>
-                  {c.name}
-                </Link>
-              </li>
-            ))}
+            {rootCategories(categories)
+              .filter((c) => (categoryCounts[c.id] ?? 0) > 0)
+              .map((c) => (
+                <li key={c.id}>
+                  <Link href={categoryUrl(categories, c.id)} className={linkClass}>
+                    {c.name}
+                  </Link>
+                </li>
+              ))}
           </ul>
         </nav>
 

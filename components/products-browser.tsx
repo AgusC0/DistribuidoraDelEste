@@ -713,7 +713,11 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
                   <SearchX aria-hidden="true" className="size-6" />
                 </span>
                 <div>
-                  <p className="font-semibold">No encontramos productos con esos filtros.</p>
+                  <p className="font-semibold">
+                    {category && !hasFilters && !s.q.trim() && categoryCount(category.id) === 0
+                      ? 'Todavía no hay productos en esta categoría.'
+                      : 'No encontramos productos con esos filtros.'}
+                  </p>
                   {fix && (
                     <p className="mt-1 text-sm text-muted-foreground">
                       ¿Quisiste decir{' '}

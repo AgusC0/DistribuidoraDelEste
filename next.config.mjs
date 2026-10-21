@@ -1,3 +1,23 @@
+/** Categorías que cambiaron de lugar al reorganizar el catálogo (ver lib/category-migration.ts). */
+const LEGACY_CATEGORY_REDIRECTS = [
+  ['bano/sanitarios/inodoros', 'bano/sanitarios'],
+  ['bano/sanitarios/bidets', 'bano/sanitarios'],
+  ['bano/sanitarios/mochilas-y-depositos', 'bano/sanitarios'],
+  ['bano/lavatorios-y-bachas', 'bano'],
+  ['griferias/griferias-de-bano', 'bano/griferias-de-bano'],
+  ['griferias/griferias-de-cocina', 'cocina/griferias-de-cocina'],
+  ['griferias/canillas-de-servicio', 'sistema-conduccion'],
+  ['griferias', 'bano/griferias-de-bano'],
+  ['agua-y-canerias/canerias', 'sistema-conduccion'],
+  ['agua-y-canerias/tanques-de-agua', 'sistema-conduccion/tanques-de-agua'],
+  ['agua-y-canerias/termotanques', 'calefaccion/termotanques'],
+  ['agua-y-canerias/purificadores', 'cocina/filtros-de-agua'],
+  ['agua-y-canerias', 'sistema-conduccion'],
+  ['aberturas-y-techos/puertas-pvc', 'bano/claraboya-y-puerta-plegable'],
+  ['aberturas-y-techos/claraboyas', 'bano/claraboya-y-puerta-plegable'],
+  ['aberturas-y-techos', 'bano/claraboya-y-puerta-plegable'],
+]
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -14,6 +34,8 @@ const nextConfig = {
       { source: '/login', destination: '/admin/login', permanent: false },
       { source: '/ingresar', destination: '/admin/login', permanent: false },
       { source: '/admin/ingresar', destination: '/admin/login', permanent: false },
+      // URLs de la estructura de categorías anterior → su lugar actual (permanentes, para Google).
+      ...LEGACY_CATEGORY_REDIRECTS.map(([from, to]) => ({ source: `/categoria/${from}`, destination: `/categoria/${to}`, permanent: true })),
     ]
   },
   async headers() {

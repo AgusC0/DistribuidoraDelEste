@@ -80,7 +80,7 @@ export function createSeed(): Database {
         id: 'purificador-max',
         slug: 'purificador-max',
         name: 'Purificador de Agua Modelo Max',
-        categoryId: 'purificadores',
+        categoryId: 'filtros-de-agua',
         description: 'Purificador de agua Rotoplas modelo Max. Sistema de filtrado de alto rendimiento para toda la familia.',
         price: 241442,
         promo: false,
@@ -106,7 +106,7 @@ export function createSeed(): Database {
         id: 'purificador-essential',
         slug: 'purificador-essential',
         name: 'Purificador de Agua Modelo Essential',
-        categoryId: 'purificadores',
+        categoryId: 'filtros-de-agua',
         description: 'Purificador de agua Rotoplas modelo Essential. Diseño compacto ideal para el hogar.',
         price: 141376,
         promo: false,
@@ -132,13 +132,13 @@ export function createSeed(): Database {
         id: 'claraboyas',
         slug: 'claraboyas-techo-losa',
         name: 'Claraboyas para Techos de Losa',
-        categoryId: 'claraboyas',
+        categoryId: 'claraboya-y-puerta-plegable',
         description: 'Domos de acrílico para iluminación natural. Medidas 40x40, 40x60, 50x38, 50x60 y 60x60.',
         price: null,
         promo: false,
         promotion: { ...EMPTY_PROMOTION },
         brand: '',
-        attributes: { medida: ['40x40 cm', '40x60 cm', '50x38 cm', '50x60 cm', '60x60 cm'], material: ['Acrílico'] },
+        attributes: { tipo: ['Claraboya'], medida: ['40x40 cm', '40x60 cm', '50x38 cm', '50x60 cm', '60x60 cm'], material: ['Acrílico'] },
         sku: '',
         shortDescription: '',
         specs: [],
@@ -158,7 +158,7 @@ export function createSeed(): Database {
         id: 'puertas-pvc',
         slug: 'puertas-plegables-pvc',
         name: 'Puertas Plegables de PVC',
-        categoryId: 'puertas-pvc',
+        categoryId: 'claraboya-y-puerta-plegable',
         description: 'Puertas plegadizas de PVC, prácticas y resistentes. Disponibles en color Cedro y Blanco.',
         price: null,
         promo: false,
@@ -184,7 +184,7 @@ export function createSeed(): Database {
         id: 'canerias',
         slug: 'canerias-y-accesorios',
         name: 'Cañerías y Accesorios',
-        categoryId: 'canerias',
+        categoryId: 'sistema-conduccion',
         description: 'Línea completa de caños, conexiones y accesorios para conducción de agua y desagüe.',
         price: null,
         promo: false,
@@ -241,7 +241,12 @@ export function createSeed(): Database {
 
 const f = (...labels: string[]) => labels.map((label) => ({ key: slugify(label), label }))
 
-/** Rubros y subcategorías. Cada subcategoría define sus propios filtros. */
+/**
+ * Rubros y subcategorías del catálogo (Rubro → Subcategoría → Productos).
+ * Los ids se usan en la URL. Los que ya existían se conservan (griferias-de-bano, sanitarios,
+ * tanques-de-agua, termotanques…) para no romper enlaces; las URLs que cambiaron redirigen
+ * (ver next.config.mjs). Cada subcategoría define sus filtros; los rubros sólo filtran por marca.
+ */
 export function createCategories(): Category[] {
   const root = (id: string, name: string, description: string, order: number): Category => ({
     id,
@@ -262,27 +267,50 @@ export function createCategories(): Category[] {
     filters,
   })
   return [
-    root('bano', 'Baño', 'Sanitarios, lavatorios, bachas y accesorios para renovar o construir tu baño.', 0),
-    sub('bano', 'sanitarios', 'Sanitarios', 'Inodoros, bidets, mochilas y depósitos de las mejores marcas.', 0, f('Tipo', 'Línea', 'Color', 'Sistema', 'Instalación')),
-    sub('sanitarios', 'inodoros', 'Inodoros', 'Inodoros cortos, largos, de colgar y con depósito incorporado.', 0, []),
-    sub('sanitarios', 'bidets', 'Bidets', 'Bidets de 1 y 3 agujeros para combinar con tu línea de sanitarios.', 1, []),
-    sub('sanitarios', 'mochilas-y-depositos', 'Mochilas y depósitos', 'Mochilas de apoyo, depósitos de embutir y repuestos.', 2, []),
-    sub('bano', 'lavatorios-y-bachas', 'Lavatorios y bachas', 'Lavatorios con pedestal, bachas de apoyo y de embutir.', 1, f('Tipo', 'Material', 'Medida', 'Instalación')),
-    sub('bano', 'accesorios-bano', 'Accesorios para baño', 'Toalleros, portarrollos, jaboneras y espejos.', 2, f('Tipo', 'Material', 'Color')),
+    root('sistema-conduccion', 'Sistema conducción', 'Caños, conexiones y accesorios para agua, gas y cloaca, y tanques de agua.', 0),
+    sub('sistema-conduccion', 'agua-gas-y-cloaca', 'Agua + gas + cloaca', 'Sistemas completos para instalaciones de agua, gas y cloaca.', 0, f('Tipo', 'Material', 'Medida')),
+    sub('sistema-conduccion', 'canos', 'Caños', 'Caños de termofusión, PVC, polietileno y cobre.', 1, f('Material', 'Medida')),
+    sub('sistema-conduccion', 'accesorios-conduccion', 'Accesorios', 'Codos, tees, cuplas, llaves de paso y demás conexiones.', 2, f('Tipo', 'Material', 'Medida')),
+    sub('sistema-conduccion', 'tanques-de-agua', 'Tanques de agua', 'Tanques tricapa, bicapa y cisternas para agua potable, y sus accesorios.', 3, f('Capacidad', 'Material', 'Color')),
 
-    root('griferias', 'Griferías', 'Griferías para baño y cocina: monocomandos, juegos de ducha y canillas.', 1),
-    sub('griferias', 'griferias-de-bano', 'Griferías de baño', 'Monocomandos de lavatorio, juegos de ducha y de bidet.', 0, f('Tipo', 'Línea', 'Color', 'Material', 'Instalación')),
-    sub('griferias', 'griferias-de-cocina', 'Griferías de cocina', 'Monocomandos y canillas para mesada y pared.', 1, f('Tipo', 'Línea', 'Color', 'Material', 'Instalación')),
-    sub('griferias', 'canillas-de-servicio', 'Canillas de servicio', 'Canillas para lavadero, jardín y exterior.', 2, f('Tipo', 'Material', 'Instalación')),
+    root('repuestos-sanitarios', 'Repuestos sanitarios', 'Repuestos para griferías y sanitarios.', 1),
+    sub('repuestos-sanitarios', 'vastagos', 'Vástagos', 'Vástagos y repuestos para canillas y llaves de paso.', 0, f('Tipo', 'Medida')),
 
-    root('agua-y-canerias', 'Agua y cañerías', 'Conducción de agua, agua caliente y tratamiento del agua.', 2),
-    sub('agua-y-canerias', 'canerias', 'Cañerías', 'Caños, conexiones y accesorios para agua y desagüe.', 0, f('Tipo', 'Medida', 'Material')),
-    sub('agua-y-canerias', 'tanques-de-agua', 'Tanques de agua', 'Tanques tricapa y bicapa para agua potable.', 1, f('Capacidad', 'Material', 'Color')),
-    sub('agua-y-canerias', 'termotanques', 'Termotanques', 'Termotanques a gas y eléctricos.', 2, f('Tipo', 'Capacidad', 'Instalación')),
-    sub('agua-y-canerias', 'purificadores', 'Purificadores', 'Purificadores y filtros de agua para el hogar.', 3, f('Tipo', 'Instalación')),
+    root('bano', 'Baño', 'Griferías, sanitarios, vanitorys y accesorios para renovar o construir tu baño.', 2),
+    sub('bano', 'griferias-de-bano', 'Griferías', 'Monocomandos de lavatorio, juegos de ducha y de bidet.', 0, f('Tipo', 'Línea', 'Color', 'Instalación')),
+    sub('bano', 'sanitarios', 'Sanitarios', 'Inodoros, bidets, mochilas y depósitos de las mejores marcas.', 1, f('Tipo', 'Línea', 'Color', 'Sistema')),
+    sub('bano', 'accesorios-bano', 'Accesorios para baño', 'Toalleros, portarrollos, jaboneras y barrales.', 2, f('Tipo', 'Color')),
+    sub('bano', 'claraboya-y-puerta-plegable', 'Claraboya + puerta plegable', 'Claraboyas para iluminación natural y puertas plegables de PVC.', 3, f('Tipo', 'Medida', 'Color')),
+    sub('bano', 'tabla-inodoro', 'Tabla inodoro', 'Tablas y asientos para inodoro.', 4, f('Línea', 'Color')),
+    sub('bano', 'vanitory', 'Vanitory', 'Vanitorys de pie y suspendidos con bacha.', 5, f('Medida', 'Instalación')),
+    sub('bano', 'espejo', 'Espejo', 'Espejos para baño.', 6, f('Medida')),
 
-    root('aberturas-y-techos', 'Aberturas y techos', 'Puertas, claraboyas e iluminación natural.', 3),
-    sub('aberturas-y-techos', 'puertas-pvc', 'Puertas PVC', 'Puertas plegadizas de PVC.', 0, f('Tipo', 'Color', 'Medida')),
-    sub('aberturas-y-techos', 'claraboyas', 'Claraboyas', 'Domos de acrílico para iluminación natural.', 1, f('Medida', 'Material')),
+    root('cocina', 'Cocina', 'Cocinas, campanas, griferías, filtros de agua, bachas y piletas.', 3),
+    sub('cocina', 'cocinas', 'Cocinas', 'Cocinas a gas y eléctricas.', 0, f('Tipo')),
+    sub('cocina', 'campanas', 'Campanas', 'Campanas y purificadores de cocina.', 1, f('Tipo', 'Medida')),
+    sub('cocina', 'griferias-de-cocina', 'Griferías', 'Monocomandos y canillas para mesada y pared.', 2, f('Tipo', 'Línea', 'Color')),
+    sub('cocina', 'filtros-de-agua', 'Filtro de agua', 'Purificadores, filtros y repuestos para tomar agua más rica.', 3, f('Tipo', 'Instalación')),
+    sub('cocina', 'bateas-de-acero', 'Bateas de acero', 'Bateas y bachas de acero inoxidable.', 4, f('Medida')),
+    sub('cocina', 'bacha', 'Bacha', 'Bachas para cocina.', 5, f('Material', 'Medida')),
+    sub('cocina', 'piletas-para-lavadero', 'Piletas para lavadero', 'Piletas para lavadero y patio.', 6, f('Material', 'Medida')),
+
+    root('calefaccion', 'Calefacción', 'Termotanques, calefones, calefactores, salamandras y bombas de agua.', 4),
+    sub('calefaccion', 'termotanques', 'Termotanque', 'Termotanques a gas, eléctricos y solares.', 0, f('Tipo', 'Capacidad', 'Instalación')),
+    sub('calefaccion', 'calefactores', 'Calefactor', 'Calefactores a gas y eléctricos.', 1, f('Tipo')),
+    sub('calefaccion', 'calefones', 'Calefón', 'Calefones a gas.', 2, f('Tipo', 'Capacidad')),
+    sub('calefaccion', 'salamandras', 'Salamandra', 'Salamandras y estufas a leña.', 3, f('Tipo')),
+    sub('calefaccion', 'bombas-de-agua', 'Bombas de agua', 'Bombas presurizadoras y elevadoras de agua.', 4, f('Tipo')),
+    sub('calefaccion', 'a-lena', 'A leña', 'Hornos, parrillas y equipos a leña.', 5, f('Tipo')),
+
+    root('construccion', 'Construcción', 'Materiales para obra: ladrillos, cemento, arena, cal y revestimientos.', 5),
+    sub('construccion', 'ladrillo-comun', 'Ladrillo común', 'Ladrillos comunes para obra.', 0, []),
+    sub('construccion', 'cemento', 'Cemento', 'Cemento portland y de albañilería.', 1, []),
+    sub('construccion', 'arena', 'Arena', 'Arena fina y gruesa.', 2, []),
+    sub('construccion', 'cal', 'Cal', 'Cal hidráulica y aérea.', 3, []),
+    sub('construccion', 'pegamento-ceramico', 'Pegamento cerámico', 'Adhesivos para cerámicos y porcelanatos.', 4, []),
+    sub('construccion', 'pastina', 'Pastina', 'Pastinas para juntas.', 5, []),
+    sub('construccion', 'membranas', 'Membranas', 'Membranas asfálticas y líquidas.', 6, []),
+    sub('construccion', 'revestimientos', 'Revestimientos', 'Revestimientos para pisos y paredes.', 7, []),
+    sub('construccion', 'ceramica', 'Cerámica', 'Cerámicos y porcelanatos.', 8, []),
   ]
 }

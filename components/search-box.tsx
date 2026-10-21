@@ -121,12 +121,15 @@ export function SearchBox({
         ...popular.map((term) => ({ kind: 'popular' as const, key: `p-${term}`, term })),
       ]
     }
-    const cats = matchCategories(categories, trimmed).map((category) => ({
-      kind: 'category' as const,
-      key: `c-${category.id}`,
-      category,
-      count: categoryCounts[category.id] ?? 0,
-    }))
+    // Sin categorías vacías: llevarían a una página sin productos.
+    const cats = matchCategories(categories, trimmed)
+      .filter((category) => (categoryCounts[category.id] ?? 0) > 0)
+      .map((category) => ({
+        kind: 'category' as const,
+        key: `c-${category.id}`,
+        category,
+        count: categoryCounts[category.id] ?? 0,
+      }))
     const prods = hits.slice(0, MAX_PRODUCTS).map((h) => ({
       kind: 'product' as const,
       key: `p-${h.product.id}`,
@@ -420,7 +423,7 @@ function groupOptions(options: Option[]) {
 }
 
 function OptionContent({ opt, query }: { opt: Option; query: string }) {
-  const { settings } = useCatalog()
+  const { settings, categories } = useCatalog()
   switch (opt.kind) {
     case 'recent':
     case 'popular': {
@@ -441,6 +444,10 @@ function OptionContent({ opt, query }: { opt: Option; query: string }) {
           </span>
           <span className="flex-1 truncate font-medium">
             <Highlighted text={opt.category.name} query={query} />
+            {/* Rubro al lado: hay subcategorías con el mismo nombre (Griferías de Baño y de Cocina). */}
+            {opt.category.parentId && (
+              <span className="font-normal text-muted-foreground"> · {categories.find((c) => c.id === opt.category.parentId)?.name}</span>
+            )}
           </span>
           <span className="text-xs text-muted-foreground">
             {opt.count} {opt.count === 1 ? 'producto' : 'productos'}

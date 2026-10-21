@@ -46,19 +46,21 @@ export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product
 
         <FadeIn delay={60} className="mt-8">
           <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
-            {rootCategories(categories).map((c) => (
-              <li key={c.id} className="shrink-0">
-                <Link
-                  href={categoryUrl(categories, c.id)}
-                  className="inline-flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-sm font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                >
-                  {c.name}
-                  <span className="text-xs tabular-nums opacity-60">
-                    {categoryCounts[c.id] ?? 0}
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {rootCategories(categories)
+              .filter((c) => (categoryCounts[c.id] ?? 0) > 0)
+              .map((c) => (
+                <li key={c.id} className="shrink-0">
+                  <Link
+                    href={categoryUrl(categories, c.id)}
+                    className="inline-flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-sm font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                  >
+                    {c.name}
+                    <span className="text-xs tabular-nums opacity-60">
+                      {categoryCounts[c.id] ?? 0}
+                    </span>
+                  </Link>
+                </li>
+              ))}
           </ul>
         </FadeIn>
 

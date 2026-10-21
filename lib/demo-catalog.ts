@@ -1,4 +1,5 @@
 import { buildVariants, EMPTY_PROMOTION } from '@/lib/catalog'
+import { reclassifyProducts } from '@/lib/category-migration'
 import { createExtraDemoProducts } from '@/lib/demo-catalog-extra'
 import { createSeed } from '@/lib/seed'
 import type { Product, ProductOption, ProductSpec, Promotion, StockStatus, Variant } from '@/lib/types'
@@ -338,5 +339,6 @@ export function createDemoProducts(): Product[] {
   // Se suman los productos originales del sitio (purificadores, claraboyas, puertas…).
   const base = createSeed().products.filter((p) => !['monocomando-cocina', 'canerias', 'termotanque'].includes(p.id))
   // Más productos por rubro para probar filtros, búsqueda, paginación y promociones con un catálogo real.
-  return [...demo, ...base, ...createExtraDemoProducts()]
+  // Los productos se escribieron con las categorías anteriores: se ubican en la estructura actual.
+  return reclassifyProducts([...demo, ...base, ...createExtraDemoProducts()])
 }

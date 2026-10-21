@@ -81,7 +81,7 @@ export function CategoryMegaMenu({ active }: { active: boolean }) {
         <div className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-xl motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1">
           <div className={cn('mx-auto grid max-w-7xl gap-10 px-4 py-8 sm:px-6 lg:px-8', promos.length > 0 && 'grid-cols-[1fr_20rem]')}>
             <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-x-8 gap-y-8 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
               {roots.map((root) => (
                 <div key={root.id}>
                   <Link

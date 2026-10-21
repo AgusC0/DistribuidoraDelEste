@@ -68,7 +68,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <main id="contenido" className="flex-1">
             {children}
           </main>
-          <SiteFooter settings={settings} categories={shell.categories} />
+          <SiteFooter settings={settings} categories={shell.categories} categoryCounts={shell.categoryCounts} />
           <WhatsappFloat />
         </div>
         <OrderDrawer />
