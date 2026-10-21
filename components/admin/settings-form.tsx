@@ -55,7 +55,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
 
   return (
     <form onSubmit={submitKeepingValues(action)} className="flex flex-col gap-6">
-      <Panel>
+      <Panel data-guide="ajustes-negocio">
         <h2 className={sectionTitle}>Negocio y contacto</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Text name="businessName" label="Razón social / nombre" defaultValue={settings.businessName} />
@@ -90,7 +90,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
         </div>
       </Panel>
 
-      <Panel>
+      <Panel data-guide="ajustes-horarios">
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Horarios</h2>
         <p className="mb-4 text-sm text-muted-foreground">
           Formato <code>08:00-12:00, 15:00-19:00</code>. Vacío = cerrado. Se usa para mostrar “Abierto ahora” en el sitio.
@@ -137,7 +137,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
         </div>
       </Panel>
 
-      <Panel>
+      <Panel data-guide="ajustes-pagos">
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Precios y formas de pago</h2>
         <p className="mb-4 text-sm text-muted-foreground">
           Se muestran en las tarjetas, la ficha de producto y el pedido. Dejá en 0 lo que no quieras mostrar.
@@ -202,7 +202,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
         </div>
       </Panel>
 
-      <Panel>
+      <Panel data-guide="ajustes-portada">
         <h2 className={sectionTitle}>Portada</h2>
         <div className="flex flex-col gap-4">
           <Text name="heroTitle" label="Título principal" defaultValue={settings.heroTitle} />
@@ -215,7 +215,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
         </div>
       </Panel>
 
-      <Panel>
+      <Panel data-guide="ajustes-email">
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Avisos por email</h2>
         <p className="mb-4 text-sm text-muted-foreground">Te llega un email cada vez que alguien manda una consulta o un pedido desde la web.</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -274,7 +274,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
         </div>
       </Panel>
 
-      <Panel>
+      <Panel data-guide="ajustes-anuncio">
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Barra de anuncio</h2>
         <p className="mb-4 text-sm text-muted-foreground">Un mensaje arriba de todo el sitio: promos, feriados, horarios especiales.</p>
         <label className="mb-3 flex cursor-pointer items-center gap-3">
@@ -301,7 +301,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
         )}
       </Panel>
 
-      <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-lg sm:flex-row sm:items-center sm:justify-between">
+      <div data-guide="ajustes-guardar" className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-lg sm:flex-row sm:items-center sm:justify-between">
         <FormMessage state={state} />
         <SubmitButton pending={pending} className="sm:ml-auto">Guardar ajustes</SubmitButton>
       </div>
@@ -312,7 +312,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
 export function BackupPanel({ stats }: { stats: { products: number; leads: number } }) {
   const [state, action] = useActionState<FormState, FormData>(restoreBackup, {})
   return (
-    <Panel className="mt-6">
+    <Panel data-guide="ajustes-respaldo" className="mt-6">
       <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Respaldo</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         Descargá una copia de todo ({stats.products} {stats.products === 1 ? 'producto' : 'productos'}, {stats.leads}{' '}
@@ -354,7 +354,7 @@ export function BackupPanel({ stats }: { stats: { products: number; leads: numbe
 export function DemoCatalogPanel() {
   const [state, setState] = useState<FormState>({})
   return (
-    <Panel className="mt-6">
+    <Panel data-guide="ajustes-demo" className="mt-6">
       <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Catálogo de demostración</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         Carga unos 25 productos de ejemplo con marcas, medidas y ofertas para mostrar cómo funcionan los filtros y las promociones.

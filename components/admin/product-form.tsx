@@ -97,7 +97,7 @@ export function ProductForm({
       <input type="hidden" name="tags" value={tags.join(',')} />
 
       <div className="flex flex-col gap-6 lg:col-span-2">
-        <Panel className="flex flex-col gap-5">
+        <Panel data-guide="producto-info" className="flex flex-col gap-5">
           <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Información</h2>
 
           <div className="flex flex-col gap-2">
@@ -290,7 +290,7 @@ export function ProductForm({
           </div>
         </Panel>
 
-        <Panel className="flex flex-col gap-4">
+        <Panel data-guide="producto-filtros" className="flex flex-col gap-4">
           <input type="hidden" name="attributes" value={attributesValue} />
           <div>
             <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Filtros del catálogo</h2>
@@ -328,7 +328,7 @@ export function ProductForm({
           )}
         </Panel>
 
-        <Panel className="flex flex-col gap-4">
+        <Panel data-guide="producto-fotos" className="flex flex-col gap-4">
           <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Fotos</h2>
           <GalleryEditor
             key={product?.updatedAt ?? 'nuevo'}
@@ -338,7 +338,7 @@ export function ProductForm({
           />
         </Panel>
 
-        <Panel className="flex flex-col gap-4">
+        <Panel data-guide="producto-variantes" className="flex flex-col gap-4">
           <div>
             <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Opciones y variantes</h2>
             <p className={hintClass}>
@@ -354,7 +354,7 @@ export function ProductForm({
           />
         </Panel>
 
-        <Panel className="flex flex-col gap-4">
+        <Panel data-guide="producto-complementos" className="flex flex-col gap-4">
           <div>
             <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Complementos</h2>
             <p className={hintClass}>Productos que se compran junto con este. Aparecen en “Completá tu compra” y en el pedido.</p>
@@ -362,7 +362,7 @@ export function ProductForm({
           <RelatedPicker key={product?.updatedAt ?? 'nuevo'} products={catalogProducts} initial={product?.related ?? []} currentId={product?.id} />
         </Panel>
 
-        <Panel className="flex flex-col gap-4">
+        <Panel data-guide="producto-ficha" className="flex flex-col gap-4">
           <div>
             <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Ficha técnica</h2>
             <p className={hintClass}>Se muestra en “Detalles del producto”: medidas, garantía, material, origen…</p>
@@ -372,7 +372,7 @@ export function ProductForm({
       </div>
 
       <div className="flex flex-col gap-6">
-        <Panel className="flex flex-col gap-4">
+        <Panel data-guide="producto-estado" className="flex flex-col gap-4">
           <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Estado</h2>
           {[
             { name: 'active', label: 'Publicado', hint: 'Visible en el sitio', checked: product?.active ?? true },
@@ -400,7 +400,7 @@ export function ProductForm({
           </div>
         </Panel>
 
-        <Panel className={cn('flex flex-col gap-4 transition-colors', promo && 'ring-2 ring-promo/40')}>
+        <Panel data-guide="producto-promo" className={cn('flex flex-col gap-4 transition-colors', promo && 'ring-2 ring-promo/40')}>
           <label className="flex cursor-pointer items-start gap-3">
             <input type="checkbox" name="promo" checked={promo} onChange={(ev) => setPromo(ev.target.checked)} className="mt-0.5 size-4 accent-promo" />
             <span>
@@ -484,7 +484,7 @@ export function ProductForm({
           </div>
         </Panel>
 
-        <Panel>
+        <Panel data-guide="producto-vista">
           <h2 className="mb-3 font-heading text-base font-semibold uppercase tracking-wide">Vista previa</h2>
           <div className="overflow-hidden rounded-xl border border-border bg-background">
             <div className="relative aspect-[4/3] bg-secondary">
@@ -505,7 +505,7 @@ export function ProductForm({
           </div>
         </Panel>
 
-        <div className="sticky bottom-4 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-lg lg:static lg:shadow-xs">
+        <div data-guide="producto-guardar" className="sticky bottom-4 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-lg lg:static lg:shadow-xs">
           <FormMessage state={state} />
           <div className="flex gap-2">
             <Button variant="outline" nativeButton={false} className="h-10 px-4" render={<Link href="/admin/productos" />}>

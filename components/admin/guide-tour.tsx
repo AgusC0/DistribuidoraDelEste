@@ -41,7 +41,8 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [tour, setTour] = useState<Tour | null>(null)
-  const [shown, setShown] = useState<{ step: GuideStep; el: HTMLElement | null } | null>(null)
+  // `blocked`: el paso necesita datos que todavía no hay (ej: pedidos); se explica qué falta.
+  const [shown, setShown] = useState<{ step: GuideStep; el: HTMLElement | null; blocked?: boolean } | null>(null)
   const [rect, setRect] = useState<DOMRect | null>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
   const cardRef = useRef<HTMLDivElement>(null)
@@ -89,9 +90,15 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         return setShown({ step, el })
       }
-      // La parte no está (ej: todavía no hay pedidos): se saltea el paso en la dirección en que venía.
-      if (++tries < patience) setTimeout(resolve, 120)
-      else go(tour.dir)
+      if (++tries < patience) return void setTimeout(resolve, 120)
+      // Si el paso necesita datos, se explica qué falta (señalando el estado vacío si lo hay).
+      if (step.missing) {
+        const empty = findTarget({ ...step, target: 'vacio' })
+        empty?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        return setShown({ step, el: empty, blocked: true })
+      }
+      // Si no, es una parte opcional: se saltea en la dirección en que venía.
+      go(tour.dir)
     }
     resolve()
     return () => {
@@ -99,22 +106,41 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     }
   }, [tour, pathname, router, go])
 
-  // Sigue la posición del elemento mientras se desplaza la página o cambia el tamaño.
+  // Sigue la posición del elemento al cambiar de paso, al desplazarse la página o cambiar el tamaño.
+  // (No sólo con requestAnimationFrame: en una pestaña en segundo plano no corre y el foco quedaba quieto.)
   useEffect(() => {
     if (!shown) return
-    let frame = 0
-    const tick = () => {
+    const measure = () => {
       setSize((s) => (s.w === window.innerWidth && s.h === window.innerHeight ? s : { w: window.innerWidth, h: window.innerHeight }))
-      if (shown.el) {
-        const r = shown.el.getBoundingClientRect()
-        setRect((prev) =>
-          prev && prev.top === r.top && prev.left === r.left && prev.width === r.width && prev.height === r.height ? prev : r,
-        )
-      } else setRect(null)
-      frame = requestAnimationFrame(tick)
+      if (!shown.el) return setRect(null)
+      const r = shown.el.getBoundingClientRect()
+      setRect((prev) => (prev && prev.top === r.top && prev.left === r.left && prev.width === r.width && prev.height === r.height ? prev : r))
     }
-    tick()
-    return () => cancelAnimationFrame(frame)
+    measure()
+    let frame = 0
+    const loop = () => {
+      measure()
+      frame = requestAnimationFrame(loop)
+    }
+    frame = requestAnimationFrame(loop)
+    // El desplazamiento suave tarda: se vuelve a medir cuando termina.
+    const timers = [150, 400].map((ms) => setTimeout(measure, ms))
+    // Si el desplazamiento suave no llegó (pestaña en segundo plano, movimiento reducido), se lleva de una.
+    timers.push(
+      setTimeout(() => {
+        const r = shown.el?.getBoundingClientRect()
+        if (r && (r.bottom < 0 || r.top > window.innerHeight)) shown.el!.scrollIntoView({ block: 'center', behavior: 'instant' })
+        measure()
+      }, 700),
+    )
+    window.addEventListener('scroll', measure, { passive: true, capture: true })
+    window.addEventListener('resize', measure)
+    return () => {
+      cancelAnimationFrame(frame)
+      timers.forEach(clearTimeout)
+      window.removeEventListener('scroll', measure, { capture: true })
+      window.removeEventListener('resize', measure)
+    }
   }, [shown])
 
   useLayoutEffect(() => {
@@ -184,7 +210,8 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
             )}
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-blue">
+              <p className={cn('text-xs font-semibold uppercase tracking-[0.16em]', shown.blocked ? 'text-warning' : 'text-brand-blue')}>
+                {shown.blocked && !shown.step.canSkip && 'No se puede seguir · '}
                 {GUIDES[tour.key].title} · Paso {index + 1} de {steps.length}
               </p>
               <button
@@ -200,7 +227,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
               {shown.step.title}
             </h2>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground" aria-live="polite">
-              {shown.step.text}
+              {shown.blocked ? shown.step.missing : shown.step.text}
             </p>
             <div className="mt-4 flex items-center justify-between gap-3">
               <div className="flex gap-1.5" aria-hidden="true">
@@ -214,9 +241,19 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
                     Anterior
                   </Button>
                 )}
-                <Button size="sm" className="h-9 bg-brand-blue px-4 text-brand-blue-foreground hover:bg-brand-blue/90" onClick={() => (index < steps.length - 1 ? go(1) : close())}>
-                  {index < steps.length - 1 ? 'Siguiente' : 'Terminar'}
-                </Button>
+                {shown.blocked && !shown.step.canSkip ? (
+                  <Button size="sm" className="h-9 bg-brand-blue px-4 text-brand-blue-foreground hover:bg-brand-blue/90" onClick={close}>
+                    Entendido
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="h-9 bg-brand-blue px-4 text-brand-blue-foreground hover:bg-brand-blue/90"
+                    onClick={() => (index < steps.length - 1 ? go(1) : close())}
+                  >
+                    {index < steps.length - 1 ? 'Siguiente' : 'Terminar'}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

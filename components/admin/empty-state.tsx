@@ -18,7 +18,7 @@ export function EmptyState({
   className?: string
 }) {
   return (
-    <div className={cn('mx-auto flex max-w-xl flex-col items-center px-4 py-12 text-center', className)}>
+    <div data-guide="vacio" className={cn('mx-auto flex max-w-xl flex-col items-center px-4 py-12 text-center', className)}>
       <span className="flex size-14 items-center justify-center rounded-2xl bg-card text-muted-foreground shadow-xs">
         <Icon className="size-7" />
       </span>

@@ -177,6 +177,8 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
   const [error, setError] = useState('')
   const [pending, start] = useTransition()
   const roots = rootCategories(categories)
+  // La guía señala la primera fila (un rubro) y su primera subcategoría.
+  const firstChild = roots[0] ? childCategories(categories, roots[0].id)[0] : undefined
   const indent = (depth: number) => (depth === 2 ? 'ml-8' : depth === 3 ? 'ml-16' : '')
 
   const row = (c: Category, siblings: Category[], i: number, depth: number) => {
@@ -184,6 +186,8 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
     const children = childCategories(categories, c.id)
     const total = [...descendantIds(categories, c.id)].reduce((sum, id) => sum + (counts[id] ?? 0), 0)
     const inherited = isChild && !c.filters.length ? effectiveFilters(categories, c.id) : []
+    const guideRow = c.id === roots[0]?.id
+    const guideChild = c.id === firstChild?.id
     if (editing === c.id) {
       return (
         <div className={cn('rounded-lg bg-muted/40 p-4', indent(depth))}>
@@ -192,8 +196,11 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
       )
     }
     return (
-      <div className={cn('flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40', indent(depth))}>
-        <div className="flex flex-col">
+      <div
+        data-guide={guideRow ? 'cat-fila' : guideChild ? 'cat-subfila' : undefined}
+        className={cn('flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40', indent(depth))}
+      >
+        <div className="flex flex-col" data-guide={guideRow ? 'cat-orden' : undefined}>
           <Button variant="ghost" size="icon-xs" disabled={i === 0} aria-label={`Subir ${c.name}`} onClick={() => start(() => moveCategory(c.id, -1))}>
             <ArrowUp />
           </Button>
@@ -213,7 +220,7 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
             {c.name}
           </p>
           {isChild ? (
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-xs text-muted-foreground" data-guide={guideChild ? 'cat-filtros' : undefined}>
               Filtros:{' '}
               {c.filters.length
                 ? c.filters.map((f) => f.label).join(', ')
@@ -225,16 +232,25 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
             <p className="truncate text-sm text-muted-foreground">{c.description || 'Sin descripción'}</p>
           )}
         </div>
-        <span className="hidden shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums sm:inline">
+        <span
+          data-guide={guideRow ? 'cat-cantidad' : undefined}
+          className="hidden shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums sm:inline"
+        >
           {total} {total === 1 ? 'producto' : 'productos'}
         </span>
         {depth < MAX_CATEGORY_DEPTH && (
-          <Button variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setAddingTo(addingTo === c.id ? null : c.id)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            data-guide={guideRow ? 'cat-sub' : undefined}
+            className="h-8 text-primary"
+            onClick={() => setAddingTo(addingTo === c.id ? null : c.id)}
+          >
             <Plus className="size-4" />
             <span className="hidden sm:inline">Subcategoría</span>
           </Button>
         )}
-        <Button variant="ghost" size="icon" aria-label={`Editar ${c.name}`} onClick={() => setEditing(c.id)}>
+        <Button variant="ghost" size="icon" data-guide={guideRow ? 'cat-editar' : undefined} aria-label={`Editar ${c.name}`} onClick={() => setEditing(c.id)}>
           <Pencil />
         </Button>
         <ConfirmButton
@@ -282,7 +298,7 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
 
   return (
     <div className="flex flex-col gap-6">
-      <Panel>
+      <Panel data-guide="cat-nueva">
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Nueva categoría</h2>
         <p className="mb-4 text-sm text-muted-foreground">
           Hasta 3 niveles: rubro → subcategoría → sub-subcategoría (Baño → Sanitarios → Inodoros). Cada una puede tener sus
@@ -291,7 +307,7 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
         <CategoryForm categories={categories} />
       </Panel>
 
-      <Panel className={cn('p-3', pending && 'opacity-70')}>
+      <Panel data-guide="cat-arbol" className={cn('p-3', pending && 'opacity-70')}>
         {error && (
           <p role="alert" className="m-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}

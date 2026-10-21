@@ -51,23 +51,31 @@ export function CategoryMegaMenu({ active }: { active: boolean }) {
 
   return (
     <div ref={wrapper} onMouseEnter={show} onMouseLeave={hide}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="true"
+      {/* "Productos" lleva al catálogo; al pasar el cursor (o con la flecha, en pantallas táctiles y con teclado) se abre el menú. */}
+      <div
         className={cn(
-          'relative flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground',
-          active || open ? 'text-foreground' : 'text-muted-foreground',
+          'relative flex items-center rounded-md transition-colors hover:bg-muted',
+          active || open ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
         )}
       >
-        Productos
-        <ChevronDown aria-hidden="true" className={cn('size-3.5 transition-transform', open && 'rotate-180')} />
+        <Link href="/productos" className="py-2 pl-3 pr-1 text-sm font-medium" aria-current={pathname === '/productos' ? 'page' : undefined}>
+          Productos
+        </Link>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-haspopup="true"
+          aria-label={open ? 'Cerrar menú de categorías' : 'Ver categorías y promociones'}
+          className="flex h-9 items-center pl-0.5 pr-2.5"
+        >
+          <ChevronDown aria-hidden="true" className={cn('size-3.5 transition-transform', open && 'rotate-180')} />
+        </button>
         <span
           aria-hidden="true"
           className={cn('absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-primary transition-opacity', active ? 'opacity-100' : 'opacity-0')}
         />
-      </button>
+      </div>
 
       {open && (
         <div className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-xl motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1">
