@@ -52,7 +52,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es-AR" className={`light scroll-smooth bg-background ${inter.variable} ${oswald.variable}`}>
-      <body className="font-sans antialiased">
+      {/* suppressHydrationWarning: extensiones del navegador (ColorZilla, Grammarly…) agregan atributos al body antes de que cargue React. */}
+      <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
