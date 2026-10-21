@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  BadgePercent,
   ClipboardList,
   ExternalLink,
   Inbox,
@@ -20,14 +21,31 @@ import { Logo } from '@/components/logo'
 import { logout } from '@/app/admin/actions'
 import { cn } from '@/lib/utils'
 
-const NAV = [
-  { href: '/admin', label: 'Resumen', icon: LayoutDashboard },
-  { href: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
-  { href: '/admin/productos', label: 'Productos', icon: Package },
-  { href: '/admin/categorias', label: 'Categorías', icon: Tags },
-  { href: '/admin/consultas', label: 'Consultas', icon: Inbox },
-  { href: '/admin/busquedas', label: 'Búsquedas', icon: Search },
-  { href: '/admin/ajustes', label: 'Ajustes', icon: Settings },
+/** Menú agrupado por tarea: atender ventas, mantener el catálogo y configurar el sitio. */
+const NAV: { title?: string; items: { href: string; label: string; icon: React.ElementType }[] }[] = [
+  { items: [{ href: '/admin', label: 'Resumen', icon: LayoutDashboard }] },
+  {
+    title: 'Ventas',
+    items: [
+      { href: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
+      { href: '/admin/consultas', label: 'Consultas', icon: Inbox },
+    ],
+  },
+  {
+    title: 'Catálogo',
+    items: [
+      { href: '/admin/productos', label: 'Productos', icon: Package },
+      { href: '/admin/promociones', label: 'Promociones', icon: BadgePercent },
+      { href: '/admin/categorias', label: 'Categorías', icon: Tags },
+    ],
+  },
+  {
+    title: 'Sitio',
+    items: [
+      { href: '/admin/busquedas', label: 'Búsquedas', icon: Search },
+      { href: '/admin/ajustes', label: 'Ajustes', icon: Settings },
+    ],
+  },
 ]
 
 export function AdminShell({
@@ -45,8 +63,13 @@ export function AdminShell({
   useEffect(() => setOpen(false), [pathname])
 
   const nav = (
-    <nav aria-label="Panel" className="flex flex-1 flex-col gap-1">
-      {NAV.map(({ href, label, icon: Icon }) => {
+    <nav aria-label="Panel" className="flex flex-1 flex-col gap-5 overflow-y-auto">
+      {NAV.map((group, gi) => (
+        <div key={group.title ?? gi} className="flex flex-col gap-1">
+          {group.title && (
+            <p className="px-3 pb-1 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/50">{group.title}</p>
+          )}
+      {group.items.map(({ href, label, icon: Icon }) => {
         const badge = href === '/admin/consultas' ? newLeads : href === '/admin/pedidos' ? newOrders : 0
         const active = href === '/admin' ? pathname === href : pathname.startsWith(href)
         return (
@@ -65,7 +88,7 @@ export function AdminShell({
               <span
                 className={cn(
                   'rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
-                  active ? 'bg-primary-foreground/20' : 'bg-promo text-promo-foreground',
+                  active ? 'bg-primary-foreground/20' : 'bg-brand-blue text-brand-blue-foreground',
                 )}
                 aria-label={`${badge} ${href === '/admin/pedidos' ? 'nuevos' : 'nuevas'}`}
               >
@@ -75,6 +98,8 @@ export function AdminShell({
           </Link>
         )
       })}
+        </div>
+      ))}
       <div className="mt-auto flex flex-col gap-1 border-t border-sidebar-border pt-3">
         <a
           href="/"

@@ -8,7 +8,6 @@ import { ChevronDown, ChevronLeft, ChevronRight, SearchX, SlidersHorizontal, X }
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/pagination'
 import { ProductCard } from '@/components/product-card'
-import { PromotionsSection } from '@/components/promotions-section'
 import { CATALOG_EVENT, SearchBox } from '@/components/search-box'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
@@ -157,7 +156,7 @@ function OptionList({
 
 /**
  * Catálogo jerárquico: Rubro → Subcategoría → filtros propios de esa categoría → productos.
- * Las ofertas van primero; después el listado completo (donde las ofertas conservan su badge).
+ * Es el catálogo completo: las promociones se reconocen por su etiqueta, sin dominar la página.
  */
 export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
   const { products, categories, index, settings } = useCatalog()
@@ -222,9 +221,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
 
   const searched = useMemo<Product[]>(() => {
     if (s.q.trim()) return search(index, s.q).map((h) => h.product)
-    return [...products].sort(
-      (a, b) => Number(b.featured) - Number(a.featured) || Number(isOnPromotion(b)) - Number(isOnPromotion(a)),
-    )
+    return [...products].sort((a, b) => Number(b.featured) - Number(a.featured))
   }, [s.q, products, index])
 
   const inScope = useMemo(() => (scope ? searched.filter((p) => scope.has(p.categoryId)) : searched), [searched, scope])
@@ -268,7 +265,6 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
     return prices.length ? { min: Math.min(...prices), max: Math.max(...prices) } : null
   }, [inScope])
 
-  const promos = filtered.filter((p) => isOnPromotion(p))
 
   /** Si se filtró por una opción de variante (ej: Medida 25 mm), la ficha abre con esa variante elegida. */
   const preferredVariant = (p: Product) => {
@@ -322,7 +318,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
 
   const brands = s.facets.marca ?? []
   const singleBrand = brands.length === 1 ? brands[0] : null
-  const title = `${category?.name ?? 'Todos los productos'}${singleBrand ? ` ${singleBrand}` : ''}`
+  const title = `${category?.name ?? (s.oferta ? 'Promociones' : 'Todos los productos')}${singleBrand ? ` ${singleBrand}` : ''}`
 
   const chips = [
     category && { label: category.name, clear: () => router.push(hrefFor(parent)) },
@@ -333,7 +329,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
       clear: () => update({ min: null, max: null }),
     },
     s.stock && { label: 'En stock', clear: () => update({ stock: false }) },
-    s.oferta && { label: 'En oferta', clear: () => update({ oferta: false }) },
+    s.oferta && { label: 'En promoción', clear: () => update({ oferta: false }) },
   ].filter(Boolean) as { label: string; clear: () => void }[]
 
   const hasFilters = chips.length > (category ? 1 : 0)
@@ -456,7 +452,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
         <div className="flex flex-col gap-1">
           {[
             { key: 'stock' as const, label: 'Sólo en stock' },
-            { key: 'oferta' as const, label: 'Sólo ofertas' },
+            { key: 'oferta' as const, label: 'En promoción' },
           ].map((o) => (
             <label key={o.key} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-muted">
               <input
@@ -564,28 +560,10 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
             </ul>
           )}
 
-          {/* 3. Ofertas: siempre antes del listado general */}
-          {page === 1 && !s.oferta && promos.length > 0 && (
-            <div className="mt-8">
-              <PromotionsSection
-                products={promos}
-                title={category ? `Ofertas en ${category.name}` : 'Ofertas destacadas'}
-                variantIdFor={preferredVariant}
-                onSeeAll={() => {
-                  update({ oferta: true })
-                  listTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }}
-              />
-            </div>
-          )}
-
-          {/* 4. Todos los productos */}
-          <div ref={listTop} className="mt-10 scroll-mt-24">
-            <div className="flex flex-col gap-4 border-b border-border pb-4">
+          {/* 3. Listado: buscar, ordenar y productos */}
+          <div ref={listTop} className="mt-8 scroll-mt-24">
+            <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-end justify-between gap-2">
-                <h2 className="font-heading text-2xl font-bold uppercase tracking-tight">
-                  {s.oferta ? 'Todas las ofertas' : 'Todos los productos'}
-                </h2>
                 <p className="text-sm text-muted-foreground" aria-live="polite">
                   {results.length ? (
                     <>
@@ -688,7 +666,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
             {pageItems.length > 0 ? (
               <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
                 {pageItems.map((p, i) => (
-                  <ProductCard key={p.id} product={p} query={s.q} priority={i < 4 && !promos.length} variantId={preferredVariant(p)} />
+                  <ProductCard key={p.id} product={p} query={s.q} priority={i < 4} variantId={preferredVariant(p)} />
                 ))}
               </div>
             ) : (

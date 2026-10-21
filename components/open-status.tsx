@@ -24,7 +24,7 @@ export function OpenStatus({ hours, className }: { hours: WeeklyHours; className
         {status.open && (
           <span className="absolute inline-flex size-full rounded-full bg-whatsapp opacity-60 motion-safe:animate-ping" />
         )}
-        <span className={cn('relative inline-flex size-2.5 rounded-full', status.open ? 'bg-whatsapp' : 'bg-promo')} />
+        <span className={cn('relative inline-flex size-2.5 rounded-full', status.open ? 'bg-success' : 'bg-warning')} />
       </span>
       {status.label}
     </span>

@@ -297,7 +297,7 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
           className={inputClass}
         />
         {announcementOn && announcement && (
-          <div className="mt-3 rounded-lg bg-promo px-4 py-2 text-center text-sm font-medium text-promo-foreground">{announcement}</div>
+          <div className="mt-3 rounded-lg bg-brand-blue px-4 py-2 text-center text-sm font-medium text-brand-blue-foreground">{announcement}</div>
         )}
       </Panel>
 

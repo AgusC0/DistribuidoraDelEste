@@ -2,14 +2,14 @@ import { Check, X } from 'lucide-react'
 import { qualityTone, type QualityCheck } from '@/lib/quality'
 import { cn } from '@/lib/utils'
 
-const BAR = { good: 'bg-whatsapp', mid: 'bg-promo', low: 'bg-destructive' }
+const BAR = { good: 'bg-whatsapp', mid: 'bg-warning', low: 'bg-destructive' }
 
 /** Puntaje de la ficha guardada y lo que falta para completarla. */
 export function QualityPanel({ score, checks }: { score: number; checks: QualityCheck[] }) {
   const missing = checks.filter((c) => !c.ok)
   const tone = qualityTone(score)
   return (
-    <section aria-labelledby="calidad-title" className="mb-6 rounded-xl border border-border bg-card p-5 shadow-xs">
+    <section aria-labelledby="calidad-title" className="mb-6 rounded-2xl bg-card p-6">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <h2 id="calidad-title" className="font-heading text-base font-semibold uppercase tracking-wide text-foreground">
           Calidad de la ficha

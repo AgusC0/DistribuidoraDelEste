@@ -26,7 +26,7 @@ const ITEMS = [
 
 export function Features() {
   return (
-    <section className="border-y border-border bg-secondary/50 py-16 md:py-20">
+    <section className="bg-secondary/60 py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-10 flex flex-col gap-3">
           <h2 className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground text-balance sm:text-4xl">
@@ -34,10 +34,10 @@ export function Features() {
           </h2>
         </FadeIn>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {ITEMS.map((item, i) => (
             <FadeIn key={item.title} delay={i * 80} as="article">
-              <div className="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/40">
+              <div className="flex h-full flex-col gap-3">
                 <span className="flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <item.icon className="size-6" />
                 </span>

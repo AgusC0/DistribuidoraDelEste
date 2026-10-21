@@ -1,5 +1,6 @@
 'use client'
 
+import { PromoBadge } from '@/components/promo-badge'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Banknote, Check, ChevronLeft, ChevronRight, Copy, CreditCard, Minus, Plus } from 'lucide-react'
@@ -61,9 +62,7 @@ export function ProductGallery({
           />
         ))}
         {isOnPromotion(product) && (
-          <Badge className="absolute left-4 top-4 h-auto bg-promo px-3 py-1 text-sm uppercase tracking-wide text-promo-foreground">
-            {discount ? `-${discount}%` : 'Oferta'}
-          </Badge>
+          <PromoBadge percent={discount} size="md" className="absolute left-4 top-4" />
         )}
         {images.length > 1 && (
           <>
@@ -236,8 +235,8 @@ function VariantSelector({
 const stockStyle = (s: StockStatus) =>
   cn(
     'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold',
-    s === 'disponible' && 'bg-whatsapp/15 text-whatsapp',
-    s === 'bajo' && 'bg-promo/15 text-promo',
+    s === 'disponible' && 'bg-success/10 text-success',
+    s === 'bajo' && 'bg-warning/15 text-warning',
     s === 'sin_stock' && 'bg-muted text-muted-foreground',
   )
 
@@ -306,8 +305,8 @@ export function ProductPurchase({
 
       <div className="flex flex-col gap-1">
         {onPromo && (
-          <div className="mb-1 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-promo">
-            <span className="rounded-full bg-promo px-2.5 py-1 text-promo-foreground">{pct ? `${pct}% OFF` : 'Oferta'}</span>
+          <div className="mb-1 flex flex-wrap items-center gap-2 text-xs font-semibold text-promo">
+            <PromoBadge percent={pct} size="md" className="shadow-none" />
             {product.promotion.limitedStock && <span>Hasta agotar stock</span>}
             {endsLabel && <span>· {endsLabel}</span>}
           </div>
@@ -343,11 +342,11 @@ export function ProductPurchase({
           )}
         </div>
         {settings.showPrices && payment && (payment.transfer != null || payment.installmentsLabel) && (
-          <div className="mt-2 flex flex-col gap-1.5 rounded-xl border border-border bg-secondary/40 p-3 text-sm">
+          <div className="mt-2 flex flex-col gap-1.5 rounded-xl bg-secondary/60 p-3 text-sm">
             {payment.transfer != null && (
               <p className="flex flex-wrap items-center gap-x-2">
-                <Banknote aria-hidden="true" className="size-4 shrink-0 text-whatsapp" />
-                <span className="font-bold tabular-nums text-whatsapp">{formatPrice(payment.transfer)}</span>
+                <Banknote aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+                <span className="font-bold tabular-nums text-foreground">{formatPrice(payment.transfer)}</span>
                 <span className="text-muted-foreground">
                   con transferencia ({settings.transferDiscount}% OFF) · ahorrás {formatPrice(payment.saving)}
                 </span>
@@ -585,7 +584,7 @@ function VariantsTable({ product, activeId, onPick }: { product: Product; active
               <td className="px-3 py-2 font-medium">{v.name}</td>
               <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{v.sku || '—'}</td>
               {settings.showPrices && <td className="px-3 py-2 text-right tabular-nums">{formatPrice(v.price)}</td>}
-              <td className={cn('px-3 py-2 text-xs font-semibold', v.stock === 'disponible' ? 'text-whatsapp' : v.stock === 'bajo' ? 'text-promo' : 'text-muted-foreground')}>
+              <td className={cn('px-3 py-2 text-xs font-semibold', v.stock === 'disponible' ? 'text-success' : v.stock === 'bajo' ? 'text-warning' : 'text-muted-foreground')}>
                 {STOCK_LABEL[v.stock]}
               </td>
             </tr>

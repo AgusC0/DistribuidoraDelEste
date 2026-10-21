@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import type { Lead, LeadStatus } from '@/lib/types'
 
 const STATUS: Record<LeadStatus, { label: string; className: string }> = {
-  nuevo: { label: 'Nueva', className: 'bg-promo/15 text-promo' },
+  nuevo: { label: 'Nueva', className: 'bg-brand-blue/10 text-brand-blue' },
   contactado: { label: 'Contactada', className: 'bg-accent/20 text-accent-foreground' },
   cerrado: { label: 'Cerrada', className: 'bg-muted text-muted-foreground' },
 }

@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Pedidos' }
 
 function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+    <div className="rounded-2xl bg-card p-5">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="mt-2 font-heading text-3xl font-bold tabular-nums text-foreground">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}

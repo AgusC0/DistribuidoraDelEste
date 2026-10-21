@@ -14,7 +14,7 @@ const REASONS = [
 ]
 
 const socialClass =
-  'flex size-11 items-center justify-center rounded-lg border border-border text-foreground transition-colors hover:border-primary/40 hover:bg-muted'
+  'flex size-11 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-primary hover:text-primary-foreground'
 
 export function About({ settings }: { settings: Settings }) {
   return (
@@ -46,7 +46,7 @@ export function About({ settings }: { settings: Settings }) {
             ))}
           </ul>
 
-          <div className="mt-2 rounded-xl border border-border bg-card p-5">
+          <div className="mt-2 rounded-2xl bg-secondary/60 p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-foreground">
                 <Clock aria-hidden="true" className="size-4 text-primary" />
@@ -94,9 +94,9 @@ export function About({ settings }: { settings: Settings }) {
               href={settings.googleReviewUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-fit items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted"
+              className="inline-flex w-fit items-center gap-2 text-sm font-medium text-foreground underline-offset-4 hover:text-primary hover:underline"
             >
-              <Star aria-hidden="true" className="size-4 fill-promo text-promo" />
+              <Star aria-hidden="true" className="size-4 fill-warning text-warning" />
               ¿Te atendimos bien? Dejanos tu reseña en Google
             </a>
           )}
@@ -107,7 +107,7 @@ export function About({ settings }: { settings: Settings }) {
             href={settings.mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-3 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
+            className="group flex items-start gap-3"
           >
             <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
             <span>
@@ -115,12 +115,12 @@ export function About({ settings }: { settings: Settings }) {
                 Dónde estamos
               </span>
               <span className="block text-sm text-muted-foreground">{settings.address}</span>
-              <span className="mt-1 block text-sm font-medium text-primary">Cómo llegar →</span>
+              <span className="mt-1 block text-sm font-medium text-primary group-hover:underline">Cómo llegar →</span>
             </span>
           </a>
 
           {settings.mapsEmbedUrl && (
-            <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted md:aspect-auto md:min-h-80 md:flex-1">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted md:aspect-auto md:min-h-80 md:flex-1">
               <iframe
                 title={`Mapa de ubicación de ${settings.businessName}`}
                 src={settings.mapsEmbedUrl}

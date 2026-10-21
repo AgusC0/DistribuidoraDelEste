@@ -29,7 +29,7 @@ export default async function SearchesPage() {
           { label: 'Términos distintos', value: top.length },
           { label: 'Sin resultados', value: total ? `${Math.round((zero / total) * 100)}%` : '—' },
         ].map((k) => (
-          <div key={k.label} className="rounded-xl border border-border bg-card p-5 shadow-xs">
+          <div key={k.label} className="rounded-2xl bg-card p-5">
             <p className="text-sm text-muted-foreground">{k.label}</p>
             <p className="mt-2 font-heading text-3xl font-bold tabular-nums">{k.value}</p>
           </div>

@@ -1,15 +1,16 @@
 'use client'
 
+import { PromoBadge } from '@/components/promo-badge'
 import { useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, Eye, Plus, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye, Plus } from 'lucide-react'
 import { useCatalog } from '@/components/catalog-provider'
 import { useOrder } from '@/components/order-provider'
 import { useQuickView } from '@/components/quick-view'
 import { highlight } from '@/lib/search'
 import { discountPercent, isOnPromotion, promotionEndsLabel } from '@/lib/catalog'
-import { categoryName, displayPrice, formatPrice, hasPrice, minPrice, paymentOptions, STOCK_LABEL } from '@/lib/site'
+import { categoryName, displayPrice, formatPrice, hasPrice, minPrice, paymentOptions } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 
@@ -56,14 +57,14 @@ export function ProductCard({
     <article
       className={cn(
         'group/card flex h-full flex-col',
-        isPromoCard && 'rounded-3xl bg-card p-2.5 shadow-sm ring-1 ring-promo/25 transition-shadow hover:shadow-xl hover:ring-promo/50',
+        isPromoCard && 'rounded-2xl bg-card p-2 shadow-sm transition-shadow hover:shadow-lg',
       )}
     >
       <div
         ref={media}
         className={cn(
-          'relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary shadow-xs ring-1 ring-border/60 transition-shadow group-hover/card:shadow-lg',
-          isPromoCard && 'aspect-square shadow-none ring-0 group-hover/card:shadow-none',
+          'relative aspect-[4/5] overflow-hidden rounded-2xl bg-secondary transition-shadow group-hover/card:shadow-lg',
+          isPromoCard && 'aspect-square rounded-xl group-hover/card:shadow-none',
         )}
       >
         <Link href={href} className="absolute inset-0 z-[1]" aria-label={`Ver ${product.name}`} tabIndex={-1} />
@@ -85,19 +86,12 @@ export function ProductCard({
         {/* etiquetas */}
         <div className="pointer-events-none absolute inset-x-3 top-3 z-[2] flex items-start justify-between gap-2">
           {onPromo ? (
-            <span
-              className={cn(
-                'rounded-full bg-promo font-bold uppercase tracking-wide text-promo-foreground shadow-sm',
-                isPromoCard ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-1 text-[0.7rem]',
-              )}
-            >
-              {pct ? `-${pct}%` : 'Oferta'}
-            </span>
+            <PromoBadge percent={pct} size={isPromoCard ? 'md' : 'sm'} />
           ) : (
             <span />
           )}
           {product.stock === 'sin_stock' && (
-            <span className="rounded-full bg-foreground/80 px-2.5 py-1 text-[0.7rem] font-semibold text-background">Sin stock</span>
+            <span className="rounded-md bg-foreground/80 px-2 py-1 text-[0.7rem] font-semibold text-background">Sin stock</span>
           )}
         </div>
 
@@ -156,16 +150,8 @@ export function ProductCard({
           <p className="truncate text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {product.brand || categoryName(categories, product.categoryId)}
           </p>
-          {product.stock !== 'sin_stock' && (
-            <span
-              className={cn(
-                'inline-flex shrink-0 items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-wider',
-                product.stock === 'bajo' ? 'text-promo' : 'text-whatsapp',
-              )}
-            >
-              <ShieldCheck aria-label={product.stock === 'bajo' ? 'Últimas unidades' : 'En stock'} className="size-3.5" />
-              <span className="hidden sm:inline">{product.stock === 'bajo' ? 'Últimas' : STOCK_LABEL.disponible}</span>
-            </span>
+          {product.stock === 'bajo' && (
+            <span className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-wider text-warning">Últimas unidades</span>
           )}
         </div>
         <h3 className="mt-1.5 line-clamp-2 text-base leading-snug text-foreground">
@@ -185,16 +171,8 @@ export function ProductCard({
           {settings.showPrices &&
             (onPromo && product.promotion.originalPrice && product.price != null ? (
               <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">
-                  {isPromoCard && 'Antes '}
-                  <s className="tabular-nums">{formatPrice(product.promotion.originalPrice)}</s>
-                </span>
-                <span className="flex flex-wrap items-baseline gap-x-2">
-                  <span className={cn('font-bold tabular-nums text-promo', isPromoCard ? 'text-2xl' : 'text-lg')}>
-                    {formatPrice(product.price)}
-                  </span>
-                  {pct && <span className="text-xs font-bold text-promo">{pct}% OFF</span>}
-                </span>
+                <s className="text-xs tabular-nums text-muted-foreground">{formatPrice(product.promotion.originalPrice)}</s>
+                <span className={cn('font-bold tabular-nums text-promo', isPromoCard ? 'text-2xl' : 'text-lg')}>{formatPrice(product.price)}</span>
               </div>
             ) : (
               <p className="flex flex-wrap items-baseline gap-x-2">
@@ -207,13 +185,12 @@ export function ProductCard({
                 >
                   {displayPrice(product)}
                 </span>
-                {onPromo && pct && <span className="text-xs font-bold text-promo">{pct}% OFF</span>}
               </p>
             ))}
           {settings.showPrices && payment && (payment.transfer || payment.installmentsLabel) && (
             <div className="mt-1 flex flex-col text-xs leading-snug">
               {payment.transfer != null && (
-                <span className="font-semibold text-whatsapp">
+                <span className="font-medium text-foreground">
                   {hasVariants ? 'Desde ' : ''}
                   {formatPrice(payment.transfer)} con transferencia
                 </span>
@@ -222,7 +199,7 @@ export function ProductCard({
             </div>
           )}
           {onPromo && (product.promotion.limitedStock || endsLabel) && (
-            <p className="mt-1 flex flex-wrap gap-x-2 text-[0.7rem] font-semibold uppercase tracking-wide text-promo">
+            <p className="mt-1 flex flex-wrap gap-x-2 text-[0.7rem] font-medium text-promo">
               {product.promotion.limitedStock && <span>Hasta agotar stock</span>}
               {endsLabel && <span>{endsLabel}</span>}
             </p>

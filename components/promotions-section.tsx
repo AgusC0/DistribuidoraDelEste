@@ -1,73 +1,63 @@
 'use client'
 
-import { ArrowRight, Flame } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+import { FadeIn } from '@/components/fade-in'
 import { ProductCard } from '@/components/product-card'
-import { discountPercent } from '@/lib/catalog'
-import type { Product } from '@/lib/types'
+import { useCatalog } from '@/components/catalog-provider'
+import { discountPercent, isOnPromotion } from '@/lib/catalog'
+import { cn } from '@/lib/utils'
 
 /**
- * Bloque de ofertas: va siempre antes del catálogo general y se diferencia visualmente.
- * Los productos siguen apareciendo también en el listado general, con su badge.
+ * Promociones de la portada: sección propia entre el hero y el catálogo, con fondo cálido
+ * y una composición distinta al listado (la mejor oferta en grande cuando hay varias).
  */
-export function PromotionsSection({
-  products,
-  max = 4,
-  title = 'Ofertas destacadas',
-  subtitle,
-  onSeeAll,
-  variantIdFor,
-}: {
-  products: Product[]
-  max?: number
-  title?: string
-  subtitle?: string
-  onSeeAll?: () => void
-  /** Variante a preseleccionar en la ficha (la que coincide con los filtros activos). */
-  variantIdFor?: (p: Product) => string | undefined
-}) {
-  if (!products.length) return null
-  const sorted = [...products].sort((a, b) => (discountPercent(b) ?? 0) - (discountPercent(a) ?? 0))
-  const shown = sorted.slice(0, max)
-  const best = discountPercent(sorted[0])
+export function PromotionsSection() {
+  const { products } = useCatalog()
+  const promos = products.filter((p) => isOnPromotion(p)).sort((a, b) => (discountPercent(b) ?? 0) - (discountPercent(a) ?? 0))
+  if (!promos.length) return null
+
+  const featured = promos.length >= 5
+  const shown = promos.slice(0, featured ? 5 : 4)
+  const best = discountPercent(promos[0])
 
   return (
-    <section
-      aria-labelledby="ofertas-title"
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-promo/15 via-promo/5 to-background p-4 ring-1 ring-promo/25 sm:p-6"
-    >
-      <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-promo/15 blur-3xl" />
-      <div className="relative mb-5 flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-promo text-promo-foreground shadow-md">
-            <Flame className="size-6" />
-          </span>
-          <div>
-            <h2 id="ofertas-title" className="font-heading text-2xl font-bold uppercase tracking-tight text-foreground">
-              {title}
+    <section id="promociones" aria-labelledby="promociones-title" className="scroll-mt-16 bg-promo/[0.07] py-14 md:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <FadeIn className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <span className="w-fit rounded-md bg-promo px-2 py-1 text-xs font-bold uppercase tracking-wider text-promo-foreground">Promo</span>
+            <h2 id="promociones-title" className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
+              Promociones
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {subtitle ??
-                `${products.length} ${products.length === 1 ? 'producto' : 'productos'} en promoción${best ? ` · hasta ${best}% OFF` : ''}`}
+            <p className="text-base text-muted-foreground">
+              Precios especiales por tiempo limitado{best ? <> · <strong className="font-semibold text-promo">hasta {best}% OFF</strong></> : null}
             </p>
           </div>
-        </div>
-        {onSeeAll && products.length > max && (
-          <button
-            type="button"
-            onClick={onSeeAll}
-            className="inline-flex items-center gap-1.5 rounded-full bg-promo px-4 py-2 text-sm font-semibold text-promo-foreground shadow-sm transition-opacity hover:opacity-90"
+          <Link
+            href="/productos?oferta=1"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-4 hover:text-promo hover:underline"
           >
-            Ver las {products.length} ofertas
+            Ver todas las promociones ({promos.length})
             <ArrowRight className="size-4" />
-          </button>
-        )}
-      </div>
-      <div className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
-        {shown.map((p, i) => (
-          <div key={p.id} className="w-[72%] shrink-0 snap-start sm:w-auto">
-            <ProductCard product={p} variant="promo" priority={i < 2} variantId={variantIdFor?.(p)} />
-          </div>
-        ))}
+          </Link>
+        </FadeIn>
+
+        <div
+          className={cn(
+            '-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0',
+            'sm:grid-cols-2 lg:grid-cols-4',
+          )}
+        >
+          {shown.map((p, i) => (
+            <div
+              key={p.id}
+              className={cn('w-[70%] shrink-0 snap-start sm:w-auto', featured && i === 0 && 'sm:col-span-2 lg:row-span-2')}
+            >
+              <ProductCard product={p} variant="promo" priority={i < 2} />
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

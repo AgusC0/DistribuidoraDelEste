@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/admin/ui'
+import { PriceVisibilityToggle } from '@/components/admin/price-visibility'
 import { BackupPanel, DemoCatalogPanel, SettingsForm } from '@/components/admin/settings-form'
 import { readDb } from '@/lib/db'
 import { emailConfigured } from '@/lib/notify'
@@ -11,6 +12,7 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="Ajustes" description="Datos del negocio, horarios, textos de la portada y anuncios." />
+      <PriceVisibilityToggle showPrices={db.settings.showPrices} className="mb-6" />
       <SettingsForm settings={db.settings} emailReady={emailConfigured()} />
       <BackupPanel stats={{ products: db.products.length, leads: db.leads.length }} />
       <DemoCatalogPanel />

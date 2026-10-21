@@ -28,7 +28,7 @@ export function PageHeader({
 }
 
 export function Panel({ className, ...props }: React.ComponentProps<'section'>) {
-  return <section className={cn('rounded-xl border border-border bg-card p-5 shadow-xs', className)} {...props} />
+  return <section className={cn('rounded-2xl bg-card p-6', className)} {...props} />
 }
 
 export function SubmitButton({

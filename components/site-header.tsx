@@ -12,6 +12,7 @@ import { OrderButton } from '@/components/order-drawer'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { useCatalog } from '@/components/catalog-provider'
+import { isOnPromotion } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
 /** Secciones de la portada (con resaltado al hacer scroll) y la página de productos. */
@@ -23,7 +24,8 @@ const NAV = [
 ]
 
 export function SiteHeader() {
-  const { settings } = useCatalog()
+  const { settings, products } = useCatalog()
+  const promoCount = products.filter((p) => isOnPromotion(p)).length
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -64,7 +66,7 @@ export function SiteHeader() {
   return (
     <>
       {settings.announcementEnabled && settings.announcementText && (
-        <div className="bg-promo px-4 py-2 text-center text-sm font-medium text-promo-foreground">
+        <div className="bg-brand-blue px-4 py-2 text-center text-sm font-medium text-brand-blue-foreground">
           {settings.announcementText}
         </div>
       )}
@@ -161,6 +163,16 @@ export function SiteHeader() {
                   {item.id === 'productos' ? 'Todos los productos' : item.label}
                 </Link>
               ))}
+              {promoCount > 0 && (
+                <Link
+                  href="/productos?oferta=1"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between rounded-md bg-promo/[0.08] px-3 py-3 text-base font-medium text-foreground"
+                >
+                  Promociones
+                  <span className="rounded bg-promo px-1.5 py-0.5 text-xs font-bold text-promo-foreground">{promoCount}</span>
+                </Link>
+              )}
               <p className="mt-2 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Categorías</p>
               <MobileCategoryList onNavigate={() => setOpen(false)} />
               <Button

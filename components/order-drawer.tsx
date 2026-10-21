@@ -33,7 +33,7 @@ export function OrderButton({ className }: { className?: string }) {
       {count > 0 && (
         <span
           key={count}
-          className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-promo px-1 text-[0.7rem] font-bold tabular-nums text-promo-foreground motion-safe:animate-in motion-safe:zoom-in-50"
+          className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[0.7rem] font-bold tabular-nums text-primary-foreground motion-safe:animate-in motion-safe:zoom-in-50"
         >
           {count}
         </span>
@@ -280,7 +280,7 @@ export function OrderDrawer() {
                     {settings.transferDiscount > 0 && total > 0 && (
                       <p className="-mt-2 flex items-baseline justify-between text-sm">
                         <span className="text-muted-foreground">Con transferencia ({settings.transferDiscount}% OFF)</span>
-                        <span className="font-bold tabular-nums text-whatsapp">{formatPrice(paymentOptions(total, settings)?.transfer ?? total)}</span>
+                        <span className="font-bold tabular-nums text-foreground">{formatPrice(paymentOptions(total, settings)?.transfer ?? total)}</span>
                       </p>
                     )}
                     {priced.length < items.length && (

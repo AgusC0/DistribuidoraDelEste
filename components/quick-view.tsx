@@ -1,5 +1,6 @@
 'use client'
 
+import { PromoBadge } from '@/components/promo-badge'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -112,9 +113,7 @@ function QuickViewDialog({
                 />
               ))}
               {isOnPromotion(product) && (
-                <span className="absolute left-4 top-4 rounded-full bg-promo px-3 py-1 text-xs font-bold uppercase text-promo-foreground">
-                  {discountPercent(product) ? `-${discountPercent(product)}%` : 'Oferta'}
-                </span>
+                <PromoBadge percent={discountPercent(product)} size="md" className="absolute left-4 top-4" />
               )}
               {images.length > 1 && (
                 <div className="qv-fade absolute bottom-4 left-4 flex gap-2" role="group" aria-label="Fotos del producto">

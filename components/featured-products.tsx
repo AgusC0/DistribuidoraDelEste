@@ -2,13 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/fade-in'
 import { ProductCard } from '@/components/product-card'
-import { SearchBox } from '@/components/search-box'
-import { PromotionsSection } from '@/components/promotions-section'
 import { useCatalog } from '@/components/catalog-provider'
 import { categoryUrl, descendantIds, isOnPromotion, rootCategories } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
@@ -23,10 +20,9 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'mas-vistos', label: 'Más vistos' },
 ]
 
-/** Portada: buscador, accesos por categoría y una selección de productos destacados. */
+/** Portada: accesos por categoría y una selección del catálogo (las promociones van en su propia sección, arriba). */
 export function FeaturedProducts() {
   const { products, categories, popularity } = useCatalog()
-  const router = useRouter()
   const promos = products.filter((p) => isOnPromotion(p))
   const [tab, setTab] = useState<Tab>('destacados')
 
@@ -52,20 +48,17 @@ export function FeaturedProducts() {
   return (
     <section id="catalogo" aria-labelledby="catalogo-title" className="scroll-mt-16 bg-background py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <FadeIn className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Catálogo</p>
-            <h2
-              id="catalogo-title"
-              className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground text-balance sm:text-4xl"
-            >
-              Productos destacados
+        <FadeIn className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <h2 id="catalogo-title" className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
+              Productos
             </h2>
-            <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
-              Armá tu pedido con todo lo que necesitás y pedí el presupuesto por WhatsApp.
-            </p>
+            <p className="max-w-xl text-base text-muted-foreground">Armá tu pedido con todo lo que necesitás y pedí el presupuesto por WhatsApp.</p>
           </div>
-          <SearchBox placeholder="¿Qué estás buscando?" className="w-full lg:max-w-md" />
+          <Link href="/productos" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+            Ver catálogo completo ({products.length})
+            <ArrowRight className="size-4" />
+          </Link>
         </FadeIn>
 
         <FadeIn delay={60} className="mt-8">
@@ -74,10 +67,10 @@ export function FeaturedProducts() {
               <li key={c.id} className="shrink-0">
                 <Link
                   href={categoryUrl(categories, c.id)}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-muted"
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-sm font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
                 >
                   {c.name}
-                  <span className="text-xs tabular-nums text-muted-foreground">
+                  <span className="text-xs tabular-nums opacity-60">
                     {products.filter((p) => descendantIds(categories, c.id).has(p.categoryId)).length}
                   </span>
                 </Link>
@@ -86,13 +79,7 @@ export function FeaturedProducts() {
           </ul>
         </FadeIn>
 
-        {promos.length > 0 && (
-          <FadeIn delay={80} className="mt-8">
-            <PromotionsSection products={promos} onSeeAll={() => router.push('/productos?oferta=1')} />
-          </FadeIn>
-        )}
-
-        <div className="mt-12 flex flex-wrap items-center gap-2 border-b border-border" role="tablist" aria-label="Selección de productos">
+        <div className="mt-10 flex flex-wrap items-center gap-2 border-b border-border" role="tablist" aria-label="Selección de productos">
           {tabs.map((t) => (
             <button
               key={t.value}
@@ -116,17 +103,16 @@ export function FeaturedProducts() {
         </div>
 
         {brands.length > 1 && (
-          <div className="mt-14">
-            <h3 className="font-heading text-xl font-bold uppercase tracking-tight text-foreground">Marcas que trabajamos</h3>
-            <ul className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-16 flex flex-col gap-4 sm:flex-row sm:items-baseline sm:gap-8">
+            <h3 className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Marcas que trabajamos</h3>
+            <ul className="flex flex-wrap gap-x-7 gap-y-3">
               {brands.map((b) => (
                 <li key={b.name}>
                   <Link
                     href={`/productos?marca=${encodeURIComponent(b.name)}`}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 font-heading text-sm font-semibold uppercase tracking-wide transition-colors hover:border-primary/40 hover:text-primary"
+                    className="font-heading text-lg font-semibold uppercase tracking-wide text-foreground/70 transition-colors hover:text-primary"
                   >
                     {b.name}
-                    <span className="font-sans text-xs font-normal normal-case tracking-normal text-muted-foreground">{b.count}</span>
                   </Link>
                 </li>
               ))}
@@ -136,7 +122,7 @@ export function FeaturedProducts() {
 
         <div className="mt-12 flex justify-center">
           <Button size="lg" nativeButton={false} className="h-12 px-8 text-base" render={<Link href="/productos" />}>
-            Ver catálogo completo ({products.length})
+            Ver todos los productos
             <ArrowRight className="size-4" />
           </Button>
         </div>

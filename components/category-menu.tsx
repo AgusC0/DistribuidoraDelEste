@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowRight, ChevronDown, Flame } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 import { useCatalog } from '@/components/catalog-provider'
-import { categoryUrl, childCategories, descendantIds, isOnPromotion, rootCategories } from '@/lib/catalog'
+import { categoryUrl, childCategories, descendantIds, discountPercent, isOnPromotion, rootCategories } from '@/lib/catalog'
+import { formatPrice, minPrice } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/lib/types'
 
@@ -18,16 +20,16 @@ function useCounts() {
   }
 }
 
-/** Menú "Productos" del encabezado (escritorio): rubros en columnas con sus subcategorías. */
+/** Menú "Productos" del encabezado (escritorio): categorías a la izquierda y productos en promoción a la derecha. */
 export function CategoryMegaMenu({ active }: { active: boolean }) {
-  const { categories, products } = useCatalog()
+  const { categories, products, settings } = useCatalog()
   const count = useCounts()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const wrapper = useRef<HTMLDivElement>(null)
   const roots = rootCategories(categories).filter((r) => count(r.id) > 0)
-  const promos = products.filter((p) => isOnPromotion(p)).length
+  const promos = products.filter((p) => isOnPromotion(p)).sort((a, b) => (discountPercent(b) ?? 0) - (discountPercent(a) ?? 0))
 
   useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
@@ -73,7 +75,8 @@ export function CategoryMegaMenu({ active }: { active: boolean }) {
 
       {open && (
         <div className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-xl motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1">
-          <div className="mx-auto grid max-w-7xl grid-cols-[1fr_15rem] gap-8 px-4 py-8 sm:px-6 lg:px-8">
+          <div className={cn('mx-auto grid max-w-7xl gap-10 px-4 py-8 sm:px-6 lg:px-8', promos.length > 0 && 'grid-cols-[1fr_20rem]')}>
+            <div className="flex flex-col gap-6">
             <div className="grid grid-cols-2 gap-x-8 gap-y-8 lg:grid-cols-4">
               {roots.map((root) => (
                 <div key={root.id}>
@@ -98,26 +101,51 @@ export function CategoryMegaMenu({ active }: { active: boolean }) {
                 </div>
               ))}
             </div>
-            <div className="flex flex-col gap-3 border-l border-border pl-8">
-              {promos > 0 && (
-                <Link
-                  href="/productos?oferta=1"
-                  className="group flex items-center gap-3 rounded-2xl bg-promo/10 p-4 ring-1 ring-promo/25 transition-colors hover:bg-promo/15"
-                >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-promo text-promo-foreground">
-                    <Flame className="size-5" />
-                  </span>
-                  <span>
-                    <span className="block font-heading text-sm font-bold uppercase text-foreground">Ofertas</span>
-                    <span className="block text-xs text-muted-foreground">{promos} productos en promoción</span>
-                  </span>
-                </Link>
-              )}
-              <Link href="/productos" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-                Ver todo el catálogo ({products.length})
+              <Link href="/productos" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+                Ver todos los productos ({products.length})
                 <ArrowRight className="size-4" />
               </Link>
             </div>
+            {promos.length > 0 && (
+              <div className="-my-8 flex flex-col gap-3 bg-promo/[0.07] px-6 py-8">
+                <p className="flex items-center gap-2 font-heading text-sm font-bold uppercase tracking-wide text-foreground">
+                  <span className="rounded bg-promo px-1.5 py-0.5 text-[0.65rem] tracking-wider text-promo-foreground">Promo</span>
+                  Productos en promoción
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {promos.slice(0, 4).map((p) => {
+                    const pct = discountPercent(p)
+                    return (
+                      <li key={p.id}>
+                        <Link href={`/productos/${p.slug}`} className="group flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-background">
+                          <span className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
+                            <Image src={p.image || '/placeholder.svg'} alt="" fill sizes="48px" className="object-cover" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="line-clamp-1 text-sm font-medium text-foreground group-hover:text-promo">{p.name}</span>
+                            <span className="flex items-baseline gap-2 whitespace-nowrap text-xs">
+                              {settings.showPrices && minPrice(p) != null && (
+                                <>
+                                  <span className="font-bold tabular-nums text-promo">{formatPrice(minPrice(p))}</span>
+                                  {!p.variants.length && p.promotion.originalPrice && (
+                                    <s className="tabular-nums text-muted-foreground">{formatPrice(p.promotion.originalPrice)}</s>
+                                  )}
+                                </>
+                              )}
+                              {pct ? <span className="font-semibold text-promo">-{pct}%</span> : null}
+                            </span>
+                          </span>
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <Link href="/productos?oferta=1" className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-promo hover:underline">
+                  Ver todas las promociones ({promos.length})
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

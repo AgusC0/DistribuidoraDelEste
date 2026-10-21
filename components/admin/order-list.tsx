@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import type { Order, OrderStatus } from '@/lib/types'
 
 export const ORDER_STATUS: Record<OrderStatus, { label: string; plural: string; className: string }> = {
-  nuevo: { label: 'Nuevo', plural: 'Nuevos', className: 'bg-promo/15 text-promo' },
+  nuevo: { label: 'Nuevo', plural: 'Nuevos', className: 'bg-brand-blue/10 text-brand-blue' },
   presupuestado: { label: 'Presupuestado', plural: 'Presupuestados', className: 'bg-accent/20 text-accent-foreground' },
   vendido: { label: 'Vendido', plural: 'Vendidos', className: 'bg-whatsapp/15 text-whatsapp' },
   perdido: { label: 'Perdido', plural: 'Perdidos', className: 'bg-muted text-muted-foreground' },

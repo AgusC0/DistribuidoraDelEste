@@ -51,6 +51,8 @@
   --color-whatsapp-foreground: var(--whatsapp-foreground);
   --color-promo: var(--promo);
   --color-promo-foreground: var(--promo-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-sans: var(--font-inter);
   --font-heading: var(--font-oswald);
 }
@@ -99,8 +101,19 @@
   /* whatsapp green */
   --whatsapp: oklch(0.62 0.16 150);
   --whatsapp-foreground: oklch(0.99 0.005 150);
-  --promo: oklch(0.7 0.19 45);
+  /*
+   * Cada color tiene una sola función:
+   *   primary (oliva)   acciones principales y navegación activa
+   *   promo (naranja)   sólo promociones: etiqueta PROMO, precio promocional, % OFF
+   *   whatsapp / success (verde)  WhatsApp y confirmaciones (vendido, guardado)
+   *   warning (ámbar)   avisos: últimas unidades, cosas para revisar
+   *   destructive (rojo) sin stock, errores, eliminar
+   *   brand-blue        estructura (hero, pie) e información pendiente (nuevo)
+   */
+  --promo: oklch(0.64 0.19 42);
   --promo-foreground: oklch(0.99 0.01 60);
+  --success: oklch(0.55 0.14 150);
+  --warning: oklch(0.62 0.13 75);
 }
 
 .dark {

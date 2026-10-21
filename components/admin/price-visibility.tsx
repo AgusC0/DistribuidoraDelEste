@@ -22,15 +22,15 @@ export function PriceVisibilityToggle({ showPrices, className }: { showPrices: b
     <section
       aria-label="Precios en el sitio"
       className={cn(
-        'flex items-center gap-4 rounded-xl border p-4 shadow-xs transition-colors sm:p-5',
-        visible ? 'border-border bg-card' : 'border-promo/40 bg-promo/5',
+        'flex items-center gap-4 rounded-2xl p-4 transition-colors sm:p-5',
+        visible ? 'bg-card' : 'bg-warning/10',
         className,
       )}
     >
       <span
         className={cn(
           'flex size-11 shrink-0 items-center justify-center rounded-lg',
-          visible ? 'bg-primary/10 text-primary' : 'bg-promo/15 text-promo',
+          visible ? 'bg-primary/10 text-primary' : 'bg-warning/15 text-warning',
         )}
       >
         {visible ? <Eye className="size-5" /> : <EyeOff className="size-5" />}

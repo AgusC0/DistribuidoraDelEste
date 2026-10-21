@@ -77,7 +77,7 @@ function StockSelect({ value, label, onChange }: { value: StockStatus; label: st
       className={cn(
         'h-8 rounded-md border border-input bg-transparent px-2 text-xs font-medium',
         value === 'sin_stock' && 'text-destructive',
-        value === 'bajo' && 'text-promo',
+        value === 'bajo' && 'text-warning',
       )}
     >
       {(Object.keys(STOCK_LABEL) as StockStatus[]).map((s) => (
@@ -91,7 +91,7 @@ function StockSelect({ value, label, onChange }: { value: StockStatus; label: st
 
 const TONE_CLASS = {
   good: 'bg-whatsapp/15 text-whatsapp',
-  mid: 'bg-promo/15 text-promo',
+  mid: 'bg-warning/15 text-warning',
   low: 'bg-destructive/10 text-destructive',
 }
 
