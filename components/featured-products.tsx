@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/fade-in'
 import { ProductCard } from '@/components/product-card'
 import { useCatalog } from '@/components/catalog-provider'
-import { categoryUrl, descendantIds, isOnPromotion, rootCategories } from '@/lib/catalog'
+import { categoryUrl, rootCategories } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 
 const MAX = 8
 
-type Tab = 'destacados' | 'novedades' | 'mas-vistos'
+export type Tab = 'destacados' | 'novedades' | 'mas-vistos'
 const TABS: { value: Tab; label: string }[] = [
   { value: 'destacados', label: 'Destacados' },
   { value: 'novedades', label: 'Novedades' },
@@ -21,29 +21,12 @@ const TABS: { value: Tab; label: string }[] = [
 ]
 
 /** Portada: accesos por categoría y una selección del catálogo (las promociones van en su propia sección, arriba). */
-export function FeaturedProducts() {
-  const { products, categories, popularity } = useCatalog()
-  const promos = products.filter((p) => isOnPromotion(p))
+/** Las listas y las marcas se calculan en el servidor (ver la portada): acá sólo llegan 8 productos por pestaña. */
+export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product[]>; brands: string[] }) {
+  const { categories, categoryCounts, totalProducts } = useCatalog()
   const [tab, setTab] = useState<Tab>('destacados')
-
-  // Tres miradas del catálogo: lo que elige el negocio, lo último que entró y lo que más mira la gente.
-  const lists: Record<Tab, Product[]> = {
-    destacados: [...products]
-      .filter((p) => !isOnPromotion(p) || promos.length === 0)
-      .sort((a, b) => Number(b.featured) - Number(a.featured))
-      .slice(0, MAX),
-    novedades: [...products].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, MAX),
-    'mas-vistos': [...products]
-      .filter((p) => (popularity[p.id] ?? 0) > 0)
-      .sort((a, b) => (popularity[b.id] ?? 0) - (popularity[a.id] ?? 0))
-      .slice(0, MAX),
-  }
   const tabs = TABS.filter((t) => lists[t.value].length >= (t.value === 'mas-vistos' ? 4 : 1))
   const current = tabs.some((t) => t.value === tab) ? tab : 'destacados'
-
-  const brands = [...new Set(products.map((p) => p.brand).filter(Boolean))]
-    .map((b) => ({ name: b, count: products.filter((p) => p.brand === b).length }))
-    .sort((a, b) => b.count - a.count)
 
   return (
     <section id="catalogo" aria-labelledby="catalogo-title" className="scroll-mt-16 bg-background py-16 md:py-24">
@@ -56,7 +39,7 @@ export function FeaturedProducts() {
             <p className="max-w-xl text-base text-muted-foreground">Armá tu pedido con todo lo que necesitás y pedí el presupuesto por WhatsApp.</p>
           </div>
           <Link href="/productos" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline">
-            Ver catálogo completo ({products.length})
+            Ver catálogo completo ({totalProducts})
             <ArrowRight className="size-4" />
           </Link>
         </FadeIn>
@@ -71,7 +54,7 @@ export function FeaturedProducts() {
                 >
                   {c.name}
                   <span className="text-xs tabular-nums opacity-60">
-                    {products.filter((p) => descendantIds(categories, c.id).has(p.categoryId)).length}
+                    {categoryCounts[c.id] ?? 0}
                   </span>
                 </Link>
               </li>
@@ -107,12 +90,12 @@ export function FeaturedProducts() {
             <h3 className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Marcas que trabajamos</h3>
             <ul className="flex flex-wrap gap-x-7 gap-y-3">
               {brands.map((b) => (
-                <li key={b.name}>
+                <li key={b}>
                   <Link
-                    href={`/productos?marca=${encodeURIComponent(b.name)}`}
+                    href={`/productos?marca=${encodeURIComponent(b)}`}
                     className="font-heading text-lg font-semibold uppercase tracking-wide text-foreground/70 transition-colors hover:text-primary"
                   >
-                    {b.name}
+                    {b}
                   </Link>
                 </li>
               ))}

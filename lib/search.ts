@@ -97,7 +97,11 @@ export function buildIndex(products: Product[], categories: Category[]): SearchI
   return { items, vocabulary: [...vocab] }
 }
 
-function tokenScore(token: string, fields: Field[]) {
+/**
+ * `memo` guarda la distancia de cada palabra ya comparada: en un catálogo grande las mismas
+ * palabras se repiten en miles de productos y comparar cada vez hacía lento el buscador.
+ */
+function tokenScore(token: string, fields: Field[], memo: Map<string, number>) {
   let best = 0
   for (const f of fields) {
     let s = 0
@@ -111,7 +115,11 @@ function tokenScore(token: string, fields: Field[]) {
       if (max > 0) {
         for (const w of f.words) {
           // Compara contra el prefijo para tolerar errores mientras se escribe.
-          const d = fuzzy(token, w, max)
+          let d = memo.get(w)
+          if (d === undefined) {
+            d = fuzzy(token, w, max)
+            memo.set(w, d)
+          }
           if (d <= max) {
             s = Math.max(s, f.weight * (d === 1 ? 1.6 : 1))
           }
@@ -129,11 +137,13 @@ export function search(index: SearchIndex, query: string): Hit[] {
   const tokens = tokenize(query)
   if (!tokens.length) return []
   const hits: Hit[] = []
+  const memos = tokens.map(() => new Map<string, number>())
+  const now = new Date()
   for (const item of index.items) {
     let total = 0
     let ok = true
-    for (const t of tokens) {
-      const s = tokenScore(t, item.fields)
+    for (const [i, t] of tokens.entries()) {
+      const s = tokenScore(t, item.fields, memos[i])
       if (s === 0) {
         ok = false
         break
@@ -142,7 +152,7 @@ export function search(index: SearchIndex, query: string): Hit[] {
     }
     if (!ok) continue
     if (item.product.featured) total += 0.5
-    if (isOnPromotion(item.product)) total += 0.3
+    if (isOnPromotion(item.product, now)) total += 0.3
     if (item.product.stock === 'sin_stock') total -= 1
     hits.push({ product: item.product, categoryName: item.categoryName, score: total })
   }

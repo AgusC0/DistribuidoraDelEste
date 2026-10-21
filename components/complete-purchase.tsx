@@ -1,13 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Check, ClipboardPlus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCatalog } from '@/components/catalog-provider'
 import { useOrder } from '@/components/order-provider'
-import { complementsFor } from '@/lib/catalog'
 import { displayPrice, formatPrice } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Product, Variant } from '@/lib/types'
@@ -15,11 +14,11 @@ import type { Product, Variant } from '@/lib/types'
 /**
  * "Completá tu compra": el producto actual más sus complementos (misma línea o elegidos a mano),
  * para sumarlos juntos al pedido con un clic. Sube el ticket sin interrumpir.
+ * Los complementos se calculan en el servidor (ver la ficha de producto).
  */
-export function CompletePurchase({ product, variant }: { product: Product; variant?: Variant }) {
-  const { products, settings } = useCatalog()
+export function CompletePurchase({ product, variant, complements }: { product: Product; variant?: Variant; complements: Product[] }) {
+  const { settings } = useCatalog()
   const { add, setOpen } = useOrder()
-  const complements = useMemo(() => complementsFor(product, products), [product, products])
   const selectable = complements.filter((c) => !c.variants.length)
   const [checked, setChecked] = useState<Set<string>>(() => new Set(selectable.map((c) => c.id)))
   const [done, setDone] = useState(false)

@@ -25,7 +25,7 @@ export function ImportForm() {
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <Panel className="flex flex-col gap-4">
+      <Panel data-guide="importar-pasos" className="flex flex-col gap-4">
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Cómo funciona</h2>
         <ol className="flex flex-col gap-3">
           {steps.map((s, i) => (
@@ -54,7 +54,7 @@ export function ImportForm() {
 
       <Panel className="lg:col-span-2">
         <form onSubmit={submitKeepingValues(action)} className="flex flex-col gap-5">
-          <fieldset className="flex flex-col gap-2">
+          <fieldset data-guide="importar-modo" className="flex flex-col gap-2">
             <legend className="mb-2 text-sm font-semibold">¿Qué querés actualizar?</legend>
             {[
               { value: 'precios', label: 'Sólo precios', hint: 'Lo más seguro para actualizar la lista de precios. No crea ni borra productos.' },
@@ -83,10 +83,10 @@ export function ImportForm() {
             ))}
           </fieldset>
 
-          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border p-8 text-center transition-colors focus-within:ring-3 focus-within:ring-ring/40 hover:border-primary/50">
+          <label data-guide="importar-archivo" className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border p-8 text-center transition-colors focus-within:ring-3 focus-within:ring-ring/40 hover:border-primary/50">
             <Upload className="size-8 text-muted-foreground" />
             <span className="text-sm font-medium">{fileName || 'Elegí la planilla .csv'}</span>
-            <span className="text-xs text-muted-foreground">Hasta 2 MB</span>
+            <span className="text-xs text-muted-foreground">Hasta 20 MB: alcanza para miles de productos</span>
             <input
               type="file"
               name="file"
@@ -122,12 +122,13 @@ export function ImportForm() {
                 <details className="text-sm">
                   <summary className="cursor-pointer text-primary">Ver detalle</summary>
                   <ul className="mt-2 max-h-48 list-inside list-disc overflow-y-auto text-muted-foreground">
-                    {r.created.map((n) => (
+                    {r.created.slice(0, 200).map((n) => (
                       <li key={`c-${n}`}>Nuevo: {n}</li>
                     ))}
-                    {r.updated.map((n) => (
+                    {r.updated.slice(0, 200).map((n) => (
                       <li key={`u-${n}`}>Actualizado: {n}</li>
                     ))}
+                    {r.created.length + r.updated.length > 400 && <li>…y {r.created.length + r.updated.length - 400} más</li>}
                   </ul>
                 </details>
               )}

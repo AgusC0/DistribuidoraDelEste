@@ -9,7 +9,7 @@ export function QualityPanel({ score, checks }: { score: number; checks: Quality
   const missing = checks.filter((c) => !c.ok)
   const tone = qualityTone(score)
   return (
-    <section aria-labelledby="calidad-title" className="mb-6 rounded-2xl bg-card p-6">
+    <section data-guide="calidad" aria-labelledby="calidad-title" className="mb-6 rounded-2xl bg-card p-6">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <h2 id="calidad-title" className="font-heading text-base font-semibold uppercase tracking-wide text-foreground">
           Calidad de la ficha

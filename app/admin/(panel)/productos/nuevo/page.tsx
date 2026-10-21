@@ -11,7 +11,7 @@ export default async function NewProductPage() {
   const suggestions = catalogSuggestions(db.products)
   return (
     <>
-      <PageHeader title="Nuevo producto" description="Completá los datos y publicalo en el catálogo." />
+      <PageHeader title="Nuevo producto" description="Completá los datos y publicalo en el catálogo." help="producto" />
       <ProductForm
         categories={[...db.categories].sort((a, b) => a.order - b.order)}
         brands={suggestions.brands}

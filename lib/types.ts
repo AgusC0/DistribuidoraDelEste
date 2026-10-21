@@ -211,3 +211,21 @@ export type PublicCatalog = {
   /** Interés de los últimos 30 días por producto (vistas + consultas), para "Más vistos". */
   popularity: Record<string, number>
 }
+
+/**
+ * Lo liviano que va en todas las páginas del sitio (layout). El catálogo completo no viaja en cada
+ * página: se descarga aparte, una sola vez, sólo donde hace falta (filtros del catálogo y buscador).
+ */
+export type PublicShell = {
+  settings: Settings
+  categories: Category[]
+  /** Productos publicados por categoría, contando sus subcategorías. */
+  categoryCounts: Record<string, number>
+  /** Hasta 8 promociones vigentes (las de mayor descuento), para la portada y el menú. */
+  promos: Product[]
+  promoCount: number
+  totalProducts: number
+  popularSearches: string[]
+  /** Cambia cuando cambia el catálogo: el navegador guarda la descarga hasta la próxima versión. */
+  catalogVersion: string
+}

@@ -24,7 +24,7 @@ export default async function EditProductPage({
 
   return (
     <>
-      <PageHeader title={product.name} description={`Última modificación: ${new Date(product.updatedAt).toLocaleString('es-AR')}`} />
+      <PageHeader title={product.name} description={`Última modificación: ${new Date(product.updatedAt).toLocaleString('es-AR')}`} help="producto" />
       <QualityPanel {...productQuality(product, db.categories)} />
       <ProductForm
         product={product}

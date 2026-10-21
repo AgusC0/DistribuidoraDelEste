@@ -2,9 +2,11 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      // fotos de productos subidas desde el panel
-      bodySizeLimit: '5mb',
+      // Planillas de miles de productos (hasta 20 MB) y fotos desde el panel.
+      bodySizeLimit: '25mb',
     },
+    // El proxy del panel (/admin) también recibe esos envíos: sin esto corta el cuerpo en 10 MB.
+    proxyClientMaxBodySize: '25mb',
   },
   async headers() {
     return [

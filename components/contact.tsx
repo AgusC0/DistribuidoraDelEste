@@ -14,10 +14,10 @@ import { submitLead } from '@/app/actions'
 import { waLink } from '@/lib/site'
 import { track } from '@/lib/track'
 
-const GENERAL = 'Otro / Consulta general'
+const GENERAL = 'Consulta general'
 
 export function Contact() {
-  const { settings, products } = useCatalog()
+  const { settings } = useCatalog()
   const [form, setForm] = useState({ name: '', phone: '', product: GENERAL, message: '', website: '' })
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({})
   const [sentUrl, setSentUrl] = useState<string | null>(null)
@@ -41,7 +41,7 @@ export function Contact() {
     }
     const lines = [
       `Hola Distribuidora del Este, mi nombre es ${form.name.trim()}.`,
-      `Producto de interés: ${form.product}.`,
+      `Producto de interés: ${form.product.trim() || GENERAL}.`,
       form.phone && `Teléfono: ${form.phone}.`,
       form.message.trim() && `Mensaje: ${form.message.trim()}`,
     ].filter(Boolean)
@@ -155,20 +155,15 @@ export function Contact() {
 
                   <Field>
                     <FieldLabel htmlFor="product">Producto de interés</FieldLabel>
-                    <select
+                    <input
                       id="product"
                       name="product"
-                      value={form.product}
+                      value={form.product === GENERAL ? '' : form.product}
                       onChange={set('product')}
-                      className="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
-                    >
-                      {products.map((p) => (
-                        <option key={p.id} value={p.name}>
-                          {p.name}
-                        </option>
-                      ))}
-                      <option value={GENERAL}>{GENERAL}</option>
-                    </select>
+                      maxLength={120}
+                      placeholder="Ej: inodoro largo, termotanque 80 litros (opcional)"
+                      className="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+                    />
                   </Field>
 
                   <Field>

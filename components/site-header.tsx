@@ -12,7 +12,6 @@ import { OrderButton } from '@/components/order-drawer'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { useCatalog } from '@/components/catalog-provider'
-import { isOnPromotion } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
 /** Secciones de la portada (con resaltado al hacer scroll) y la página de productos. */
@@ -24,8 +23,7 @@ const NAV = [
 ]
 
 export function SiteHeader() {
-  const { settings, products } = useCatalog()
-  const promoCount = products.filter((p) => isOnPromotion(p)).length
+  const { settings, promoCount } = useCatalog()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)

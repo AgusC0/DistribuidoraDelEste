@@ -6,30 +6,26 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import { useCatalog } from '@/components/catalog-provider'
-import { categoryUrl, childCategories, descendantIds, discountPercent, isOnPromotion, rootCategories } from '@/lib/catalog'
+import { categoryUrl, childCategories, discountPercent, rootCategories } from '@/lib/catalog'
 import { formatPrice, minPrice } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/lib/types'
 
 /** Cantidad de productos publicados en la categoría y sus subcategorías (para ocultar las vacías). */
 function useCounts() {
-  const { products, categories } = useCatalog()
-  return (id: string) => {
-    const ids = descendantIds(categories, id)
-    return products.filter((p) => ids.has(p.categoryId)).length
-  }
+  const { categoryCounts } = useCatalog()
+  return (id: string) => categoryCounts[id] ?? 0
 }
 
 /** Menú "Productos" del encabezado (escritorio): categorías a la izquierda y productos en promoción a la derecha. */
 export function CategoryMegaMenu({ active }: { active: boolean }) {
-  const { categories, products, settings } = useCatalog()
+  const { categories, promos, promoCount, totalProducts, settings } = useCatalog()
   const count = useCounts()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const wrapper = useRef<HTMLDivElement>(null)
   const roots = rootCategories(categories).filter((r) => count(r.id) > 0)
-  const promos = products.filter((p) => isOnPromotion(p)).sort((a, b) => (discountPercent(b) ?? 0) - (discountPercent(a) ?? 0))
 
   useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
@@ -102,7 +98,7 @@ export function CategoryMegaMenu({ active }: { active: boolean }) {
               ))}
             </div>
               <Link href="/productos" className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-                Ver todos los productos ({products.length})
+                Ver todos los productos ({totalProducts})
                 <ArrowRight className="size-4" />
               </Link>
             </div>
@@ -141,7 +137,7 @@ export function CategoryMegaMenu({ active }: { active: boolean }) {
                   })}
                 </ul>
                 <Link href="/productos?oferta=1" className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-promo hover:underline">
-                  Ver todas las promociones ({promos.length})
+                  Ver todas las promociones ({promoCount})
                   <ArrowRight className="size-4" />
                 </Link>
               </div>

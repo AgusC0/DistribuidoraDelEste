@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useCatalog } from '@/components/catalog-provider'
+import { useProducts } from '@/components/catalog-provider'
 import type { OrderItem, Product, Variant } from '@/lib/types'
 
 const STORAGE_KEY = 'dde_order'
@@ -23,27 +23,38 @@ export const itemKey = (i: { productId: string; variantId?: string }) => `${i.pr
 
 /** Lista de pedido/presupuesto que arma el cliente. Se guarda en su navegador. */
 export function OrderProvider({ children }: { children: React.ReactNode }) {
-  const { products } = useCatalog()
   const [items, setItems] = useState<OrderItem[]>([])
+  const [savedIds, setSavedIds] = useState<string[]>([])
   const [open, setOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const current = useProducts(savedIds)
 
-  // Carga lo guardado y actualiza nombres y precios con el catálogo vigente.
+  // Muestra lo guardado al instante…
   useEffect(() => {
     let saved: OrderItem[] = []
     try {
       saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')
     } catch {}
-    const fresh = saved.flatMap((i) => {
-      const p = products.find((x) => x.id === i.productId)
-      if (!p) return []
-      const v = i.variantId ? p.variants.find((x) => x.id === i.variantId) : undefined
-      if (i.variantId && !v) return []
-      return [{ ...i, name: p.name, variantName: v?.name, sku: v?.sku || p.sku || undefined, price: v ? v.price : p.price }]
-    })
-    setItems(fresh)
+    setItems(saved)
+    setSavedIds([...new Set(saved.map((i) => i.productId))])
     setLoaded(true)
-  }, [products])
+  }, [])
+
+  // …y después actualiza nombres y precios con el catálogo vigente (y saca lo que ya no existe).
+  useEffect(() => {
+    if (!savedIds.length || !current.ready) return
+    const byId = new Map(current.items.map((p) => [p.id, p]))
+    setItems((list) =>
+      list.flatMap((i) => {
+        const p = byId.get(i.productId)
+        if (!p) return savedIds.includes(i.productId) ? [] : [i]
+        const v = i.variantId ? p.variants.find((x) => x.id === i.variantId) : undefined
+        if (i.variantId && !v) return []
+        return [{ ...i, name: p.name, variantName: v?.name, sku: v?.sku || p.sku || undefined, price: v ? v.price : p.price }]
+      }),
+    )
+    setSavedIds([])
+  }, [current, savedIds])
 
   useEffect(() => {
     if (!loaded) return

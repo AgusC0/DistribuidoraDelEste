@@ -57,7 +57,7 @@ function SaleInput({ order }: { order: Order }) {
   )
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, first }: { order: Order; first?: boolean }) {
   const [notes, setNotes] = useState(order.notes)
   const [copied, setCopied] = useState(false)
   const [pending, start] = useTransition()
@@ -65,7 +65,7 @@ function OrderCard({ order }: { order: Order }) {
   const unpriced = order.items.filter((i) => i.price == null).length
 
   return (
-    <li className={cn('flex flex-col gap-4 p-5', pending && 'opacity-70')}>
+    <li data-guide={first ? 'pedido' : undefined} className={cn('flex flex-col gap-4 p-5', pending && 'opacity-70')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-foreground">
@@ -77,6 +77,7 @@ function OrderCard({ order }: { order: Order }) {
           </p>
         </div>
         <select
+          data-guide={first ? 'pedido-estado' : undefined}
           value={order.status}
           onChange={(e) => start(() => setOrderStatus(order.id, e.target.value as OrderStatus))}
           aria-label={`Estado del pedido #${order.number}`}
@@ -147,7 +148,7 @@ function OrderCard({ order }: { order: Order }) {
         className={cn(inputClass, 'h-auto py-2')}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div data-guide={first ? 'pedido-acciones' : undefined} className="flex flex-wrap gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -204,8 +205,8 @@ export function OrderList({ orders }: { orders: Order[] }) {
 
   return (
     <Panel className="p-0">
-      <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex gap-1 overflow-x-auto" role="group" aria-label="Filtrar por estado">
+      <div data-guide="pedidos-filtros" className="flex flex-col gap-3 border-b border-border p-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none]" role="group" aria-label="Filtrar por estado">
           {tabs.map((t) => (
             <button
               key={t.value}
@@ -221,7 +222,7 @@ export function OrderList({ orders }: { orders: Order[] }) {
             </button>
           ))}
         </div>
-        <div className="relative md:w-72">
+        <div className="relative xl:w-64">
           <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
@@ -235,8 +236,8 @@ export function OrderList({ orders }: { orders: Order[] }) {
       </div>
       {filtered.length ? (
         <ul className="divide-y divide-border">
-          {filtered.map((o) => (
-            <OrderCard key={o.id} order={o} />
+          {filtered.map((o, i) => (
+            <OrderCard key={o.id} order={o} first={i === 0} />
           ))}
         </ul>
       ) : (

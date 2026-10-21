@@ -7,22 +7,23 @@ import { QuickViewProvider } from '@/components/quick-view'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { WhatsappFloat } from '@/components/whatsapp-float'
-import { getPublicCatalog } from '@/lib/db'
+import { getShell } from '@/lib/public-catalog'
 import { parseRanges, SITE_URL } from '@/lib/site'
 
 // Se regenera al guardar cambios desde el panel (revalidatePath) y, como mínimo, cada hora.
 export const revalidate = 3600
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { settings } = await getPublicCatalog()
+  const { settings } = await getShell()
   return settings.googleVerification ? { verification: { google: settings.googleVerification } } : {}
 }
 
 const DAY_SCHEMA = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const catalog = await getPublicCatalog()
-  const { settings } = catalog
+  // Sólo lo liviano: el catálogo completo ya no viaja en cada página.
+  const shell = await getShell()
+  const { settings } = shell
 
   const t = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
   const jsonLd = {
@@ -53,7 +54,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <CatalogProvider catalog={catalog}>
+    <CatalogProvider shell={shell}>
       <OrderProvider>
         <QuickViewProvider>
         <a
@@ -67,7 +68,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <main id="contenido" className="flex-1">
             {children}
           </main>
-          <SiteFooter settings={settings} categories={catalog.categories} />
+          <SiteFooter settings={settings} categories={shell.categories} />
           <WhatsappFloat />
         </div>
         <OrderDrawer />

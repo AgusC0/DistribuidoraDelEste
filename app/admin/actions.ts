@@ -458,7 +458,8 @@ export async function importProducts(_prev: ImportState, fd: FormData): Promise<
   await requireAdmin()
   const file = fd.get('file')
   if (!(file instanceof File) || file.size === 0) return { message: 'Elegí la planilla (.csv).' }
-  if (file.size > 2 * 1024 * 1024) return { message: 'La planilla supera los 2 MB.' }
+  // 20 MB alcanzan para decenas de miles de filas (2.500 productos con variantes rondan 2–4 MB).
+  if (file.size > 20 * 1024 * 1024) return { message: 'La planilla supera los 20 MB. Dividila en dos archivos.' }
   if (/\.xlsx?$/i.test(file.name)) {
     return { message: 'En Excel usá Archivo → Guardar como → "CSV (delimitado por comas)" y subí ese archivo.' }
   }

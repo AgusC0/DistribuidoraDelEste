@@ -78,6 +78,7 @@ export default async function AdminHome() {
       <PageHeader
         title="Resumen"
         description={new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}
+        help="resumen"
         actions={
           <Button nativeButton={false} className="h-10 px-4" render={<Link href="/admin/productos/nuevo" />}>
             <Plus className="size-4" />
@@ -86,10 +87,11 @@ export default async function AdminHome() {
         }
       />
 
-      <section aria-labelledby="tareas-title">
-        <h2 id="tareas-title" className="mb-3 font-heading text-lg font-semibold uppercase tracking-wide text-foreground">
+      <section data-guide="tareas" aria-labelledby="tareas-title">
+        <h2 id="tareas-title" className="font-heading text-lg font-semibold uppercase tracking-wide text-foreground">
           Para atender
         </h2>
+        <p className="mb-3 text-sm text-muted-foreground">Lo que necesita una acción, de lo más urgente a lo menos. Tocá una fila para resolverlo.</p>
         {tasks.length ? (
           <ul className="flex flex-col gap-2">
             {tasks.map((t) => (
@@ -115,10 +117,11 @@ export default async function AdminHome() {
         )}
       </section>
 
-      <section aria-labelledby="mes-title" className="mt-10">
-        <h2 id="mes-title" className="mb-3 font-heading text-lg font-semibold uppercase tracking-wide text-foreground">
+      <section data-guide="mes" aria-labelledby="mes-title" className="mt-10">
+        <h2 id="mes-title" className="font-heading text-lg font-semibold uppercase tracking-wide text-foreground">
           Últimos 30 días
         </h2>
+        <p className="mb-3 text-sm text-muted-foreground">Cómo viene el sitio. La flecha compara con los 30 días anteriores.</p>
         <Panel className="grid grid-cols-2 gap-6 lg:grid-cols-4">
           <Stat label="Pedidos" value={orders.count} />
           <Stat label="Vendido por la web" value={formatPrice(orders.revenue)} />
@@ -127,7 +130,8 @@ export default async function AdminHome() {
         </Panel>
       </section>
 
-      <section aria-labelledby="pedidos-title" className="mt-10">
+      {recent.length > 0 && (
+      <section data-guide="ultimos-pedidos" aria-labelledby="pedidos-title" className="mt-10">
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 id="pedidos-title" className="font-heading text-lg font-semibold uppercase tracking-wide text-foreground">
             Últimos pedidos
@@ -137,7 +141,6 @@ export default async function AdminHome() {
           </Link>
         </div>
         <Panel className="p-2">
-          {recent.length ? (
             <ul>
               {recent.map((o) => (
                 <li key={o.id}>
@@ -156,13 +159,9 @@ export default async function AdminHome() {
                 </li>
               ))}
             </ul>
-          ) : (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-              Cuando alguien arme un pedido en el sitio y lo mande por WhatsApp, aparece acá.
-            </p>
-          )}
         </Panel>
       </section>
+      )}
     </>
   )
 }

@@ -25,7 +25,7 @@ function waNumber(phone: string) {
   return d.length >= 10 ? `549${d}` : null
 }
 
-function LeadCard({ lead }: { lead: Lead }) {
+function LeadCard({ lead, isFirst }: { lead: Lead; isFirst?: boolean }) {
   const [notes, setNotes] = useState(lead.notes)
   const [pending, start] = useTransition()
   const number = waNumber(lead.phone)
@@ -33,7 +33,7 @@ function LeadCard({ lead }: { lead: Lead }) {
   const reply = `Hola ${first}, te escribimos de Distribuidora del Este por tu consulta sobre ${lead.product}.`
 
   return (
-    <li className={cn('flex flex-col gap-3 p-5', pending && 'opacity-70')}>
+    <li data-guide={isFirst ? 'consulta' : undefined} className={cn('flex flex-col gap-3 p-5', pending && 'opacity-70')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-foreground">{lead.name}</p>
@@ -147,8 +147,8 @@ export function LeadList({ leads }: { leads: Lead[] }) {
 
   return (
     <Panel className="p-0">
-      <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex gap-1 overflow-x-auto" role="group" aria-label="Filtrar por estado">
+      <div data-guide="consultas-filtros" className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none]" role="group" aria-label="Filtrar por estado">
           {tabs.map((t) => (
             <button
               key={t.value}
@@ -178,8 +178,8 @@ export function LeadList({ leads }: { leads: Lead[] }) {
       </div>
       {filtered.length ? (
         <ul className="divide-y divide-border">
-          {filtered.map((l) => (
-            <LeadCard key={l.id} lead={l} />
+          {filtered.map((l, i) => (
+            <LeadCard key={l.id} lead={l} isFirst={i === 0} />
           ))}
         </ul>
       ) : (

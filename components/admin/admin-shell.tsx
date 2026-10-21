@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react'
 import { Logo } from '@/components/logo'
+import { GuideProvider } from '@/components/admin/guide-tour'
 import { logout } from '@/app/admin/actions'
 import { cn } from '@/lib/utils'
 
@@ -63,7 +64,7 @@ export function AdminShell({
   useEffect(() => setOpen(false), [pathname])
 
   const nav = (
-    <nav aria-label="Panel" className="flex flex-1 flex-col gap-5 overflow-y-auto">
+    <nav data-guide="menu" aria-label="Panel" className="flex flex-1 flex-col gap-5 overflow-y-auto">
       {NAV.map((group, gi) => (
         <div key={group.title ?? gi} className="flex flex-col gap-1">
           {group.title && (
@@ -76,6 +77,7 @@ export function AdminShell({
           <Link
             key={href}
             href={href}
+            data-guide={`nav-${href.split('/').pop()}`}
             aria-current={active ? 'page' : undefined}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
@@ -124,6 +126,7 @@ export function AdminShell({
   )
 
   return (
+    <GuideProvider>
     <div className="min-h-dvh bg-secondary/40">
       {/* barra superior móvil */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background px-4 lg:hidden">
@@ -156,8 +159,10 @@ export function AdminShell({
       </aside>
 
       <div className="lg:pl-64">
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">{children}</main>
+        {/* Todo el ancho disponible: sin márgenes vacíos a los costados. */}
+        <main className="px-4 py-6 sm:px-6 lg:px-10 lg:py-10">{children}</main>
       </div>
     </div>
+    </GuideProvider>
   )
 }

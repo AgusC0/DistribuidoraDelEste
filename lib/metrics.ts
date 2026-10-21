@@ -3,8 +3,8 @@ import type { Database, Order, TrackEvent } from '@/lib/types'
 
 const DAY = 86_400_000
 
-const dayKey = (date: Date | string) =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date(date)) // YYYY-MM-DD
+const dayFormat = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE })
+const dayKey = (date: Date | string) => dayFormat.format(new Date(date)) // YYYY-MM-DD
 
 export function dailySeries(events: TrackEvent[], type: TrackEvent['type'], days: number) {
   const counts = new Map<string, number>()

@@ -20,6 +20,7 @@ export function PriceVisibilityToggle({ showPrices, className }: { showPrices: b
 
   return (
     <section
+      data-guide="precios"
       aria-label="Precios en el sitio"
       className={cn(
         'flex items-center gap-4 rounded-2xl p-4 transition-colors sm:p-5',

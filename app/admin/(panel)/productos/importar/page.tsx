@@ -12,7 +12,8 @@ export default function ImportPage() {
     <>
       <PageHeader
         title="Excel: importar y exportar"
-        description="Cargá o actualizá muchos productos de una vez con una planilla."
+        description="Cargá o actualizá muchos productos de una vez con una planilla de hasta 20 MB (miles de productos)."
+        help="importar"
         actions={
           <Button variant="outline" nativeButton={false} className="h-10 px-4" render={<Link href="/admin/productos" />}>
             <ArrowLeft className="size-4" />

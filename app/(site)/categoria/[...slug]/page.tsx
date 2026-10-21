@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ProductsBrowser } from '@/components/products-browser'
 import { categoryPath, categoryUrl, descendantIds, findCategoryByPath } from '@/lib/catalog'
-import { getPublicCatalog } from '@/lib/db'
+import { getInitialPage, getPublicCatalog } from '@/lib/public-catalog'
 import { SITE_URL } from '@/lib/site'
 
 export const revalidate = 3600
@@ -67,7 +67,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   return (
     <>
       {/* `key`: al pasar de una categoría a otra, los filtros arrancan de cero. */}
-      <ProductsBrowser key={category.id} categoryId={category.id} />
+      <ProductsBrowser key={category.id} categoryId={category.id} initial={await getInitialPage(category.id)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
     </>
   )

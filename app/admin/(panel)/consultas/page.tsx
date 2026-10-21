@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { Download } from 'lucide-react'
+import { Download, Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/admin/empty-state'
 import { PageHeader } from '@/components/admin/ui'
 import { LeadList } from '@/components/admin/lead-list'
 import { readDb } from '@/lib/db'
@@ -14,14 +15,24 @@ export default async function LeadsPage() {
       <PageHeader
         title="Consultas"
         description="Lo que la gente envía desde el formulario de contacto. Respondé por WhatsApp y marcá el seguimiento."
+        help="consultas"
         actions={
+          db.leads.length > 0 && (
           <Button variant="outline" nativeButton={false} className="h-10 px-4" render={<a href="/admin/consultas/exportar" download />}>
             <Download className="size-4" />
             Exportar CSV
           </Button>
+          )
         }
       />
-      <LeadList leads={db.leads} />
+      {db.leads.length ? (
+        <LeadList leads={db.leads} />
+      ) : (
+        <EmptyState icon={Inbox} title="Todavía no llegaron consultas">
+          Cuando alguien complete el formulario de contacto del sitio, la consulta aparece acá con su nombre, teléfono y mensaje. Desde acá le respondés por
+          WhatsApp con un toque y marcás el seguimiento.
+        </EmptyState>
+      )}
     </>
   )
 }

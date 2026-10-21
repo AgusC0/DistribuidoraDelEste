@@ -11,7 +11,7 @@ import { ProductCard } from '@/components/product-card'
 import { CATALOG_EVENT, SearchBox } from '@/components/search-box'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
-import { useCatalog } from '@/components/catalog-provider'
+import { useCatalog, useFullCatalog } from '@/components/catalog-provider'
 import {
   attributeValues,
   categoryPath,
@@ -157,9 +157,15 @@ function OptionList({
 /**
  * Catálogo jerárquico: Rubro → Subcategoría → filtros propios de esa categoría → productos.
  * Es el catálogo completo: las promociones se reconocen por su etiqueta, sin dominar la página.
+ *
+ * La primera página llega armada desde el servidor (`initial`), así se ve al instante y Google la lee.
+ * Para filtrar, ordenar y buscar se descarga el catálogo liviano una sola vez (queda en caché).
  */
-export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
-  const { products, categories, index, settings } = useCatalog()
+export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; initial: { items: Product[]; total: number } }) {
+  const { categories, categoryCounts, settings } = useCatalog()
+  const full = useFullCatalog()
+  const { index, ready: catalogReady } = full
+  const products = catalogReady ? full.products : initial.items
   const router = useRouter()
   const [s, setS] = useState<State>(EMPTY)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -278,7 +284,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
     )?.id
   }
 
-  // El catálogo es chico: se ordena en cada render sin memorizar.
+  // Ordenar unos miles de productos lleva menos de un milisegundo: se hace en cada render.
   const results = (() => {
     const list = filtered
     const priced = (p: Product, dir: 1 | -1) => {
@@ -296,7 +302,10 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
     })
   })()
 
-  const totalPages = Math.max(1, Math.ceil(results.length / s.perPage))
+  // Con filtros en la URL (ej: llegó desde "Ver promociones") no se muestra la primera página sin filtrar mientras carga.
+  const hasUrlState = !!(s.q.trim() || Object.keys(s.facets).length || s.min != null || s.max != null || s.stock || s.oferta || s.sort !== 'relevancia' || s.page > 1)
+  const loading = !catalogReady && hasUrlState
+  const totalPages = Math.max(1, Math.ceil((catalogReady ? results.length : initial.total) / s.perPage))
   const page = Math.min(s.page, totalPages)
   const pageItems = results.slice((page - 1) * s.perPage, page * s.perPage)
   const from = results.length ? (page - 1) * s.perPage + 1 : 0
@@ -307,8 +316,9 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
     [results.length, s.q, index],
   )
 
-  // Conteo por categoría (respeta la búsqueda, no los filtros).
+  // Conteo por categoría (respeta la búsqueda, no los filtros). Hasta que baja el catálogo, el del servidor.
   const categoryCount = (id: string) => {
+    if (!catalogReady) return categoryCounts[id] ?? 0
     const ids = descendantIds(categories, id)
     return searched.filter((p) => ids.has(p.categoryId)).length
   }
@@ -390,7 +400,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
               )}
             >
               Todos los productos
-              <span className="text-xs tabular-nums text-muted-foreground">{searched.length}</span>
+              <span className="text-xs tabular-nums text-muted-foreground">{catalogReady ? searched.length : rootCategories(categories).reduce((n, c) => n + (categoryCounts[c.id] ?? 0), 0)}</span>
             </Link>
           </li>
           {rootCategories(categories).map((root) => (
@@ -399,13 +409,25 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
         </ul>
       </FilterGroup>
 
-      {facetOptions.map((g) => (
+      {!catalogReady && (
+        <div className="flex flex-col gap-3 py-4" aria-hidden="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <span className="h-3 w-20 animate-pulse rounded bg-muted" />
+              <span className="h-3 w-32 animate-pulse rounded bg-muted" />
+              <span className="h-3 w-28 animate-pulse rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {catalogReady && facetOptions.map((g) => (
         <FilterGroup key={g.key} title={g.label}>
           <OptionList options={g.options} selected={s.facets[g.key] ?? []} onToggle={(v) => toggleFacet(g.key, v)} />
         </FilterGroup>
       ))}
 
-      {settings.showPrices && priceBounds && (
+      {catalogReady && settings.showPrices && priceBounds && (
         <FilterGroup title="Precio">
           <form
             className="flex items-end gap-2"
@@ -565,7 +587,13 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-end justify-between gap-2">
                 <p className="text-sm text-muted-foreground" aria-live="polite">
-                  {results.length ? (
+                  {loading ? (
+                    'Cargando…'
+                  ) : !catalogReady ? (
+                    <>
+                      Mostrando <strong className="text-foreground">1–{initial.items.length}</strong> de {initial.total}
+                    </>
+                  ) : results.length ? (
                     <>
                       Mostrando <strong className="text-foreground">{from}–{to}</strong> de {results.length}
                     </>
@@ -663,7 +691,17 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
               )}
             </div>
 
-            {pageItems.length > 0 ? (
+            {loading ? (
+              <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <div key={i} className="flex flex-col gap-3">
+                    <span className="aspect-[4/5] animate-pulse rounded-2xl bg-muted" />
+                    <span className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                    <span className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+                  </div>
+                ))}
+              </div>
+            ) : pageItems.length > 0 ? (
               <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
                 {pageItems.map((p, i) => (
                   <ProductCard key={p.id} product={p} query={s.q} priority={i < 4} variantId={preferredVariant(p)} />

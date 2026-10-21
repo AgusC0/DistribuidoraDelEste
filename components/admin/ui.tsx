@@ -5,28 +5,37 @@ import { useFormStatus } from 'react-dom'
 import { AlertDialog } from '@base-ui/react/alert-dialog'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { HelpGuide } from '@/components/admin/help-guide'
+import type { GuideKey } from '@/lib/admin-guides'
 import { cn } from '@/lib/utils'
 
 export function PageHeader({
   title,
   description,
   actions,
+  help,
 }: {
   title: string
   description?: string
   actions?: React.ReactNode
+  /** Guía paso a paso de la sección (botón "Ayuda"). */
+  help?: GuideKey
 }) {
   return (
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
+      <div data-guide="encabezado" className="max-w-2xl">
         <h1 className="font-heading text-2xl font-bold uppercase tracking-tight text-foreground sm:text-3xl">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {(actions || help) && (
+        <div className="flex flex-wrap items-center gap-2" data-guide={actions ? `${title.toLowerCase().split(' ')[0]}-acciones` : undefined}>
+          {help && <HelpGuide guide={help} />}
+          {actions}
+        </div>
+      )}
     </div>
   )
 }
-
 export function Panel({ className, ...props }: React.ComponentProps<'section'>) {
   return <section className={cn('rounded-2xl bg-card p-6', className)} {...props} />
 }

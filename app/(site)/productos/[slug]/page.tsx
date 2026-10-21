@@ -6,15 +6,20 @@ import { ProductCard } from '@/components/product-card'
 import { ProductShowcase } from '@/components/product-detail'
 import { RecentlyViewed } from '@/components/recently-viewed'
 import { ProductView } from '@/components/product-view'
-import { getPublicCatalog } from '@/lib/db'
+import { getComplements, getPublicCatalog, leanProduct } from '@/lib/public-catalog'
 import { categoryPath, categoryUrl } from '@/lib/catalog'
 import { categoryName, SITE_URL } from '@/lib/site'
 
 export const revalidate = 3600
 
+// Con miles de productos no se generan todos al compilar: los destacados ya salen listos y el resto
+// se genera la primera vez que alguien lo visita (y queda guardado como los demás).
 export async function generateStaticParams() {
   const { products } = await getPublicCatalog()
-  return products.map((p) => ({ slug: p.slug }))
+  return products
+    .filter((p) => p.featured)
+    .slice(0, 100)
+    .map((p) => ({ slug: p.slug }))
 }
 
 async function getProduct(slug: string) {
@@ -58,6 +63,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const prev = position > 0 ? siblings[position - 1] : undefined
   const next = position >= 0 && position < siblings.length - 1 ? siblings[position + 1] : undefined
 
+  const complements = await getComplements(product)
   const variantPrices = product.variants.map((v) => v.price).filter((v): v is number => v != null)
   const breadcrumbLd = {
     '@context': 'https://schema.org',
@@ -161,7 +167,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         )}
       </div>
 
-      <ProductShowcase product={product}>
+      <ProductShowcase product={product} complements={complements}>
         <ul className="grid grid-cols-1 gap-3 border-t border-border pt-5 sm:grid-cols-3">
           {[
             { icon: ShieldCheck, text: 'Calidad garantizada' },
@@ -183,7 +189,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </h2>
           <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
             {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={leanProduct(p)} />
             ))}
           </div>
         </section>

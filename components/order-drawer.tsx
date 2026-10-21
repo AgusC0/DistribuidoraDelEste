@@ -7,12 +7,10 @@ import { Dialog } from '@base-ui/react/dialog'
 import { ClipboardList, Minus, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
-import { useCatalog } from '@/components/catalog-provider'
+import { useCatalog, useProducts } from '@/components/catalog-provider'
 import { itemKey, useOrder } from '@/components/order-provider'
 import { submitOrder } from '@/app/actions'
-import { complementsFor } from '@/lib/catalog'
 import { displayPrice, formatPrice, orderWaMessage, paymentOptions, waLink } from '@/lib/site'
-import type { Product } from '@/lib/types'
 import { track } from '@/lib/track'
 import { cn } from '@/lib/utils'
 
@@ -43,26 +41,19 @@ export function OrderButton({ className }: { className?: string }) {
 }
 
 export function OrderDrawer() {
-  const { settings, products } = useCatalog()
+  const { settings } = useCatalog()
   const { items, open, setOpen, setQuantity, remove, clear, add } = useOrder()
+  // Fotos, enlaces y complementos de lo que está en el pedido: se piden al abrir el panel.
+  const ids = [...new Set(items.map((i) => i.productId))]
+  const picked = useProducts(open ? ids : [], { complements: true })
+  const products = picked.items
   const [name, setName] = useState('')
   const [note, setNote] = useState('')
   const [sent, setSent] = useState(false)
 
   const priced = items.filter((i) => i.price != null)
   // Complementos de lo que ya está en el pedido (sin repetir lo que ya se agregó).
-  const suggestions = (() => {
-    const inOrder = new Set(items.map((i) => i.productId))
-    const out: Product[] = []
-    for (const item of items) {
-      const product = products.find((p) => p.id === item.productId)
-      if (!product) continue
-      for (const c of complementsFor(product, products, 6)) {
-        if (!inOrder.has(c.id) && !out.some((x) => x.id === c.id)) out.push(c)
-      }
-    }
-    return out.slice(0, 3)
-  })()
+  const suggestions = picked.complements.filter((c) => !ids.includes(c.id)).slice(0, 3)
   const total = priced.reduce((s, i) => s + (i.price ?? 0) * i.quantity, 0)
 
   function send() {

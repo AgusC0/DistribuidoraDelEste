@@ -458,7 +458,15 @@ export function SpecsTable({ rows }: { rows: { label: string; value: string }[] 
 
 /* ---------- Ficha completa (página de producto) ---------- */
 
-export function ProductShowcase({ product, children }: { product: Product; children?: React.ReactNode }) {
+export function ProductShowcase({
+  product,
+  complements,
+  children,
+}: {
+  product: Product
+  complements: Product[]
+  children?: React.ReactNode
+}) {
   const { categories } = useCatalog()
   const selection = useVariantSelection(product)
   const { variant, selectVariant } = selection
@@ -524,7 +532,7 @@ export function ProductShowcase({ product, children }: { product: Product; child
         </div>
       </div>
 
-      <CompletePurchase product={product} variant={variant} />
+      <CompletePurchase product={product} variant={variant} complements={complements} />
       <StickyBuyBar product={product} variant={variant} visible={showBar} onChoose={() => purchaseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })} />
 
       <div className="mt-14 grid grid-cols-1 gap-10 border-t border-border pt-10 lg:grid-cols-2 lg:gap-12">

@@ -1,11 +1,12 @@
 'use client'
 
-import { Fragment, useMemo, useState, useTransition } from 'react'
+import { Fragment, useEffect, useMemo, useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Check, ChevronDown, Copy, ExternalLink, Pencil, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BulkBar } from '@/components/admin/bulk-bar'
+import { Pagination } from '@/components/pagination'
 import { ConfirmButton, inputClass, Panel, Switch } from '@/components/admin/ui'
 import { deleteProduct, duplicateProduct, setProductPrice, setProductStock, setVariantQuick, toggleProduct } from '@/app/admin/actions'
 import { buildIndex, search } from '@/lib/search'
@@ -14,6 +15,9 @@ import { productQuality, QUALITY_GOOD, qualityTone, type QualityCheck } from '@/
 import { categoryName, displayPrice, formatPrice, STOCK_LABEL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Category, Product, StockStatus } from '@/lib/types'
+
+/** Con miles de productos, dibujar todas las filas juntas trababa el panel. */
+const PAGE_SIZE = 50
 
 export type ProductStatusFilter = 'todos' | 'publicados' | 'ocultos' | 'promo' | 'sin_stock' | 'incompletos'
 
@@ -219,6 +223,8 @@ export function ProductTable({
   const [status, setStatus] = useState<ProductStatusFilter>(initialStatus)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  useEffect(() => setPage(1), [query, category, status])
   const [, start] = useTransition()
 
   const index = useMemo(() => buildIndex(products, categories), [products, categories])
@@ -241,6 +247,9 @@ export function ProductTable({
     return list
   }, [products, categories, index, query, category, status, quality])
 
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const pageRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id))
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)))
   const toggleOne = (id: string) =>
@@ -285,8 +294,8 @@ export function ProductTable({
     )
 
   return (
-    <Panel className="p-0">
-      <div className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center">
+    <Panel className="p-0" data-guide="productos-tabla">
+      <div data-guide="productos-filtros" className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -315,7 +324,7 @@ export function ProductTable({
         </select>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2" role="group" aria-label="Filtrar por estado">
+      <div className="flex gap-1 overflow-x-auto border-b border-border px-4 py-2 [scrollbar-width:none]" role="group" aria-label="Filtrar por estado">
         {STATUSES.map((s) => (
           <button
             key={s.value}
@@ -339,10 +348,10 @@ export function ProductTable({
         {rows.length > 0 && (
           <li className="flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground">
             <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Seleccionar todos" className="size-4 accent-primary" />
-            Seleccionar todos
+            Seleccionar todos ({rows.length})
           </li>
         )}
-        {rows.map((p) => {
+        {pageRows.map((p) => {
           const q = quality.get(p.id)!
           return (
             <li key={p.id} className={cn(!p.active && 'bg-muted/30')}>
@@ -404,7 +413,14 @@ export function ProductTable({
           <thead>
             <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <th className="w-10 px-4 py-3">
-                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Seleccionar todos" className="size-4 accent-primary" />
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label={`Seleccionar los ${rows.length} productos del filtro`}
+                  title={`Seleccionar los ${rows.length} productos del filtro`}
+                  className="size-4 accent-primary"
+                />
               </th>
               <th className="px-2 py-3 font-medium">Producto</th>
               <th className="px-2 py-3 font-medium">Precio</th>
@@ -419,7 +435,7 @@ export function ProductTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((p) => {
+            {pageRows.map((p) => {
               const q = quality.get(p.id)!
               const open = expanded === p.id
               const variantsOut = p.variants.filter((v) => v.stock === 'sin_stock').length
@@ -503,6 +519,14 @@ export function ProductTable({
           </tbody>
         </table>
       </div>
+      {rows.length > PAGE_SIZE && (
+        <div className="flex flex-col items-center gap-3 border-t border-border px-4 py-4 sm:flex-row sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, rows.length)} de {rows.length} productos
+          </p>
+          <Pagination page={currentPage} total={pageCount} onChange={setPage} />
+        </div>
+      )}
       {rows.length === 0 && (
         <p className="py-12 text-center text-sm text-muted-foreground">
           {status === 'incompletos' ? 'Todas las fichas están completas.' : 'No hay productos con esos filtros.'}

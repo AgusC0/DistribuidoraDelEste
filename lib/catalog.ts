@@ -64,7 +64,9 @@ export function findCategoryByPath(categories: Category[], slugs: string[]): Cat
 /* ---------- Promociones ---------- */
 
 /** Fecha de hoy en Córdoba (YYYY-MM-DD), para que la promo cambie a medianoche local. */
-const today = (now: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(now)
+// Un solo formateador: crearlo en cada llamada era lo más lento al filtrar miles de productos.
+const dayFormat = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE })
+const today = (now: Date) => dayFormat.format(now)
 
 /** Promoción vigente: activa y dentro de sus fechas. */
 export function isOnPromotion(p: Product, now = new Date()) {

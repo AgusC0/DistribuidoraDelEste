@@ -4,9 +4,9 @@ import { useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'r
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, Clock, CornerDownLeft, Search, Sparkles, TrendingUp, X } from 'lucide-react'
-import { useCatalog } from '@/components/catalog-provider'
+import { useCatalog, useFullCatalog } from '@/components/catalog-provider'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
-import { categoryUrl, descendantIds } from '@/lib/catalog'
+import { categoryUrl } from '@/lib/catalog'
 import { correction, highlight, matchCategories, normalize, search } from '@/lib/search'
 import { displayPrice, hasPrice, waLink } from '@/lib/site'
 import { track } from '@/lib/track'
@@ -82,7 +82,7 @@ export function SearchBox({
    */
   navigate?: (go: () => void) => void
 }) {
-  const { index, categories, products, popularSearches, settings } = useCatalog()
+  const { categories, categoryCounts, popularSearches, settings } = useCatalog()
   const router = useRouter()
   const pathname = usePathname()
   const id = useId()
@@ -99,6 +99,8 @@ export function SearchBox({
   const [open, setOpen] = useState(variant === 'panel')
   const [active, setActive] = useState(-1)
   const [recent, setRecent] = useState<string[]>([])
+  // El catálogo para buscar se descarga recién al abrir el buscador o empezar a escribir.
+  const { index, ready } = useFullCatalog(open || query.length > 0)
 
   useEffect(() => setRecent(readRecent()), [])
 
@@ -123,7 +125,7 @@ export function SearchBox({
       kind: 'category' as const,
       key: `c-${category.id}`,
       category,
-      count: products.filter((p) => descendantIds(categories, category.id).has(p.categoryId)).length,
+      count: categoryCounts[category.id] ?? 0,
     }))
     const prods = hits.slice(0, MAX_PRODUCTS).map((h) => ({
       kind: 'product' as const,
@@ -132,13 +134,15 @@ export function SearchBox({
       categoryName: h.categoryName,
     }))
     const out: Option[] = [...cats, ...prods]
+    // Mientras se descarga el catálogo no decimos "sin resultados".
+    if (!ready) return out
     if (hits.length > 0) out.push({ kind: 'all', key: 'all', count: hits.length })
     else {
       if (fix) out.push({ kind: 'correction', key: 'fix', term: fix })
       out.push({ kind: 'whatsapp', key: 'wa' })
     }
     return out
-  }, [trimmed, hits, fix, categories, products, popularSearches, recent])
+  }, [trimmed, hits, fix, categories, categoryCounts, popularSearches, recent, ready])
 
   // Autocompletado "fantasma": completa el nombre del mejor resultado mientras escribís.
   const ghost = useMemo(() => {
@@ -154,14 +158,14 @@ export function SearchBox({
   // Registra la búsqueda cuando el usuario deja de escribir (para el panel de admin).
   const lastLogged = useRef('')
   useEffect(() => {
-    if (trimmed.length < 3) return
+    if (trimmed.length < 3 || !ready) return
     const t = setTimeout(() => {
       if (normalize(trimmed) === lastLogged.current) return
       lastLogged.current = normalize(trimmed)
       track({ type: 'search', q: trimmed, results: hits.length })
     }, 1200)
     return () => clearTimeout(t)
-  }, [trimmed, hits.length])
+  }, [trimmed, hits.length, ready])
 
   const expanded = open && options.length > 0
 

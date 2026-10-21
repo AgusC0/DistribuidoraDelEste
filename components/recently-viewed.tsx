@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { ProductCard } from '@/components/product-card'
-import { useCatalog } from '@/components/catalog-provider'
+import { useProducts } from '@/components/catalog-provider'
 
 const KEY = 'dde_recent_products'
 const MAX = 10
@@ -17,20 +17,17 @@ export function rememberProduct(id: string) {
 
 /** "Vistos recientemente": retomar lo que la persona ya estuvo mirando. */
 export function RecentlyViewed({ excludeId }: { excludeId?: string }) {
-  const { products } = useCatalog()
   const [ids, setIds] = useState<string[]>([])
 
   useEffect(() => {
     try {
-      setIds(JSON.parse(localStorage.getItem(KEY) ?? '[]'))
+      const list: string[] = JSON.parse(localStorage.getItem(KEY) ?? '[]')
+      setIds(list.filter((id) => id !== excludeId).slice(0, 6))
     } catch {}
-  }, [])
+  }, [excludeId])
 
-  const items = ids
-    .filter((id) => id !== excludeId)
-    .map((id) => products.find((p) => p.id === id))
-    .filter((p): p is NonNullable<typeof p> => !!p)
-    .slice(0, 4)
+  // Pide de más por si alguno ya no está publicado.
+  const items = useProducts(ids).items.slice(0, 4)
 
   if (!items.length) return null
   return (

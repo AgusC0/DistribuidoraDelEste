@@ -19,6 +19,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       <PageHeader
         title="Productos"
         description="Publicá, editá precios y stock. Los cambios se ven en el sitio al instante."
+        help="productos"
         actions={
           <>
             <Button variant="outline" nativeButton={false} className="h-10 px-4" render={<Link href="/admin/productos/importar" />}>

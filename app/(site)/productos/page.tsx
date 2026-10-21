@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import { ProductsBrowser } from '@/components/products-browser'
+import { getInitialPage } from '@/lib/public-catalog'
+
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Catálogo de productos',
@@ -8,6 +11,6 @@ export const metadata: Metadata = {
   alternates: { canonical: '/productos' },
 }
 
-export default function ProductsPage() {
-  return <ProductsBrowser />
+export default async function ProductsPage() {
+  return <ProductsBrowser initial={await getInitialPage()} />
 }

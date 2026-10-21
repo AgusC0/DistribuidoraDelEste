@@ -11,7 +11,7 @@ export default async function CategoriesPage() {
   const counts = Object.fromEntries(categories.map((c) => [c.id, db.products.filter((p) => p.categoryId === c.id).length]))
   return (
     <>
-      <PageHeader title="Categorías" description="Organizan el catálogo y los filtros del sitio. El orden es el mismo que ve el cliente." />
+      <PageHeader title="Categorías" description="Organizan el catálogo y los filtros del sitio. El orden es el mismo que ve el cliente." help="categorias" />
       <CategoryManager categories={categories} counts={counts} />
     </>
   )

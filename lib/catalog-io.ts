@@ -212,15 +212,19 @@ export function applyImport(
     return result
   }
   const now = new Date().toISOString()
+  // Índices armados una sola vez: con miles de filas, buscar recorriendo todo el catálogo en cada fila tardaba decenas de segundos.
+  const byId = new Map(products.map((p) => [p.id, p]))
+  const byName = new Map<string, Product>()
+  for (const p of products) if (!byName.has(normalize(p.name))) byName.set(normalize(p.name), p)
+  const slugs = new Set(products.map((p) => p.slug))
+  const created: Product[] = []
 
   rows.slice(1).forEach((r, i) => {
     const line = i + 2
     const get = (name: (typeof COLUMNS)[number]) => (col(name) === -1 ? undefined : (r[col(name)] ?? '').trim())
     const id = get('id')
     const name = get('nombre')
-    const existing =
-      (id && products.find((p) => p.id === id)) ||
-      (name ? products.find((p) => normalize(p.name) === normalize(name)) : undefined)
+    const existing = (id && byId.get(id)) || (name ? byName.get(normalize(name)) : undefined)
 
     if (!existing && mode === 'precios') {
       result.errors.push(`Fila ${line}: no encontramos "${name || id}" en el catálogo.`)
@@ -321,9 +325,12 @@ export function applyImport(
 
     if (!existing) {
       let slug = slugify(target.name) || 'producto'
-      for (let n = 2; products.some((p) => p.slug === slug); n++) slug = `${slugify(target.name)}-${n}`
+      for (let n = 2; slugs.has(slug); n++) slug = `${slugify(target.name)}-${n}`
       target.slug = slug
-      products.unshift(target)
+      slugs.add(slug)
+      byId.set(target.id, target)
+      byName.set(normalize(target.name), target)
+      created.push(target)
       result.created.push(target.name)
     } else if (JSON.stringify(target) !== before) {
       target.updatedAt = now
@@ -332,5 +339,7 @@ export function applyImport(
       result.unchanged++
     }
   })
+  // Los nuevos quedan primero, como antes (el último de la planilla arriba de todo).
+  products.unshift(...created.reverse())
   return result
 }

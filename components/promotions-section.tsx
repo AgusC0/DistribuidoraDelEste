@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react'
 import { FadeIn } from '@/components/fade-in'
 import { ProductCard } from '@/components/product-card'
 import { useCatalog } from '@/components/catalog-provider'
-import { discountPercent, isOnPromotion } from '@/lib/catalog'
+import { discountPercent } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
 /**
@@ -13,8 +13,7 @@ import { cn } from '@/lib/utils'
  * y una composición distinta al listado (la mejor oferta en grande cuando hay varias).
  */
 export function PromotionsSection() {
-  const { products } = useCatalog()
-  const promos = products.filter((p) => isOnPromotion(p)).sort((a, b) => (discountPercent(b) ?? 0) - (discountPercent(a) ?? 0))
+  const { promos, promoCount } = useCatalog()
   if (!promos.length) return null
 
   const featured = promos.length >= 5
@@ -38,7 +37,7 @@ export function PromotionsSection() {
             href="/productos?oferta=1"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-4 hover:text-promo hover:underline"
           >
-            Ver todas las promociones ({promos.length})
+            Ver todas las promociones ({promoCount})
             <ArrowRight className="size-4" />
           </Link>
         </FadeIn>
