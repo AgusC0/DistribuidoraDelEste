@@ -9,7 +9,26 @@ export async function GET(request: Request) {
   const db = await readDb()
   const template = new URL(request.url).searchParams.has('modelo')
   const rows = template
-    ? [[...COLUMNS], ['', 'Ej: Codo 90° termofusión 25 mm', 'Agua y cañerías > Cañerías', 'Marca', '1200', '1500', 'disponible', 'si', 'si', 'no', 'Descripción corta', 'codo, conexión', '', 'tipo=Codo; medida=25 mm; material=Polipropileno']]
+    ? [[...COLUMNS], [
+          '',
+          'COD-001',
+          'Ej: Codo 90° termofusión',
+          'Agua y cañerías > Cañerías',
+          'Marca',
+          '890',
+          '',
+          'disponible',
+          'si',
+          'no',
+          'no',
+          'Codo a 90° para termofusión',
+          'Descripción completa del producto',
+          'codo, conexión',
+          'Medida',
+          '20 mm = 650 # COD-001-20 | 25 mm = 890 # COD-001-25 | 32 mm = 1290 # COD-001-32',
+          'tipo=Codo; material=Polipropileno',
+          'Presión de trabajo=20 bar; Garantía=1 año',
+        ]]
     : [[...COLUMNS], ...db.products.map((p) => productRow(p, db.categories))]
   const name = template ? 'modelo-productos' : `productos-${new Date().toISOString().slice(0, 10)}`
   return new Response(toCsv(rows), {

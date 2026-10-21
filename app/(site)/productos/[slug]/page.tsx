@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ChevronRight, Headphones, ShieldCheck, Wrench } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Headphones, ShieldCheck, Wrench } from 'lucide-react'
 import { ProductCard } from '@/components/product-card'
-import { ProductGallery, ProductPurchase } from '@/components/product-detail'
+import { ProductShowcase } from '@/components/product-detail'
 import { ProductView } from '@/components/product-view'
 import { getPublicCatalog } from '@/lib/db'
 import { categoryPath, categoryUrl } from '@/lib/catalog'
@@ -46,6 +46,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .concat(catalog.products.filter((p) => p.id !== product.id && p.categoryId !== product.categoryId && p.featured))
     .slice(0, 4)
 
+  const siblings = catalog.products
+    .filter((p) => p.categoryId === product.categoryId)
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  const position = siblings.findIndex((p) => p.id === product.id)
+  const prev = position > 0 ? siblings[position - 1] : undefined
+  const next = position >= 0 && position < siblings.length - 1 ? siblings[position + 1] : undefined
+
+  const variantPrices = product.variants.map((v) => v.price).filter((v): v is number => v != null)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -53,7 +61,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     description: product.description,
     image: product.images.map((src) => `${SITE_URL}${src}`),
     category: category?.name,
-    ...(product.price != null && {
+    ...(product.sku && { sku: product.sku }),
+    ...(product.brand && { brand: { '@type': 'Brand', name: product.brand } }),
+    ...(variantPrices.length > 1 && {
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'ARS',
+        lowPrice: Math.min(...variantPrices),
+        highPrice: Math.max(...variantPrices),
+        offerCount: variantPrices.length,
+      },
+    }),
+    ...(product.price != null && variantPrices.length <= 1 && {
       offers: {
         '@type': 'Offer',
         priceCurrency: 'ARS',
@@ -68,7 +87,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
       <ProductView productId={product.id} />
-      <nav aria-label="Ruta de navegación" className="mb-6 text-sm text-muted-foreground">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <nav aria-label="Ruta de navegación" className="text-sm text-muted-foreground">
         <ol className="flex flex-wrap items-center gap-1">
           <li>
             <Link href="/" className="hover:text-foreground">
@@ -95,38 +115,46 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </li>
         </ol>
       </nav>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
-        <ProductGallery product={product} />
-
-        <div className="flex flex-col gap-5">
-          {category && (
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">{category.name}</p>
-          )}
-          <h1 className="font-heading text-3xl font-bold uppercase leading-tight tracking-tight text-foreground text-balance sm:text-4xl">
-            {product.name}
-          </h1>
-          <p className="text-base leading-relaxed text-muted-foreground text-pretty">{product.description}</p>
-
-          <ProductPurchase product={product} />
-          <p className="text-sm text-muted-foreground">
-            Armá tu pedido con todo lo que necesitás y pedí el presupuesto completo por WhatsApp. Los precios pueden variar.
-          </p>
-
-          <ul className="mt-2 grid grid-cols-1 gap-3 border-t border-border pt-5 sm:grid-cols-3">
-            {[
-              { icon: ShieldCheck, text: 'Calidad garantizada' },
-              { icon: Wrench, text: 'Asesoramiento técnico' },
-              { icon: Headphones, text: 'Atención personalizada' },
-            ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-2 text-sm text-foreground">
-                <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
-                {text}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {(prev || next) && (
+          <div className="flex items-center gap-1 text-sm">
+            {prev && (
+              <Link
+                href={`/productos/${prev.slug}`}
+                title={prev.name}
+                className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <ChevronLeft className="size-4" />
+                Anterior
+              </Link>
+            )}
+            {next && (
+              <Link
+                href={`/productos/${next.slug}`}
+                title={next.name}
+                className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Siguiente
+                <ChevronRight className="size-4" />
+              </Link>
+            )}
+          </div>
+        )}
       </div>
+
+      <ProductShowcase product={product}>
+        <ul className="grid grid-cols-1 gap-3 border-t border-border pt-5 sm:grid-cols-3">
+          {[
+            { icon: ShieldCheck, text: 'Calidad garantizada' },
+            { icon: Wrench, text: 'Asesoramiento técnico' },
+            { icon: Headphones, text: 'Atención personalizada' },
+          ].map(({ icon: Icon, text }) => (
+            <li key={text} className="flex items-center gap-2 text-sm text-foreground">
+              <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
+              {text}
+            </li>
+          ))}
+        </ul>
+      </ProductShowcase>
 
       {related.length > 0 && (
         <section aria-labelledby="related-title" className="mt-16 border-t border-border pt-12">

@@ -39,7 +39,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       if (!p) return []
       const v = i.variantId ? p.variants.find((x) => x.id === i.variantId) : undefined
       if (i.variantId && !v) return []
-      return [{ ...i, name: p.name, variantName: v?.name, price: v ? v.price : p.price }]
+      return [{ ...i, name: p.name, variantName: v?.name, sku: v?.sku || p.sku || undefined, price: v ? v.price : p.price }]
     })
     setItems(fresh)
     setLoaded(true)
@@ -66,6 +66,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           variantId: variant?.id,
           name: product.name,
           variantName: variant?.name,
+          sku: variant?.sku || product.sku || undefined,
           price: variant ? variant.price : product.price,
           quantity,
         },

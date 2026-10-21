@@ -1,11 +1,12 @@
 import { normalize } from '@/lib/search'
 import { slugify } from '@/lib/site'
-import { categoryPath, EMPTY_PROMOTION } from '@/lib/catalog'
-import type { Category, Product, StockStatus, Variant } from '@/lib/types'
+import { categoryPath, EMPTY_PROMOTION, variantLabel } from '@/lib/catalog'
+import type { Category, Product, ProductOption, ProductSpec, StockStatus, Variant } from '@/lib/types'
 
 /** Columnas de la planilla de productos (exportar / importar). */
 export const COLUMNS = [
   'id',
+  'codigo',
   'nombre',
   'categoria',
   'marca',
@@ -15,10 +16,13 @@ export const COLUMNS = [
   'publicado',
   'promo',
   'destacado',
+  'descripcion_corta',
   'descripcion',
   'etiquetas',
+  'opciones_nombres',
   'opciones',
   'atributos',
+  'ficha',
 ] as const
 
 const STOCK_IN: Record<string, StockStatus> = {
@@ -38,26 +42,62 @@ const priceIn = (v: string): number | null => {
   return digits ? Number(digits) : null
 }
 
-/** Opciones en una celda: "40x40=12000 | 50x60=15000 | 60x60" (precio opcional). */
+/**
+ * Variantes en una celda: "20 mm / Blanco = 6900 # COD-123 | 25 mm / Blanco = 9800".
+ * Precio y código son opcionales. Los nombres de las opciones van en "opciones_nombres" ("Medida / Color").
+ */
 export function variantsToCell(variants: Variant[]) {
-  return variants.map((v) => (v.price != null ? `${v.name}=${v.price}` : v.name)).join(' | ')
+  return variants
+    .map((v) => `${v.name}${v.price != null ? ` = ${v.price}` : ''}${v.sku ? ` # ${v.sku}` : ''}`)
+    .join(' | ')
 }
 
-function variantsFromCell(cell: string, previous: Variant[]): Variant[] {
-  return cell
-    .split('|')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => {
-      const [name, price] = part.split('=').map((s) => s.trim())
-      const prev = previous.find((v) => normalize(v.name) === normalize(name))
-      return {
-        id: prev?.id ?? `v_${slugify(name)}_${Math.random().toString(36).slice(2, 6)}`,
-        name,
-        price: price ? priceIn(price) : null,
-        stock: prev?.stock ?? 'disponible',
-      }
+function variantsFromCell(cell: string, optionNames: string[], previous: Variant[]): { options: ProductOption[]; variants: Variant[] } {
+  const names = optionNames.length ? optionNames : ['Opción']
+  const options: ProductOption[] = names.map((name) => ({ name, values: [] }))
+  const variants: Variant[] = []
+  for (const part of cell.split('|').map((x) => x.trim()).filter(Boolean)) {
+    const [left, sku = ''] = part.split('#').map((x) => x.trim())
+    const [label, price] = left.split('=').map((x) => x.trim())
+    // ' / ' (con espacios) separa opciones; así una medida como 1/2" no se corta.
+    const values = label.split(/\s+\/\s+/).map((x) => x.trim())
+    const combo: Record<string, string> = {}
+    names.forEach((name, i) => {
+      const value = values[i]
+      if (!value) return
+      combo[name] = value
+      if (!options[i].values.includes(value)) options[i].values.push(value)
     })
+    if (Object.keys(combo).length !== names.length) continue
+    const name = variantLabel(combo, options)
+    const prev = previous.find((v) => normalize(v.name) === normalize(name))
+    variants.push({
+      id: prev?.id ?? `v_${slugify(name)}_${Math.random().toString(36).slice(2, 6)}`,
+      name,
+      options: combo,
+      sku: sku || prev?.sku || '',
+      price: price ? priceIn(price) : null,
+      originalPrice: prev?.originalPrice ?? null,
+      stock: prev?.stock ?? 'disponible',
+      imageIndex: prev?.imageIndex ?? null,
+    })
+  }
+  return { options: options.filter((o) => o.values.length), variants }
+}
+
+/** Ficha técnica en una celda: "Ancho=39 cm; Alto=42,5 cm; Garantía=1 año". */
+export function specsToCell(specs: ProductSpec[]) {
+  return specs.map((r) => `${r.label}=${r.value}`).join('; ')
+}
+
+function specsFromCell(cell: string): ProductSpec[] {
+  return cell
+    .split(';')
+    .map((part) => {
+      const [label, ...rest] = part.split('=')
+      return { label: (label ?? '').trim(), value: rest.join('=').trim() }
+    })
+    .filter((r) => r.label && r.value)
 }
 
 /** Atributos en una celda: "tipo=Codo; medida=20 mm, 25 mm". */
@@ -87,6 +127,7 @@ function categoryLabel(categories: Category[], id: string) {
 export function productRow(p: Product, categories: Category[]) {
   return [
     p.id,
+    p.sku,
     p.name,
     categoryLabel(categories, p.categoryId),
     p.brand,
@@ -96,10 +137,13 @@ export function productRow(p: Product, categories: Category[]) {
     p.active ? 'si' : 'no',
     p.promo ? 'si' : 'no',
     p.featured ? 'si' : 'no',
+    p.shortDescription,
     p.description,
     p.tags.join(', '),
+    p.options.map((o) => o.name).join(' / '),
     variantsToCell(p.variants),
     attributesToCell(p.attributes),
+    specsToCell(p.specs),
   ]
 }
 
@@ -197,6 +241,10 @@ export function applyImport(
         promotion: { ...EMPTY_PROMOTION },
         brand: '',
         attributes: {},
+        sku: '',
+        shortDescription: '',
+        specs: [],
+        options: [],
         featured: false,
         active: true,
         stock: 'disponible',
@@ -213,9 +261,13 @@ export function applyImport(
     const previous = get('precio_anterior')
     if (previous !== undefined) target.promotion = { ...target.promotion, originalPrice: priceIn(previous) }
     const options = get('opciones')
+    const optionNames = (get('opciones_nombres') ?? target.options.map((o) => o.name).join(' / '))
+      .split(/\s+\/\s+/)
+      .map((x) => x.trim())
+      .filter(Boolean)
     if (options !== undefined && mode === 'precios' && options) {
-      // En modo precios sólo actualiza el precio de opciones que ya existen.
-      for (const v of variantsFromCell(options, target.variants)) {
+      // En modo precios sólo actualiza el precio de variantes que ya existen.
+      for (const v of variantsFromCell(options, optionNames, target.variants).variants) {
         const prev = target.variants.find((x) => x.id === v.id)
         if (prev) prev.price = v.price
       }
@@ -249,7 +301,17 @@ export function applyImport(
           .split(',')
           .map((t) => t.trim().toLowerCase())
           .filter(Boolean)
-      if (options !== undefined) target.variants = variantsFromCell(options, target.variants)
+      if (options !== undefined) {
+        const parsed = variantsFromCell(options, optionNames, target.variants)
+        target.options = parsed.options
+        target.variants = parsed.variants
+      }
+      const sku = get('codigo')
+      if (sku !== undefined) target.sku = sku.slice(0, 40)
+      const short = get('descripcion_corta')
+      if (short !== undefined) target.shortDescription = short.slice(0, 200)
+      const ficha = get('ficha')
+      if (ficha !== undefined) target.specs = specsFromCell(ficha)
       const brand = get('marca')
       if (brand !== undefined) target.brand = brand.slice(0, 60)
       const attrs = get('atributos')

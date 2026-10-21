@@ -50,7 +50,7 @@ Todo (productos, categorías, consultas, ajustes y métricas) vive en `data/db.j
 
 - **Mostrar / ocultar precios**: switch en Resumen y Productos. Con los precios ocultos el sitio muestra sólo los productos (sin montos en tarjetas, fichas, pedido ni mensajes de WhatsApp) y los precios no se envían al navegador.
 - **Resumen**: consultas nuevas, clics a WhatsApp, vistas, ranking de productos más consultados, búsquedas sin resultados y alertas (productos sin foto, sin stock, etc.).
-- **Productos**: alta, edición, galería de fotos, opciones/variantes con precio y stock propio, importar/exportar con Excel (CSV), palabras clave para el buscador, stock, promo, destacado, publicar/ocultar, duplicar, editar precio en la tabla y ajuste masivo de precios por porcentaje.
+- **Productos**: alta, edición, código, bajada corta, ficha técnica ("Detalles del producto"), galería de fotos, opciones combinables (Medida × Color…) que generan variantes con código, precio, precio anterior, stock y foto propios, importar/exportar con Excel (CSV), palabras clave para el buscador, stock, promo, destacado, publicar/ocultar, duplicar, editar precio en la tabla y ajuste masivo de precios por porcentaje.
 - **Categorías**: árbol de rubros y subcategorías (Baño y cocina → Griferías). Cada subcategoría define sus propios filtros (Tipo, Medida, Material…), que aparecen sólo al navegar esa categoría.
 - **Promociones**: se activan en cada producto (no son una categoría), con precio anterior tachado o % OFF, fechas de vigencia y "Hasta agotar stock". En cada categoría, las ofertas se muestran primero.
 - **Catálogo de demostración**: en Ajustes, carga productos de ejemplo con marcas, medidas y ofertas para presentar el sitio.
@@ -60,6 +60,7 @@ Todo (productos, categorías, consultas, ajustes y métricas) vive en `data/db.j
 
 ## Para el cliente en el sitio
 
+- **Ficha de producto**: código copiable, selector de variantes que actualiza precio, stock, código y foto (las combinaciones inexistentes se marcan como no disponibles), link compartible con la variante (`?v=`), tabla de variantes, "Detalles del producto" y anterior/siguiente.
 - **Catálogo por categorías**: `/categoria/rubro/subcategoria`, con filtros propios de cada categoría (Marca, Tipo, Medida…), chips de filtros activos, ofertas primero y después todos los productos.
 
 - **Mi pedido**: el cliente suma productos (y la opción elegida) con cantidades y manda la lista completa por WhatsApp para pedir presupuesto. El pedido queda guardado también en **Consultas**.

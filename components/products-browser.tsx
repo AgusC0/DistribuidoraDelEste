@@ -25,7 +25,7 @@ import {
   sortValues,
 } from '@/lib/catalog'
 import { correction, search } from '@/lib/search'
-import { formatPrice, minPrice } from '@/lib/site'
+import { formatPrice, minPrice, slugify } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Category, Product } from '@/lib/types'
 
@@ -270,6 +270,18 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
   }, [inScope])
 
   const promos = filtered.filter((p) => isOnPromotion(p))
+
+  /** Si se filtró por una opción de variante (ej: Medida 25 mm), la ficha abre con esa variante elegida. */
+  const preferredVariant = (p: Product) => {
+    const matching = Object.entries(s.facets).filter(([key, sel]) => sel.length && p.options.some((o) => slugify(o.name) === key))
+    if (!matching.length) return undefined
+    return p.variants.find((v) =>
+      matching.every(([key, sel]) => {
+        const option = p.options.find((o) => slugify(o.name) === key)!
+        return sel.includes(v.options[option.name])
+      }),
+    )?.id
+  }
 
   // El catálogo es chico: se ordena en cada render sin memorizar.
   const results = (() => {
@@ -570,6 +582,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
               <PromotionsSection
                 products={promos}
                 title={category ? `Ofertas en ${category.name}` : 'Ofertas destacadas'}
+                variantIdFor={preferredVariant}
                 onSeeAll={() => {
                   update({ oferta: true })
                   listTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -687,7 +700,7 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
             {pageItems.length > 0 ? (
               <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
                 {pageItems.map((p, i) => (
-                  <ProductCard key={p.id} product={p} query={s.q} priority={i < 4 && !promos.length} />
+                  <ProductCard key={p.id} product={p} query={s.q} priority={i < 4 && !promos.length} variantId={preferredVariant(p)} />
                 ))}
               </div>
             ) : (

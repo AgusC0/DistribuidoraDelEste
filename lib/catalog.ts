@@ -1,5 +1,5 @@
-import { TIMEZONE } from '@/lib/site'
-import type { Category, Product, Promotion } from '@/lib/types'
+import { slugify, TIMEZONE } from '@/lib/site'
+import type { Category, Product, ProductOption, Promotion, Variant } from '@/lib/types'
 
 /* ---------- Árbol de categorías ---------- */
 
@@ -94,7 +94,8 @@ export function promotionEndsLabel(p: Product, now = new Date()): string | null 
 
 /* ---------- Atributos para filtros ---------- */
 
-export const attributeValues = (p: Product, key: string) => p.attributes[key] ?? []
+/** Valores de un filtro para un producto: sus atributos más las opciones de variantes con el mismo nombre. */
+export const attributeValues = (p: Product, key: string) => [...new Set([...(p.attributes[key] ?? []), ...optionValuesForFilter(p, key)])]
 
 /** Ordena valores de filtro de forma natural: "20 mm" < "25 mm" < "110 mm". */
 export function sortValues(values: string[]) {
@@ -110,4 +111,49 @@ export function catalogSuggestions(products: Product[]) {
   }
   for (const key of Object.keys(attributes)) attributes[key] = sortValues(attributes[key])
   return { brands, attributes }
+}
+
+/* ---------- Variantes ---------- */
+
+/** "25 mm / Blanco", en el orden de las opciones del producto. */
+export function variantLabel(values: Record<string, string>, options: ProductOption[]) {
+  const ordered = options.map((o) => values[o.name]).filter(Boolean)
+  return ordered.length ? ordered.join(' / ') : Object.values(values).join(' / ')
+}
+
+/** Todas las combinaciones posibles de las opciones (Medida × Color…). */
+export function combinations(options: ProductOption[]): Record<string, string>[] {
+  return options
+    .filter((o) => o.values.length)
+    .reduce<Record<string, string>[]>(
+      (acc, o) => acc.flatMap((combo) => o.values.map((v) => ({ ...combo, [o.name]: v }))),
+      [{}],
+    )
+    .filter((c) => Object.keys(c).length)
+}
+
+type VariantRow = Partial<Omit<Variant, 'options' | 'name'>> & { values: string[] }
+
+/** Arma variantes a partir de filas de valores, en el orden de las opciones. */
+export function buildVariants(idPrefix: string, options: ProductOption[], rows: VariantRow[]): Variant[] {
+  return rows.map((row) => {
+    const values = Object.fromEntries(options.map((o, i) => [o.name, row.values[i]]).filter(([, v]) => v))
+    return {
+      id: row.id ?? `${idPrefix}-${row.values.join('-').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      name: variantLabel(values, options),
+      options: values,
+      sku: row.sku ?? '',
+      price: row.price ?? null,
+      originalPrice: row.originalPrice ?? null,
+      stock: row.stock ?? 'disponible',
+      imageIndex: row.imageIndex ?? null,
+    }
+  })
+}
+
+/** Valores de una opción de variante que coincide con un filtro (opción "Medida" ↔ filtro "medida"). */
+export function optionValuesForFilter(p: Product, key: string): string[] {
+  const option = p.options.find((o) => slugify(o.name) === key)
+  if (!option) return []
+  return option.values.filter((v) => !p.variants.length || p.variants.some((variant) => variant.options[option.name] === v))
 }

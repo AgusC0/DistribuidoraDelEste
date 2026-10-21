@@ -7,6 +7,7 @@ import { ArrowLeft, ImagePlus, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { GalleryEditor } from '@/components/admin/gallery-editor'
+import { SpecsEditor } from '@/components/admin/specs-editor'
 import { VariantsEditor } from '@/components/admin/variants-editor'
 import { FieldError, FormMessage, inputClass, Panel, SubmitButton, submitKeepingValues } from '@/components/admin/ui'
 import { saveProduct, type FormState } from '@/app/admin/actions'
@@ -44,6 +45,7 @@ export function ProductForm({
   const [description, setDescription] = useState(product?.description ?? '')
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? '')
   const [promo, setPromo] = useState(product?.promo ?? false)
+  const [sku, setSku] = useState(product?.sku ?? '')
   const [originalPrice, setOriginalPrice] = useState(product?.promotion.originalPrice?.toString() ?? '')
   const [manualPercent, setManualPercent] = useState(product?.promotion.discountPercent?.toString() ?? '')
   const [attrs, setAttrs] = useState<Record<string, string>>(() =>
@@ -204,9 +206,38 @@ export function ProductForm({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-[12rem_1fr]">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="sku" className={labelClass}>
+                Código / referencia
+              </label>
+              <input
+                id="sku"
+                name="sku"
+                value={sku}
+                onChange={(ev) => setSku(ev.target.value.toUpperCase())}
+                placeholder="Ej: FE-IBA"
+                className={cn(inputClass, 'font-mono')}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="shortDescription" className={labelClass}>
+                Bajada corta
+              </label>
+              <input
+                id="shortDescription"
+                name="shortDescription"
+                defaultValue={product?.shortDescription ?? ''}
+                maxLength={200}
+                placeholder="Una línea debajo del título. Ej: Inodoro largo de loza para mochila de apoyo."
+                className={inputClass}
+              />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2">
             <label htmlFor="description" className={labelClass}>
-              Descripción
+              Descripción completa
             </label>
             <textarea
               id="description"
@@ -315,10 +346,26 @@ export function ProductForm({
 
         <Panel className="flex flex-col gap-4">
           <div>
-            <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Opciones / variantes</h2>
-            <p className={hintClass}>Medidas, colores o capacidades, cada una con su precio y stock. Opcional.</p>
+            <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Opciones y variantes</h2>
+            <p className={hintClass}>
+              Medidas, colores o capacidades. Cada combinación tiene su código, precio, stock y foto. Opcional.
+            </p>
           </div>
-          <VariantsEditor key={product?.updatedAt ?? 'nuevo'} initial={product?.variants ?? []} />
+          <VariantsEditor
+            key={product?.updatedAt ?? 'nuevo'}
+            initialOptions={product?.options ?? []}
+            initialVariants={product?.variants ?? []}
+            baseSku={sku}
+            imageCount={product?.images.length ?? 0}
+          />
+        </Panel>
+
+        <Panel className="flex flex-col gap-4">
+          <div>
+            <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Ficha técnica</h2>
+            <p className={hintClass}>Se muestra en “Detalles del producto”: medidas, garantía, material, origen…</p>
+          </div>
+          <SpecsEditor key={product?.updatedAt ?? 'nuevo'} initial={product?.specs ?? []} />
         </Panel>
       </div>
 

@@ -33,6 +33,20 @@ function migrate(db: Database): Database {
     p.brand ??= ''
     p.attributes ??= {}
     p.promotion = { ...EMPTY_PROMOTION, ...p.promotion }
+    p.sku ??= ''
+    p.shortDescription ??= ''
+    p.specs ??= []
+    // Variantes viejas (sólo nombre) → una opción genérica "Opción".
+    if (!p.options) {
+      p.options = p.variants.length ? [{ name: 'Opción', values: p.variants.map((v) => v.name) }] : []
+    }
+    p.variants = p.variants.map((v) => ({
+      ...v,
+      options: v.options ?? (p.options[0] ? { [p.options[0].name]: v.name } : {}),
+      sku: v.sku ?? '',
+      originalPrice: v.originalPrice ?? null,
+      imageIndex: v.imageIndex ?? null,
+    }))
   }
   return db
 }
@@ -96,7 +110,7 @@ export async function getPublicCatalog(): Promise<PublicCatalog> {
           ...p,
           price: null,
           promotion: { ...p.promotion, originalPrice: null },
-          variants: p.variants.map((v) => ({ ...v, price: null })),
+          variants: p.variants.map((v) => ({ ...v, price: null, originalPrice: null })),
         })),
     popularSearches: topSearches(db.events, 30, 6).map((s) => s.term),
   }

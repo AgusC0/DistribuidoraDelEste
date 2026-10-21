@@ -6,6 +6,7 @@ import { cookies, headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { checkCredentials, createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from '@/lib/auth'
+import { variantLabel } from '@/lib/catalog'
 import { applyImport, type ImportMode, type ImportResult } from '@/lib/catalog-io'
 import { parseCsv } from '@/lib/csv'
 import { sendTestEmail } from '@/lib/notify'
@@ -19,6 +20,8 @@ import type {
   Database,
   LeadStatus,
   Product,
+  ProductOption,
+  ProductSpec,
   Promotion,
   Settings,
   StockStatus,
@@ -137,15 +140,48 @@ export async function saveProduct(_prev: FormState, fd: FormData): Promise<FormS
     errors.image = (e as Error).message
   }
 
-  const variants: Variant[] = parseJson<Partial<Variant>[]>(fd.get('variants'), [])
-    .filter((v) => typeof v.name === 'string' && v.name.trim())
-    .slice(0, 40)
-    .map((v) => ({
-      id: typeof v.id === 'string' && v.id ? v.id.slice(0, 40) : newId('v_'),
-      name: String(v.name).trim().slice(0, 80),
-      price: typeof v.price === 'number' && Number.isFinite(v.price) && v.price >= 0 ? Math.round(v.price) : null,
+  const money = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.round(v) : null)
+  const text = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max)
+
+  // Opciones (ejes de variación): Medida → [20 mm, 25 mm]. Máximo 3 ejes y 30 valores por eje.
+  const options: ProductOption[] = []
+  for (const o of parseJson<Partial<ProductOption>[]>(fd.get('options'), []).slice(0, 3)) {
+    const name = text(o.name, 40)
+    const values = [...new Set((Array.isArray(o.values) ? o.values : []).map((v) => text(v, 60)).filter(Boolean))].slice(0, 30)
+    if (name && values.length && !options.some((x) => x.name.toLowerCase() === name.toLowerCase())) options.push({ name, values })
+  }
+
+  // Variantes: combinaciones de esas opciones, cada una con código, precio, stock y foto.
+  const seenCombos = new Set<string>()
+  const variants: Variant[] = []
+  for (const v of parseJson<Partial<Variant>[]>(fd.get('variants'), []).slice(0, 120)) {
+    const values: Record<string, string> = {}
+    for (const o of options) {
+      const value = text(v.options?.[o.name], 60)
+      if (o.values.includes(value)) values[o.name] = value
+    }
+    if (Object.keys(values).length !== options.length) continue
+    const combo = variantLabel(values, options)
+    if (seenCombos.has(combo)) continue
+    seenCombos.add(combo)
+    const imageIndex = typeof v.imageIndex === 'number' && v.imageIndex >= 0 && v.imageIndex < 12 ? Math.floor(v.imageIndex) : null
+    variants.push({
+      id: typeof v.id === 'string' && /^[\w-]{1,60}$/.test(v.id) ? v.id : newId('v_'),
+      name: combo,
+      options: values,
+      sku: text(v.sku, 40),
+      price: money(v.price),
+      originalPrice: money(v.originalPrice),
       stock: isStock(v.stock) ? v.stock : 'disponible',
-    }))
+      imageIndex,
+    })
+  }
+
+  // Ficha técnica: filas Etiqueta → Valor (Ancho → 39 cm).
+  const specs: ProductSpec[] = parseJson<Partial<ProductSpec>[]>(fd.get('specs'), [])
+    .map((r) => ({ label: text(r.label, 40), value: text(r.value, 120) }))
+    .filter((r) => r.label && r.value)
+    .slice(0, 40)
 
   if (Object.keys(errors).length) return { errors, message: 'Revisá los campos marcados.' }
 
@@ -188,6 +224,10 @@ export async function saveProduct(_prev: FormState, fd: FormData): Promise<FormS
       promo: fd.get('promo') === 'on',
       promotion,
       brand: str(fd, 'brand', 60),
+      sku: str(fd, 'sku', 40),
+      shortDescription: str(fd, 'shortDescription', 200),
+      specs,
+      options,
       attributes,
       featured: fd.get('featured') === 'on',
       active: fd.get('active') === 'on',
@@ -485,6 +525,7 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
     heroSubtitle: str(fd, 'heroSubtitle', 300),
     announcementEnabled: fd.get('announcementEnabled') === 'on',
     announcementText: str(fd, 'announcementText', 160),
+    priceNote: str(fd, 'priceNote', 200),
     notifyEmail,
     gaId,
     googleVerification: str(fd, 'googleVerification', 120).replace(/^.*content="([^"]+)".*$/, '$1'),

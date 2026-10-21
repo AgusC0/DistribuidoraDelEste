@@ -39,7 +39,8 @@ export function hasPrice(product: Product) {
 export function productWaMessage(product: Product, variant?: Variant) {
   const price = variant ? variant.price : product.price
   const label = variant ? `${product.name} – ${variant.name}` : product.name
-  return `Hola Distribuidora del Este, quería consultar por: ${label}${price != null ? ` (${formatPrice(price)})` : ''}.`
+  const sku = variant?.sku || product.sku
+  return `Hola Distribuidora del Este, quería consultar por: ${label}${sku ? ` (cód. ${sku})` : ''}${price != null ? ` – ${formatPrice(price)}` : ''}.`
 }
 
 /** Mensaje de WhatsApp con todo el pedido armado en el sitio. */
@@ -47,7 +48,7 @@ export function orderWaMessage(items: OrderItem[], name?: string, note?: string)
   const lines = items.map((i) => {
     const label = i.variantName ? `${i.name} – ${i.variantName}` : i.name
     const price = i.price != null ? ` – ${formatPrice(i.price * i.quantity)}` : ''
-    return `• ${i.quantity} × ${label}${price}`
+    return `• ${i.quantity} × ${label}${i.sku ? ` (cód. ${i.sku})` : ''}${price}`
   })
   const priced = items.filter((i) => i.price != null)
   const total = priced.reduce((s, i) => s + (i.price ?? 0) * i.quantity, 0)

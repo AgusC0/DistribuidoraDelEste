@@ -22,12 +22,15 @@ export function ProductCard({
   query = '',
   priority = false,
   variant = 'default',
+  variantId,
 }: {
   product: Product
   query?: string
   priority?: boolean
   /** `promo`: versión destacada para la sección de ofertas. */
   variant?: 'default' | 'promo'
+  /** Variante a preseleccionar al abrir la ficha (p. ej. la medida filtrada en el catálogo). */
+  variantId?: string
 }) {
   const { categories, settings } = useCatalog()
   const { add } = useOrder()
@@ -35,7 +38,7 @@ export function ProductCard({
   const media = useRef<HTMLDivElement>(null)
   const [index, setIndex] = useState(0)
   const [added, setAdded] = useState(false)
-  const href = `/productos/${product.slug}`
+  const href = `/productos/${product.slug}${variantId ? `?v=${variantId}` : ''}`
   const images = product.images.length ? product.images : [product.image || '/placeholder.svg']
   const many = images.length > 1
 

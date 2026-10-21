@@ -135,6 +135,16 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
       </Panel>
 
       <Panel>
+        <h2 className={sectionTitle}>Ficha de producto</h2>
+        <Text
+          name="priceNote"
+          label="Aclaración debajo del precio"
+          defaultValue={settings.priceNote}
+          hint="Ej: Precios de contado, débito o transferencia. Consultá otras formas de pago."
+        />
+      </Panel>
+
+      <Panel>
         <h2 className={sectionTitle}>Portada</h2>
         <div className="flex flex-col gap-4">
           <Text name="heroTitle" label="Título principal" defaultValue={settings.heroTitle} />

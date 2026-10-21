@@ -15,12 +15,15 @@ export function PromotionsSection({
   title = 'Ofertas destacadas',
   subtitle,
   onSeeAll,
+  variantIdFor,
 }: {
   products: Product[]
   max?: number
   title?: string
   subtitle?: string
   onSeeAll?: () => void
+  /** Variante a preseleccionar en la ficha (la que coincide con los filtros activos). */
+  variantIdFor?: (p: Product) => string | undefined
 }) {
   if (!products.length) return null
   const sorted = [...products].sort((a, b) => (discountPercent(b) ?? 0) - (discountPercent(a) ?? 0))
@@ -62,7 +65,7 @@ export function PromotionsSection({
       <div className="relative -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
         {shown.map((p, i) => (
           <div key={p.id} className="w-[72%] shrink-0 snap-start sm:w-auto">
-            <ProductCard product={p} variant="promo" priority={i < 2} />
+            <ProductCard product={p} variant="promo" priority={i < 2} variantId={variantIdFor?.(p)} />
           </div>
         ))}
       </div>

@@ -87,6 +87,7 @@ export function buildIndex(products: Product[], categories: Category[]): SearchI
         field(product.name, 4),
         field([...product.tags, ...product.variants.map((v) => v.name)].join(' '), 2.5),
         field(product.brand, 3),
+        field([product.sku, ...product.variants.map((v) => v.sku)].filter(Boolean).join(' '), 4),
         field(Object.values(product.attributes).flat().join(' '), 2),
         field(categoryName, 2.5),
         field(product.description, 1),

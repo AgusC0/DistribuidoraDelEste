@@ -34,12 +34,34 @@ export type Promotion = {
   limitedStock: boolean
 }
 
-/** Variante de un producto: medida, color, capacidad… con su propio precio y stock. */
+/** Eje de variación del producto (ej: Medida → 20 mm, 25 mm, 32 mm). */
+export type ProductOption = {
+  name: string
+  values: string[]
+}
+
+/**
+ * Variante: una combinación de opciones (ej: { Medida: '25 mm', Color: 'Blanco' })
+ * con su propio código, precio, stock y foto.
+ */
 export type Variant = {
   id: string
+  /** Etiqueta legible de la combinación ("25 mm / Blanco"). Se arma sola a partir de `options`. */
   name: string
+  options: Record<string, string>
+  sku: string
   price: number | null
+  /** Precio anterior (tachado) si el producto está en promoción. */
+  originalPrice: number | null
   stock: StockStatus
+  /** Índice de la foto del producto que muestra esta variante (null = la principal). */
+  imageIndex: number | null
+}
+
+/** Fila de la ficha técnica ("Detalles del producto"): Ancho → 39 cm. */
+export type ProductSpec = {
+  label: string
+  value: string
 }
 
 export type Product = {
@@ -60,6 +82,14 @@ export type Product = {
   featured: boolean
   active: boolean
   stock: StockStatus
+  /** Código interno / referencia. */
+  sku: string
+  /** Bajada corta debajo del título. */
+  shortDescription: string
+  /** Ficha técnica: medidas, garantía, origen… (además de marca y filtros). */
+  specs: ProductSpec[]
+  /** Ejes de variación; las variantes son sus combinaciones. */
+  options: ProductOption[]
   /** Foto principal (siempre igual a `images[0]`). */
   image: string
   /** Galería completa; la primera es la principal. */
@@ -104,6 +134,8 @@ export type Settings = {
   heroSubtitle: string
   announcementEnabled: boolean
   announcementText: string
+  /** Aclaración debajo de los precios en la ficha de producto (formas de pago, IVA…). */
+  priceNote: string
   /** `false` oculta todos los montos del sitio público (tarjetas, fichas, pedido y WhatsApp). */
   showPrices: boolean
   /** Email que recibe el aviso de cada consulta nueva. */
@@ -122,6 +154,8 @@ export type OrderItem = {
   variantId?: string
   name: string
   variantName?: string
+  /** Código de la variante (o del producto). */
+  sku?: string
   price: number | null
   quantity: number
 }

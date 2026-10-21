@@ -155,7 +155,13 @@ export function OrderDrawer() {
                             ) : (
                               <p className="text-sm font-medium">{item.name}</p>
                             )}
-                            {item.variantName && <p className="text-xs text-muted-foreground">{item.variantName}</p>}
+                            {(item.variantName || item.sku) && (
+                              <p className="text-xs text-muted-foreground">
+                                {item.variantName}
+                                {item.variantName && item.sku && ' · '}
+                                {item.sku && <span className="font-mono">{item.sku}</span>}
+                              </p>
+                            )}
                           </div>
                           <button
                             type="button"
