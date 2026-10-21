@@ -12,7 +12,7 @@ import { parseCsv } from '@/lib/csv'
 import { sendTestEmail } from '@/lib/notify'
 import { mutateDb, newId, readDb, UPLOADS_DIR } from '@/lib/db'
 import { createDemoProducts } from '@/lib/demo-catalog'
-import { createCategories } from '@/lib/seed'
+import { CATEGORIES_VERSION, createCategories } from '@/lib/seed'
 import { requireAdmin } from '@/lib/session'
 import { slugify } from '@/lib/site'
 import type {
@@ -496,11 +496,9 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
     const key = slugify(clean)
     if (key && !filters.some((x) => x.key === key)) filters.push({ key, label: clean })
   }
+  // Marcas que trabaja el negocio en la categoría (separadas por coma).
+  const brands = [...new Set(str(fd, 'brands', 600).split(',').map((b) => b.trim().slice(0, 40)).filter(Boolean))].slice(0, 30)
   const result = await mutateDb((db): FormState => {
-    const slug = slugify(name)
-    if (db.categories.some((c) => c.slug === slug && c.id !== id)) {
-      return { errors: { name: 'Ya existe una categoría con ese nombre.' } }
-    }
     // Hasta 3 niveles (Baño → Sanitarios → Inodoros). Una categoría no puede quedar dentro de sí misma.
     const parentRaw = str(fd, 'parentId', 80)
     const parent = db.categories.find((c) => c.id === parentRaw)
@@ -518,14 +516,23 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
       return { errors: { parentId: `El catálogo admite hasta ${MAX_CATEGORY_DEPTH} niveles (ej: Baño → Sanitarios → Inodoros).` } }
     }
     const parentId = parent?.id ?? null
+    // Dos categorías hermanas no pueden llamarse igual (en rubros distintos sí: Griferías de Baño y de Cocina).
+    if (db.categories.some((c) => c.id !== id && (c.parentId ?? null) === parentId && slugify(c.name) === slugify(name))) {
+      return { errors: { name: 'Ya hay una categoría con ese nombre en ese lugar.' } }
+    }
     if (existing) {
+      // La URL (slug) no cambia al renombrar: así no se rompen enlaces ni lo indexado por Google.
       if (existing.parentId !== parentId) existing.order = db.categories.filter((c) => c.parentId === parentId).length
       existing.name = name
-      existing.slug = slug
       existing.description = str(fd, 'description', 200)
       existing.parentId = parentId
       existing.filters = filters
+      existing.brands = brands
     } else {
+      // El id/slug es único en todo el catálogo: si el nombre ya se usa en otro rubro, se le suma el del rubro.
+      const base = slugify(name) || 'categoria'
+      let slug = db.categories.some((c) => c.id === base) && parent ? `${base}-${parent.slug}` : base
+      for (let n = 2; db.categories.some((c) => c.id === slug); n++) slug = `${base}-${n}`
       db.categories.push({
         id: slug,
         name,
@@ -534,6 +541,7 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
         order: db.categories.filter((c) => (c.parentId ?? null) === parentId).length,
         parentId,
         filters,
+        brands,
       })
     }
     return { ok: true, message: existing ? 'Categoría actualizada.' : 'Categoría creada.' }
@@ -732,6 +740,7 @@ export async function loadDemoCatalog(): Promise<FormState> {
   await requireAdmin()
   const count = await mutateDb((db) => {
     db.categories = createCategories()
+    db.categoriesVersion = CATEGORIES_VERSION
     db.products = createDemoProducts()
     return db.products.length
   })

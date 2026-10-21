@@ -10,6 +10,7 @@ const PUERTA_OPTIONS = [{ name: 'Color', values: ['Cedro', 'Blanco'] }]
 export function createSeed(): Database {
   return {
     version: 1,
+    categoriesVersion: CATEGORIES_VERSION,
     settings: {
       businessName: 'Distribuidora del Este SRL',
       tagline: 'Sanitarios y corralón en Villa María, Córdoba',
@@ -132,7 +133,7 @@ export function createSeed(): Database {
         id: 'claraboyas',
         slug: 'claraboyas-techo-losa',
         name: 'Claraboyas para Techos de Losa',
-        categoryId: 'claraboya-y-puerta-plegable',
+        categoryId: 'claraboyas',
         description: 'Domos de acrílico para iluminación natural. Medidas 40x40, 40x60, 50x38, 50x60 y 60x60.',
         price: null,
         promo: false,
@@ -158,7 +159,7 @@ export function createSeed(): Database {
         id: 'puertas-pvc',
         slug: 'puertas-plegables-pvc',
         name: 'Puertas Plegables de PVC',
-        categoryId: 'claraboya-y-puerta-plegable',
+        categoryId: 'puertas-plegadizas',
         description: 'Puertas plegadizas de PVC, prácticas y resistentes. Disponibles en color Cedro y Blanco.',
         price: null,
         promo: false,
@@ -241,14 +242,16 @@ export function createSeed(): Database {
 
 const f = (...labels: string[]) => labels.map((label) => ({ key: slugify(label), label }))
 
+/** Sube cuando cambia la estructura por defecto: las bases existentes se actualizan una vez (ver lib/category-migration.ts). */
+export const CATEGORIES_VERSION = 2
+
 /**
- * Rubros y subcategorías del catálogo (Rubro → Subcategoría → Productos).
- * Los ids se usan en la URL. Los que ya existían se conservan (griferias-de-bano, sanitarios,
- * tanques-de-agua, termotanques…) para no romper enlaces; las URLs que cambiaron redirigen
- * (ver next.config.mjs). Cada subcategoría define sus filtros; los rubros sólo filtran por marca.
+ * Rubros y subcategorías del catálogo, tal cual los definió el cliente (Rubro → Subcategoría → Productos),
+ * con las marcas que trabaja en cada una. Los ids se usan en la URL: se conservan los que ya existían
+ * y las URLs que cambiaron redirigen (ver next.config.mjs). Los rubros sólo filtran por marca.
  */
 export function createCategories(): Category[] {
-  const root = (id: string, name: string, description: string, order: number): Category => ({
+  const root = (id: string, name: string, description: string, order: number, brands: string[] = []): Category => ({
     id,
     name,
     slug: id,
@@ -256,8 +259,17 @@ export function createCategories(): Category[] {
     order,
     parentId: null,
     filters: [],
+    brands,
   })
-  const sub = (parentId: string, id: string, name: string, description: string, order: number, filters: Category['filters']): Category => ({
+  const sub = (
+    parentId: string,
+    id: string,
+    name: string,
+    description: string,
+    order: number,
+    filters: Category['filters'],
+    brands: string[] = [],
+  ): Category => ({
     id,
     name,
     slug: id,
@@ -265,52 +277,59 @@ export function createCategories(): Category[] {
     order,
     parentId,
     filters,
+    brands,
   })
+  const griferias = ['FV', 'Mozart', 'Bayco', 'IPS', 'Vasser']
   return [
-    root('sistema-conduccion', 'Sistema conducción', 'Caños, conexiones y accesorios para agua, gas y cloaca, y tanques de agua.', 0),
-    sub('sistema-conduccion', 'agua-gas-y-cloaca', 'Agua + gas + cloaca', 'Sistemas completos para instalaciones de agua, gas y cloaca.', 0, f('Tipo', 'Material', 'Medida')),
-    sub('sistema-conduccion', 'canos', 'Caños', 'Caños de termofusión, PVC, polietileno y cobre.', 1, f('Material', 'Medida')),
-    sub('sistema-conduccion', 'accesorios-conduccion', 'Accesorios', 'Codos, tees, cuplas, llaves de paso y demás conexiones.', 2, f('Tipo', 'Material', 'Medida')),
-    sub('sistema-conduccion', 'tanques-de-agua', 'Tanques de agua', 'Tanques tricapa, bicapa y cisternas para agua potable, y sus accesorios.', 3, f('Capacidad', 'Material', 'Color')),
+    // "Agua + gas + cloaca" es la bajada del rubro (así figura en la estructura del cliente), no una subcategoría.
+    root('sistema-conduccion', 'Sistema de conducción', 'Agua + gas + cloaca: caños, accesorios, tanques y bombas de agua.', 0),
+    sub('sistema-conduccion', 'canos', 'Caños', 'Caños para agua, gas y cloaca.', 0, f('Material', 'Medida'), ['H3', 'Duratop', 'Acqua System', 'Sigas', 'Epoxi', 'IPS', 'Tuboforte']),
+    sub('sistema-conduccion', 'accesorios-conduccion', 'Accesorios', 'Codos, tees, cuplas, llaves de paso y demás conexiones.', 1, f('Tipo', 'Material', 'Medida')),
+    sub('sistema-conduccion', 'tanques-de-agua', 'Tanque de agua', 'Tanques de agua tricapa, bicapa y de acero inoxidable.', 2, f('Capacidad', 'Material', 'Color'), ['Rotoplas', 'Mayper', 'Tinacos', 'Affinity']),
+    sub('sistema-conduccion', 'bombas-de-agua', 'Bombas de agua', 'Bombas presurizadoras y elevadoras de agua.', 3, f('Tipo'), ['Rowa', 'Pluvius', 'Cafu']),
 
-    root('repuestos-sanitarios', 'Repuestos sanitarios', 'Repuestos para griferías y sanitarios.', 1),
-    sub('repuestos-sanitarios', 'vastagos', 'Vástagos', 'Vástagos y repuestos para canillas y llaves de paso.', 0, f('Tipo', 'Medida')),
+    root('repuestos-sanitarios', 'Repuestos sanitarios', 'Repuestos para sanitarios.', 1, ['Ferrum', 'Roca', 'Capea', 'Pringles']),
 
-    root('bano', 'Baño', 'Griferías, sanitarios, vanitorys y accesorios para renovar o construir tu baño.', 2),
-    sub('bano', 'griferias-de-bano', 'Griferías', 'Monocomandos de lavatorio, juegos de ducha y de bidet.', 0, f('Tipo', 'Línea', 'Color', 'Instalación')),
-    sub('bano', 'sanitarios', 'Sanitarios', 'Inodoros, bidets, mochilas y depósitos de las mejores marcas.', 1, f('Tipo', 'Línea', 'Color', 'Sistema')),
-    sub('bano', 'accesorios-bano', 'Accesorios para baño', 'Toalleros, portarrollos, jaboneras y barrales.', 2, f('Tipo', 'Color')),
-    sub('bano', 'claraboya-y-puerta-plegable', 'Claraboya + puerta plegable', 'Claraboyas para iluminación natural y puertas plegables de PVC.', 3, f('Tipo', 'Medida', 'Color')),
-    sub('bano', 'tabla-inodoro', 'Tabla inodoro', 'Tablas y asientos para inodoro.', 4, f('Línea', 'Color')),
-    sub('bano', 'vanitory', 'Vanitory', 'Vanitorys de pie y suspendidos con bacha.', 5, f('Medida', 'Instalación')),
-    sub('bano', 'espejo', 'Espejo', 'Espejos para baño.', 6, f('Medida')),
+    root('repuestos-griferias', 'Repuestos griferías', 'Repuestos para griferías.', 2, griferias),
 
-    root('cocina', 'Cocina', 'Cocinas, campanas, griferías, filtros de agua, bachas y piletas.', 3),
-    sub('cocina', 'cocinas', 'Cocinas', 'Cocinas a gas y eléctricas.', 0, f('Tipo')),
-    sub('cocina', 'campanas', 'Campanas', 'Campanas y purificadores de cocina.', 1, f('Tipo', 'Medida')),
-    sub('cocina', 'griferias-de-cocina', 'Griferías', 'Monocomandos y canillas para mesada y pared.', 2, f('Tipo', 'Línea', 'Color')),
-    sub('cocina', 'filtros-de-agua', 'Filtro de agua', 'Purificadores, filtros y repuestos para tomar agua más rica.', 3, f('Tipo', 'Instalación')),
-    sub('cocina', 'bateas-de-acero', 'Bateas de acero', 'Bateas y bachas de acero inoxidable.', 4, f('Medida')),
-    sub('cocina', 'bacha', 'Bacha', 'Bachas para cocina.', 5, f('Material', 'Medida')),
-    sub('cocina', 'piletas-para-lavadero', 'Piletas para lavadero', 'Piletas para lavadero y patio.', 6, f('Material', 'Medida')),
+    root('bano', 'Baño', 'Griferías, sanitarios, accesorios, vanitorys, espejos y botiquines para tu baño.', 3),
+    sub('bano', 'griferias-de-bano', 'Griferías', 'Monocomandos de lavatorio, juegos de ducha y de bidet.', 0, f('Tipo', 'Línea', 'Color', 'Instalación'), griferias),
+    sub('bano', 'sanitarios', 'Sanitarios', 'Inodoros, bidets, mochilas y depósitos.', 1, f('Tipo', 'Línea', 'Color', 'Sistema'), ['Ferrum']),
+    sub('bano', 'accesorios-bano', 'Accesorios para baño', 'Toalleros, portarrollos, jaboneras y barrales.', 2, f('Tipo', 'Color'), ['Peirano', 'Hydros', 'Genebre', 'Mozart']),
+    sub('bano', 'puertas-plegadizas', 'Puerta plegadiza', 'Puertas plegadizas de PVC y sus accesorios.', 3, f('Color', 'Medida'), ['Claraluz']),
+    sub('bano', 'claraboyas', 'Claraboya', 'Claraboyas y domos para iluminación natural.', 4, f('Medida', 'Material'), ['Claraluz']),
+    sub('bano', 'tabla-inodoro', 'Tablas inodoro', 'Tablas de inodoro de madera y plásticas.', 5, f('Material', 'Color'), ['Cotrabo', 'Daccord', 'Monkoto', 'Ferrum', 'Mozart']),
+    sub('bano', 'vanitory', 'Vanitory', 'Vanitorys de pie y suspendidos con bacha.', 6, f('Medida', 'Instalación'), ['Amoblamiento JC', 'Schneider']),
+    sub('bano', 'espejo', 'Espejos', 'Espejos para baño.', 7, f('Medida')),
+    sub('bano', 'botiquines', 'Botiquines', 'Botiquines con espejo para baño.', 8, f('Medida')),
 
-    root('calefaccion', 'Calefacción', 'Termotanques, calefones, calefactores, salamandras y bombas de agua.', 4),
-    sub('calefaccion', 'termotanques', 'Termotanque', 'Termotanques a gas, eléctricos y solares.', 0, f('Tipo', 'Capacidad', 'Instalación')),
-    sub('calefaccion', 'calefactores', 'Calefactor', 'Calefactores a gas y eléctricos.', 1, f('Tipo')),
-    sub('calefaccion', 'calefones', 'Calefón', 'Calefones a gas.', 2, f('Tipo', 'Capacidad')),
-    sub('calefaccion', 'salamandras', 'Salamandra', 'Salamandras y estufas a leña.', 3, f('Tipo')),
-    sub('calefaccion', 'bombas-de-agua', 'Bombas de agua', 'Bombas presurizadoras y elevadoras de agua.', 4, f('Tipo')),
-    sub('calefaccion', 'a-lena', 'A leña', 'Hornos, parrillas y equipos a leña.', 5, f('Tipo')),
+    root('cocina', 'Cocina', 'Anafes, campanas, griferías, filtros purificadores, bachas y piletas de lavadero.', 4),
+    sub('cocina', 'anafes', 'Anafe', 'Anafes a gas y eléctricos.', 0, f('Tipo'), ['Abrasol', 'Brogas']),
+    sub('cocina', 'campanas', 'Campanas de cocina', 'Campanas y purificadores de cocina.', 1, f('Tipo', 'Medida'), ['Al-nes', 'Dhinox']),
+    sub('cocina', 'griferias-de-cocina', 'Griferías', 'Monocomandos y canillas para mesada y pared.', 2, f('Tipo', 'Línea', 'Color'), griferias),
+    sub('cocina', 'filtros-de-agua', 'Filtro purificador', 'Purificadores y filtros para tomar agua más rica.', 3, f('Tipo', 'Instalación'), ['Rotoplas']),
+    sub('cocina', 'bachas-de-acero', 'Bachas de acero', 'Bachas de acero inoxidable simples y dobles.', 4, f('Medida'), ['Masecor', 'Dhinox']),
+    sub('cocina', 'piletas-lavadero-marmolina', 'Piletas lavadero marmolina', 'Piletas de lavadero de marmolina.', 5, f('Medida'), ['Campagnolo']),
+    sub('cocina', 'piletas-lavadero-plasticas', 'Piletas lavadero plásticas', 'Piletas de lavadero plásticas.', 6, f('Medida', 'Color'), ['Astrid', 'Concorplast']),
 
-    root('construccion', 'Construcción', 'Materiales para obra: ladrillos, cemento, arena, cal y revestimientos.', 5),
-    sub('construccion', 'ladrillo-comun', 'Ladrillo común', 'Ladrillos comunes para obra.', 0, []),
+    root('calefaccion', 'Calefacción', 'Termotanques, calefactores, calefones, salamandras y estufas de fundición.', 5),
+    sub('calefaccion', 'termotanques', 'Termotanques', 'Termotanques a gas, eléctricos y solares.', 0, f('Tipo', 'Capacidad', 'Instalación'), ['Ecotermo', 'Rotoplas', 'Señorial', 'Saiar', 'Rheem', 'Kacemaster', 'Sherman']),
+    sub('calefaccion', 'calefactores', 'Calefactor', 'Calefactores a gas.', 1, f('Tipo'), ['Volcán']),
+    sub('calefaccion', 'calefones', 'Calefón', 'Calefones a gas.', 2, f('Tipo', 'Capacidad'), ['Volcán']),
+    sub('calefaccion', 'salamandras', 'Salamandra', 'Salamandras a leña.', 3, f('Tipo')),
+    sub('calefaccion', 'estufas-de-fundicion', 'Estufa de fundición', 'Estufas de hierro fundido a leña.', 4, f('Tipo')),
+
+    root('construccion', 'Construcción', 'Arena, cemento, cal, pegamentos, pastinas, impermeabilizantes y membranas.', 6),
+    sub('construccion', 'arena', 'Arena', 'Arena fina y gruesa.', 0, []),
     sub('construccion', 'cemento', 'Cemento', 'Cemento portland y de albañilería.', 1, []),
-    sub('construccion', 'arena', 'Arena', 'Arena fina y gruesa.', 2, []),
-    sub('construccion', 'cal', 'Cal', 'Cal hidráulica y aérea.', 3, []),
-    sub('construccion', 'pegamento-ceramico', 'Pegamento cerámico', 'Adhesivos para cerámicos y porcelanatos.', 4, []),
-    sub('construccion', 'pastina', 'Pastina', 'Pastinas para juntas.', 5, []),
-    sub('construccion', 'membranas', 'Membranas', 'Membranas asfálticas y líquidas.', 6, []),
-    sub('construccion', 'revestimientos', 'Revestimientos', 'Revestimientos para pisos y paredes.', 7, []),
-    sub('construccion', 'ceramica', 'Cerámica', 'Cerámicos y porcelanatos.', 8, []),
+    sub('construccion', 'cal', 'Hercal', 'Cal hidráulica Hercal.', 2, []),
+    sub('construccion', 'pegamento-ceramico', 'Pegamento cerámico', 'Adhesivos para cerámicos y porcelanatos.', 3, []),
+    sub('construccion', 'pastina', 'Pastina', 'Pastinas para juntas.', 4, []),
+    sub('construccion', 'sika', 'Sika', 'Productos Sika para la construcción.', 5, []),
+    sub('construccion', 'protex', 'Protex', 'Productos Protex para la construcción.', 6, []),
+    sub('construccion', 'ceresita', 'Ceresita', 'Hidrófugos y productos Ceresita.', 7, []),
+    sub('construccion', 'membrana-asfaltica', 'Membrana asfáltica', 'Membranas asfálticas para techos.', 8, []),
+
+    root('herramientas', 'Herramientas', 'Próximamente.', 7),
   ]
 }

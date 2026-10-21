@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { EMPTY_PROMOTION } from '@/lib/catalog'
-import { hasLegacyCategories, migrateCategoryTree, renameAbbreviatedCategories } from '@/lib/category-migration'
+import { hasLegacyCategories, migrateCategoryTree, upgradeCategoryTree } from '@/lib/category-migration'
 import { createSeed } from '@/lib/seed'
 import type { Database, PublicCatalog, TrackEvent } from '@/lib/types'
 
@@ -29,7 +29,7 @@ function migrate(db: Database): Database {
   db.orders ??= []
   // Estructura de categorías anterior → actual (reclasifica productos, conserva categorías propias).
   if (hasLegacyCategories(db)) migrateCategoryTree(db)
-  renameAbbreviatedCategories(db)
+  upgradeCategoryTree(db)
   for (const c of db.categories) {
     c.parentId ??= null
     c.filters ??= []

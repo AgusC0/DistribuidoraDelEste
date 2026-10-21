@@ -232,9 +232,23 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
 
   const inScope = useMemo(() => (scope ? searched.filter((p) => scope.has(p.categoryId)) : searched), [searched, scope])
 
-  const groups = useMemo(() => [{ key: 'marca', label: 'Marca' }, ...attrFilters], [attrFilters])
+  // En un rubro, sus subcategorías también son un filtro de casillas: se pueden marcar varias
+  // (ej: Griferías + Sanitarios dentro de Baño). Cada producto vale por la subcategoría que lo contiene.
+  const subOf = useMemo(() => {
+    const map = new Map<string, string>()
+    if (category) for (const child of childCategories(categories, category.id)) for (const id of descendantIds(categories, child.id)) map.set(id, child.name)
+    return map
+  }, [categories, category])
 
-  const valuesOf = (p: Product, key: string) => (key === 'marca' ? (p.brand ? [p.brand] : []) : attributeValues(p, key))
+  const groups = useMemo(
+    () => [...(subOf.size ? [{ key: 'sub', label: 'Subcategoría' }] : []), { key: 'marca', label: 'Marca' }, ...attrFilters],
+    [attrFilters, subOf],
+  )
+
+  const valuesOf = (p: Product, key: string) => {
+    if (key === 'sub') return subOf.has(p.categoryId) ? [subOf.get(p.categoryId)!] : []
+    return key === 'marca' ? (p.brand ? [p.brand] : []) : attributeValues(p, key)
+  }
 
   const priceOk = (p: Product) => {
     if (s.min == null && s.max == null) return true
@@ -327,6 +341,13 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
   const hrefFor = (c?: Category) => (c ? categoryUrl(categories, c.id) : '/productos') + qs
 
   const brands = s.facets.marca ?? []
+  // Marcas de la categoría (o de sus subcategorías, en un rubro) que tienen productos acá, en el orden cargado.
+  const brandShortcuts = (() => {
+    if (!category || !catalogReady) return []
+    const listed = category.brands?.length ? category.brands : childCategories(categories, category.id).flatMap((c) => c.brands ?? [])
+    const present = new Map(inScope.map((p) => [p.brand.toLowerCase(), p.brand]))
+    return [...new Set(listed.map((b) => present.get(b.toLowerCase())).filter((b): b is string => !!b))]
+  })()
   const singleBrand = brands.length === 1 ? brands[0] : null
   const title = `${category?.name ?? (s.oferta ? 'Promociones' : 'Todos los productos')}${singleBrand ? ` ${singleBrand}` : ''}`
 
@@ -375,7 +396,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
           </span>
           <span className="text-xs tabular-nums text-muted-foreground">{count}</span>
         </Link>
-        {inPath && children.length > 0 && (
+        {inPath && children.length > 0 && !(active && subOf.size > 0) && (
           <ul className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
             {children.map((child) => (
               <CategoryNode key={child.id} node={child} level={level + 1} />
@@ -388,6 +409,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
 
   const sidebar = (
     <div>
+      <p className="mb-4 text-xs text-muted-foreground">Podés marcar varias opciones y combinar filtros.</p>
       <FilterGroup title="Categorías">
         <ul className="flex flex-col gap-0.5 text-sm">
           <li>
@@ -580,6 +602,30 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Marcas que trabaja el negocio en esta categoría: un toque filtra (y se pueden combinar). */}
+          {brandShortcuts.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Marcas</span>
+              {brandShortcuts.map((b) => {
+                const on = brands.includes(b)
+                return (
+                  <button
+                    key={b}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => toggleFacet('marca', b)}
+                    className={cn(
+                      'inline-flex h-8 items-center rounded-full px-3 text-sm font-medium transition-colors',
+                      on ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-muted',
+                    )}
+                  >
+                    {b}
+                  </button>
+                )
+              })}
+            </div>
           )}
 
           {/* 3. Listado: buscar, ordenar y productos */}

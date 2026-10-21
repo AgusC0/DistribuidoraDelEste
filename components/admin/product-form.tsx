@@ -13,7 +13,7 @@ import { VariantsEditor } from '@/components/admin/variants-editor'
 import { FieldError, FormMessage, inputClass, Panel, SubmitButton, submitKeepingValues } from '@/components/admin/ui'
 import { saveProduct, type FormState } from '@/app/admin/actions'
 import { formatPrice, slugify, STOCK_LABEL } from '@/lib/site'
-import { flattenCategories } from '@/lib/catalog'
+import { categoryPath, flattenCategories } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 import type { Category, Product, StockStatus } from '@/lib/types'
 
@@ -57,6 +57,8 @@ export function ProductForm({
   )
   const selectedCategory = categories.find((c) => c.id === categoryId)
   const categoryFilters = selectedCategory?.filters ?? []
+  // Primero las marcas que trabaja el negocio en la categoría elegida (y en su rubro), después las ya cargadas.
+  const brandOptions = [...new Set([...categoryPath(categories, categoryId).reverse().flatMap((c) => c.brands ?? []), ...brands])]
   const attributesValue = JSON.stringify(
     Object.fromEntries(
       categoryFilters
@@ -174,7 +176,7 @@ export function ProductForm({
                 className={inputClass}
               />
               <datalist id="brand-list">
-                {brands.map((b) => (
+                {brandOptions.map((b) => (
                   <option key={b} value={b} />
                 ))}
               </datalist>

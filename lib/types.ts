@@ -16,6 +16,8 @@ export type Category = {
   parentId: string | null
   /** Filtros específicos que se muestran al navegar esta categoría. */
   filters: CategoryFilter[]
+  /** Marcas que trabaja el negocio en esta categoría: accesos rápidos en la página y sugerencias en el panel. */
+  brands?: string[]
 }
 
 /**
@@ -194,6 +196,8 @@ export type TrackEvent =
 
 export type Database = {
   version: number
+  /** Versión de la estructura de categorías por defecto: permite actualizar bases existentes una sola vez. */
+  categoriesVersion?: number
   settings: Settings
   categories: Category[]
   products: Product[]

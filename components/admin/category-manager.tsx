@@ -143,6 +143,18 @@ function CategoryForm({
           placeholder="Ej: Caños, conexiones y accesorios para agua y desagüe."
         />
       </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`brands-${uid}`} className="text-xs font-medium text-muted-foreground">
+          Marcas que trabajan (separadas por coma). Se muestran como accesos rápidos en la categoría.
+        </label>
+        <input
+          id={`brands-${uid}`}
+          name="brands"
+          defaultValue={category?.brands?.join(', ')}
+          className={inputClass}
+          placeholder="Ej: FV, Mozart, Bayco"
+        />
+      </div>
       {parentId ? (
         <div className="flex flex-col gap-1">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">

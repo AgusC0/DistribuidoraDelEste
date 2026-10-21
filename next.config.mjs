@@ -13,9 +13,24 @@ const LEGACY_CATEGORY_REDIRECTS = [
   ['agua-y-canerias/termotanques', 'calefaccion/termotanques'],
   ['agua-y-canerias/purificadores', 'cocina/filtros-de-agua'],
   ['agua-y-canerias', 'sistema-conduccion'],
-  ['aberturas-y-techos/puertas-pvc', 'bano/claraboya-y-puerta-plegable'],
-  ['aberturas-y-techos/claraboyas', 'bano/claraboya-y-puerta-plegable'],
-  ['aberturas-y-techos', 'bano/claraboya-y-puerta-plegable'],
+  ['aberturas-y-techos/puertas-pvc', 'bano/puertas-plegadizas'],
+  ['aberturas-y-techos/claraboyas', 'bano/claraboyas'],
+  ['aberturas-y-techos', 'bano/claraboyas'],
+  // Ajustes posteriores a la reorganización
+  ['bano/claraboya-y-puerta-plegable', 'bano/claraboyas'],
+  ['cocina/bateas-de-acero', 'cocina/bachas-de-acero'],
+  ['sistema-conduccion/agua-gas-y-cloaca', 'sistema-conduccion'],
+  // Estructura definitiva del cliente (versión 2)
+  ['calefaccion/bombas-de-agua', 'sistema-conduccion/bombas-de-agua'],
+  ['repuestos-sanitarios/vastagos', 'repuestos-griferias'],
+  ['cocina/cocinas', 'cocina/anafes'],
+  ['cocina/bacha', 'cocina'],
+  ['cocina/piletas-para-lavadero', 'cocina'],
+  ['calefaccion/a-lena', 'calefaccion'],
+  ['construccion/ladrillo-comun', 'construccion'],
+  ['construccion/revestimientos', 'construccion'],
+  ['construccion/ceramica', 'construccion'],
+  ['construccion/membranas', 'construccion/membrana-asfaltica'],
 ]
 
 /** @type {import('next').NextConfig} */

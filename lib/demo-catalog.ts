@@ -1,7 +1,7 @@
 import { buildVariants, EMPTY_PROMOTION } from '@/lib/catalog'
 import { reclassifyProducts } from '@/lib/category-migration'
 import { createExtraDemoProducts } from '@/lib/demo-catalog-extra'
-import { createSeed } from '@/lib/seed'
+import { createCategories, createSeed } from '@/lib/seed'
 import type { Product, ProductOption, ProductSpec, Promotion, StockStatus, Variant } from '@/lib/types'
 
 /**
@@ -340,5 +340,27 @@ export function createDemoProducts(): Product[] {
   const base = createSeed().products.filter((p) => !['monocomando-cocina', 'canerias', 'termotanque'].includes(p.id))
   // Más productos por rubro para probar filtros, búsqueda, paginación y promociones con un catálogo real.
   // Los productos se escribieron con las categorías anteriores: se ubican en la estructura actual.
-  return reclassifyProducts([...demo, ...base, ...createExtraDemoProducts()])
+  return withClientBrands(reclassifyProducts([...demo, ...base, ...createExtraDemoProducts()]))
+}
+
+/**
+ * En la demostración, cada producto lleva una de las marcas que trabaja el cliente en su categoría
+ * (si la que tenía no está en esa lista). Una misma marca original pasa siempre a la misma marca nueva,
+ * así una línea de productos (inodoro, bidet y mochila) sigue siendo de una sola marca.
+ */
+function withClientBrands(products: Product[]): Product[] {
+  const categories = createCategories()
+  const brandsOf = (id: string): string[] => {
+    for (let c = categories.find((x) => x.id === id); c; c = categories.find((x) => x.id === c!.parentId)) {
+      if (c.brands?.length) return c.brands
+    }
+    return []
+  }
+  const hash = (text: string) => [...text].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7)
+  return products.map((p) => {
+    const list = brandsOf(p.categoryId)
+    if (!list.length || list.some((b) => b.toLowerCase() === p.brand.toLowerCase())) return p
+    const brand = list[hash(p.brand) % list.length]
+    return { ...p, brand, description: p.brand ? p.description.split(p.brand).join(brand) : p.description }
+  })
 }
