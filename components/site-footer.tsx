@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { Clock, Map, Mail, MapPin } from 'lucide-react'
-import { Logo } from '@/components/logo'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
@@ -25,7 +24,10 @@ export function SiteFooter({ settings, categories }: { settings: Settings; categ
     <footer className="bg-brand-blue text-primary-foreground">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="flex flex-col gap-4">
-          <Logo variant="light" />
+          <p className="flex flex-col leading-none">
+            <span className="font-heading text-xl font-bold uppercase tracking-wide">{settings.businessName}</span>
+            <span className="mt-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-aqua">Sanitarios · Corralón</span>
+          </p>
           <p className="max-w-xs text-sm leading-relaxed text-primary-foreground/75">{settings.tagline}. Calidad y asesoramiento para tu hogar o proyecto.</p>
           <div className="flex gap-2">
             {settings.facebook && (
@@ -101,9 +103,12 @@ export function SiteFooter({ settings, categories }: { settings: Settings; categ
       </div>
 
       <div className="border-t border-primary-foreground/10">
-        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-          <p className="text-center text-xs text-primary-foreground/65">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-primary-foreground/65 sm:flex-row sm:px-6 lg:px-8">
+          <p className="text-center">
             © {new Date().getFullYear()} {settings.businessName}. Todos los derechos reservados.
+          </p>
+          <p>
+            Desarrollado por <span className="font-semibold text-primary-foreground/85">ExTend</span>
           </p>
         </div>
       </div>

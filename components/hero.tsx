@@ -8,7 +8,7 @@ import type { Settings } from '@/lib/types'
 
 export function Hero({ settings }: { settings: Settings }) {
   return (
-    <section id="inicio" className="relative isolate scroll-mt-16 overflow-hidden bg-brand-blue">
+    <section id="inicio" className="relative isolate scroll-mt-16 md:scroll-mt-20 overflow-hidden bg-brand-blue">
       <Image
         src="/images/hero-bathroom.png"
         alt=""

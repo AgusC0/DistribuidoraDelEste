@@ -18,7 +18,7 @@ const socialClass =
 
 export function About({ settings }: { settings: Settings }) {
   return (
-    <section id="nosotros" aria-labelledby="nosotros-title" className="scroll-mt-16 bg-background py-16 md:py-24">
+    <section id="nosotros" aria-labelledby="nosotros-title" className="scroll-mt-16 md:scroll-mt-20 bg-background py-16 md:py-24">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
         <FadeIn className="flex flex-col gap-5">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Nosotros</p>

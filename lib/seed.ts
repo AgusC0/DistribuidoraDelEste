@@ -23,7 +23,7 @@ export function createSeed(): Database {
         'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d799.8825352796204!2d-63.23053915165842!3d-32.416519832226975!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95cc42ed83f59769%3A0x58dafcce3fa44711!2sDistribuidora%20Del%20Este!5e0!3m2!1ses-419!2sar!4v1787065060311!5m2!1ses-419!2sar',
       instagram: 'https://instagram.com/distribuidora_del_este',
       instagramHandle: '@distribuidora_del_este',
-      facebook: 'https://facebook.com/distribuidoradeleste',
+      facebook: 'https://www.facebook.com/profile.php?id=100063635046976',
       hours: [
         '',
         '08:00-12:00, 15:00-19:00',

@@ -32,7 +32,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     name: settings.businessName,
     description: settings.tagline,
     url: SITE_URL,
-    image: `${SITE_URL}/images/logo-distribuidora.png`,
+    image: `${SITE_URL}/images/logo-del-este.png`,
     telephone: `+${settings.whatsappNumber}`,
     email: settings.email,
     address: {

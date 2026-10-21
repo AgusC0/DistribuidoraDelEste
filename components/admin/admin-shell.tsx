@@ -130,7 +130,7 @@ export function AdminShell({
     <div className="min-h-dvh bg-secondary/40">
       {/* barra superior móvil */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background px-4 lg:hidden">
-        <Logo />
+        <Logo className="h-10" />
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -153,7 +153,7 @@ export function AdminShell({
         )}
       >
         <Link href="/admin" className="px-2 pt-1">
-          <Logo />
+          <Logo className="h-20" />
         </Link>
         {nav}
       </aside>

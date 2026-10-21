@@ -8,6 +8,14 @@ const nextConfig = {
     // El proxy del panel (/admin) también recibe esos envíos: sin esto corta el cuerpo en 10 MB.
     proxyClientMaxBodySize: '25mb',
   },
+  // Atajos para entrar al panel: /login y /ingresar llevan al ingreso real (/admin/login).
+  async redirects() {
+    return [
+      { source: '/login', destination: '/admin/login', permanent: false },
+      { source: '/ingresar', destination: '/admin/login', permanent: false },
+      { source: '/admin/ingresar', destination: '/admin/login', permanent: false },
+    ]
+  },
   async headers() {
     return [
       {

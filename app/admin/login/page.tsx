@@ -1,7 +1,10 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { BadgePercent, ClipboardList, Tags } from 'lucide-react'
 import { Logo } from '@/components/logo'
 import { LoginForm } from '@/components/admin/login-form'
+import { Auth5 } from '@/components/ui/auth-5'
+import { readDb } from '@/lib/db'
 import { isAdmin } from '@/lib/session'
 
 export const metadata: Metadata = { title: 'Ingresar al panel', robots: { index: false } }
@@ -11,26 +14,42 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams
   const devHint = process.env.NODE_ENV !== 'production' && !process.env.ADMIN_PASSWORD
   const misconfigured = process.env.NODE_ENV === 'production' && !process.env.ADMIN_PASSWORD
+  const { settings } = await readDb()
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-secondary/60 px-4 py-12">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm">
-        <Logo />
-        <h1 className="mt-6 font-heading text-2xl font-bold uppercase tracking-tight text-foreground">Panel de administración</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Ingresá tu usuario y contraseña para gestionar el sitio.</p>
-        {misconfigured && (
-          <p className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-            Falta configurar la variable de entorno ADMIN_PASSWORD en el servidor.
+    <Auth5
+      logo={<Logo className="h-16 sm:h-20" />}
+      heading="Ingresá al panel"
+      subtext={
+        <>
+          Gestioná productos, precios, promociones y pedidos de la web de <span className="font-medium text-foreground">{settings.businessName}</span>.
+        </>
+      }
+      image={{ src: '/images/hero-bathroom.png', alt: 'Showroom con sanitarios, griferías y muebles de baño' }}
+      panelHeading="Todo tu negocio online, en un solo lugar"
+      features={[
+        { icon: <ClipboardList className="size-5" />, title: 'Pedidos al día', description: 'Cada pedido de WhatsApp queda guardado con sus productos y precios.' },
+        { icon: <Tags className="size-5" />, title: 'Precios y stock al instante', description: 'Cambiás uno o cientos a la vez, y se ve en la web enseguida.' },
+        { icon: <BadgePercent className="size-5" />, title: 'Promociones que se ven', description: 'Tus ofertas aparecen primero en la portada y en el menú.' },
+      ]}
+      footer={
+        <div className="space-y-4">
+          <p className="text-center text-xs leading-relaxed text-muted-foreground">
+            ¿Olvidaste la contraseña? Pedísela a quien administra el sitio.
           </p>
-        )}
-        <LoginForm next={next ?? ''} />
-        {devHint && (
-          <p className="mt-4 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-            Modo prueba: usuario <code className="font-semibold">admin</code> y contraseña{' '}
-            <code className="font-semibold">admin</code>. Se cambian con ADMIN_USER y ADMIN_PASSWORD en <code>.env.local</code>.
-          </p>
-        )}
-      </div>
-    </main>
+          {devHint && (
+            <p className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+              Modo prueba: usuario <code className="font-semibold">admin</code> y contraseña <code className="font-semibold">admin</code>. Se cambian con
+              ADMIN_USER y ADMIN_PASSWORD en <code>.env.local</code>.
+            </p>
+          )}
+        </div>
+      }
+    >
+      {misconfigured && (
+        <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">Falta configurar la variable de entorno ADMIN_PASSWORD en el servidor.</p>
+      )}
+      <LoginForm next={next ?? ''} />
+    </Auth5>
   )
 }

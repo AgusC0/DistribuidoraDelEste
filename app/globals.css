@@ -65,8 +65,8 @@
   --card-foreground: oklch(0.22 0.03 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.03 250);
-  /* verde oliva #4A5D23 */
-  --primary: oklch(0.45 0.09 125);
+  /* verde del logo #2F5F26 */
+  --primary: oklch(0.43 0.1 138);
   --primary-foreground: oklch(0.99 0.005 120);
   --secondary: oklch(0.95 0.01 235);
   --secondary-foreground: oklch(0.3 0.05 250);
@@ -78,8 +78,8 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.9 0.01 235);
   --input: oklch(0.9 0.01 235);
-  --ring: oklch(0.45 0.09 125);
-  --chart-1: oklch(0.45 0.09 125);
+  --ring: oklch(0.43 0.1 138);
+  --chart-1: oklch(0.43 0.1 138);
   --chart-2: oklch(0.78 0.11 220);
   --chart-3: oklch(0.38 0.07 250);
   --chart-4: oklch(0.6 0.08 160);
@@ -87,12 +87,12 @@
   --radius: 0.5rem;
   --sidebar: oklch(0.985 0.002 240);
   --sidebar-foreground: oklch(0.22 0.03 250);
-  --sidebar-primary: oklch(0.45 0.09 125);
+  --sidebar-primary: oklch(0.43 0.1 138);
   --sidebar-primary-foreground: oklch(0.99 0.005 120);
   --sidebar-accent: oklch(0.95 0.01 235);
   --sidebar-accent-foreground: oklch(0.3 0.05 250);
   --sidebar-border: oklch(0.9 0.01 235);
-  --sidebar-ring: oklch(0.45 0.09 125);
+  --sidebar-ring: oklch(0.43 0.1 138);
   /* azul oscuro corporativo #1E3A5F */
   --brand-blue: oklch(0.33 0.06 250);
   --brand-blue-foreground: oklch(0.99 0.005 240);

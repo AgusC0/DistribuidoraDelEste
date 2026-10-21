@@ -21,7 +21,7 @@ export function PromotionsSection() {
   const best = discountPercent(promos[0])
 
   return (
-    <section id="promociones" aria-labelledby="promociones-title" className="scroll-mt-16 bg-promo/[0.07] py-14 md:py-20">
+    <section id="promociones" aria-labelledby="promociones-title" className="scroll-mt-16 md:scroll-mt-20 bg-promo/[0.07] py-14 md:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-2">

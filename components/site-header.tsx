@@ -74,9 +74,9 @@ export function SiteHeader() {
           scrolled ? 'border-border shadow-sm' : 'border-transparent',
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 md:h-20 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center rounded-lg" aria-label="Distribuidora del Este – Inicio">
-            <Logo />
+            <Logo className="h-[52px] md:h-[68px]" />
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Navegación principal">
