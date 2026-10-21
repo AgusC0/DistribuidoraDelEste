@@ -14,5 +14,10 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   await requireAdmin()
   const db = await readDb()
   const newLeads = db.leads.filter((l) => l.status === 'nuevo').length
-  return <AdminShell newLeads={newLeads}>{children}</AdminShell>
+  const newOrders = db.orders.filter((o) => o.status === 'nuevo').length
+  return (
+    <AdminShell newLeads={newLeads} newOrders={newOrders}>
+      {children}
+    </AdminShell>
+  )
 }

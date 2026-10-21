@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Eye, Inbox, Package, Plus, Search } from 'lucide-react'
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, ClipboardList, Eye, Inbox, Package, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BarList, ColumnChart } from '@/components/admin/charts'
 import { PageHeader, Panel } from '@/components/admin/ui'
 import { PriceVisibilityToggle } from '@/components/admin/price-visibility'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { readDb, topSearches } from '@/lib/db'
-import { dailySeries, periodCompare, productRanking } from '@/lib/metrics'
+import { dailySeries, orderStats, periodCompare, productRanking } from '@/lib/metrics'
+import { productQuality, QUALITY_GOOD } from '@/lib/quality'
+import { formatPrice } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = { title: 'Resumen' }
@@ -65,6 +67,11 @@ export default async function AdminHome() {
   const series = dailySeries(db.events, 'wa_click', 30)
   const ranking = productRanking(db, 30).slice(0, 6)
   const missing = topSearches(db.events, 30, 50).filter((s) => s.zero > 0).slice(0, 5)
+  const orders = orderStats(db.orders, 30)
+  const newOrders = db.orders.filter((o) => o.status === 'nuevo').length
+  const scores = active.map((p) => productQuality(p, db.categories).score)
+  const avgQuality = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
+  const incomplete = scores.filter((s) => s < QUALITY_GOOD).length
 
   const alerts = [
     ...db.products
@@ -93,7 +100,14 @@ export default async function AdminHome() {
 
       <PriceVisibilityToggle showPrices={db.settings.showPrices} className="mb-6" />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+        <Kpi
+          label="Pedidos nuevos"
+          value={newOrders}
+          icon={ClipboardList}
+          hint={`${orders.count} en 30 días · ${formatPrice(orders.revenue)} vendido`}
+          href="/admin/pedidos"
+        />
         <Kpi
           label="Consultas nuevas"
           value={newLeads.length}
@@ -102,13 +116,13 @@ export default async function AdminHome() {
           href="/admin/consultas"
         />
         <Kpi label="Clics a WhatsApp" value={clicks.current} icon={WhatsappIcon} delta={clicks.delta} hint="vs. 30 días anteriores" />
-        <Kpi label="Vistas de productos" value={views.current} icon={Eye} delta={views.delta} hint="vs. 30 días anteriores" />
+        <Kpi label="Vistas de productos" value={views.current} icon={Eye} delta={views.delta} hint={`vs. 30 días anteriores · ${searches.current} búsquedas`} />
         <Kpi
-          label="Productos publicados"
-          value={`${active.length}/${db.products.length}`}
+          label="Calidad del catálogo"
+          value={`${avgQuality}%`}
           icon={Package}
-          hint={`${searches.current} búsquedas en el sitio`}
-          href="/admin/productos"
+          hint={incomplete ? `${incomplete} fichas para completar · ${active.length} publicados` : `Todas las fichas completas · ${active.length} publicados`}
+          href={incomplete ? '/admin/productos?estado=incompletos' : '/admin/productos'}
         />
       </div>
 

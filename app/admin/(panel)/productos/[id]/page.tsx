@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PageHeader } from '@/components/admin/ui'
+import { QualityPanel } from '@/components/admin/quality-panel'
+import { productQuality } from '@/lib/quality'
 import { ProductForm } from '@/components/admin/product-form'
 import { catalogSuggestions } from '@/lib/catalog'
 import { readDb } from '@/lib/db'
@@ -23,6 +25,7 @@ export default async function EditProductPage({
   return (
     <>
       <PageHeader title={product.name} description={`Última modificación: ${new Date(product.updatedAt).toLocaleString('es-AR')}`} />
+      <QualityPanel {...productQuality(product, db.categories)} />
       <ProductForm
         product={product}
         categories={[...db.categories].sort((a, b) => a.order - b.order)}

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { useCatalog } from '@/components/catalog-provider'
 import { itemKey, useOrder } from '@/components/order-provider'
-import { submitLead } from '@/app/actions'
+import { submitOrder } from '@/app/actions'
 import { complementsFor } from '@/lib/catalog'
 import { displayPrice, formatPrice, orderWaMessage, paymentOptions, waLink } from '@/lib/site'
 import type { Product } from '@/lib/types'
@@ -68,12 +68,14 @@ export function OrderDrawer() {
   function send() {
     const message = orderWaMessage(items, name.trim(), note.trim())
     // Guardado en segundo plano: abrir WhatsApp debe ser inmediato para que el navegador no lo bloquee.
-    void submitLead({
-      name: name.trim() || 'Cliente (pedido web)',
-      phone: '',
-      product: `Pedido web (${items.length} ${items.length === 1 ? 'producto' : 'productos'})`,
+    void submitOrder(
+      {
+        name: name.trim(),
+        note: note.trim(),
+        items: items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
+      },
       message,
-    }).catch(() => {})
+    ).catch(() => {})
     track({ type: 'wa_click', source: 'pedido' })
     window.open(waLink(settings.whatsappNumber, message), '_blank', 'noopener,noreferrer')
     setSent(true)

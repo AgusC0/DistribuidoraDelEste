@@ -167,6 +167,26 @@ export type OrderItem = {
   quantity: number
 }
 
+export type OrderStatus = 'nuevo' | 'presupuestado' | 'vendido' | 'perdido'
+
+/** Pedido armado en el sitio y enviado por WhatsApp. Precios y nombres se toman del catálogo al recibirlo. */
+export type Order = {
+  id: string
+  /** Número correlativo para hablar del pedido ("pedido #12"). */
+  number: number
+  name: string
+  note: string
+  items: OrderItem[]
+  /** Suma de los ítems con precio, al momento del pedido. */
+  estimatedTotal: number
+  status: OrderStatus
+  /** Lo que se vendió realmente (se carga al marcarlo vendido). */
+  saleAmount: number | null
+  notes: string
+  createdAt: string
+  updatedAt: string
+}
+
 export type TrackEvent =
   | { type: 'search'; ts: string; q: string; results: number }
   | { type: 'wa_click'; ts: string; productId?: string; source: string }
@@ -178,6 +198,7 @@ export type Database = {
   categories: Category[]
   products: Product[]
   leads: Lead[]
+  orders: Order[]
   events: TrackEvent[]
 }
 

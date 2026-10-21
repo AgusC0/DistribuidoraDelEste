@@ -1,5 +1,5 @@
 import { TIMEZONE } from '@/lib/site'
-import type { Database, TrackEvent } from '@/lib/types'
+import type { Database, Order, TrackEvent } from '@/lib/types'
 
 const DAY = 86_400_000
 
@@ -81,4 +81,38 @@ export const SOURCE_LABEL: Record<string, string> = {
   nosotros: 'Sección nosotros',
   buscador: 'Buscador (sin resultados)',
   'catalogo-sin-resultados': 'Catálogo (sin resultados)',
+}
+
+/** Pedidos de los últimos `days` días: cuántos llegaron, cuántos se vendieron y por cuánto. */
+export function orderStats(orders: Order[], days: number) {
+  const since = Date.now() - days * DAY
+  const recent = orders.filter((o) => Date.parse(o.createdAt) >= since)
+  const sold = recent.filter((o) => o.status === 'vendido')
+  const closed = recent.filter((o) => o.status === 'vendido' || o.status === 'perdido').length
+  const revenue = sold.reduce((s, o) => s + (o.saleAmount ?? 0), 0)
+  return {
+    count: recent.length,
+    open: recent.filter((o) => o.status === 'nuevo' || o.status === 'presupuestado').length,
+    sold: sold.length,
+    /** % de vendidos sobre los que ya se cerraron (vendidos + perdidos). */
+    conversion: closed ? Math.round((sold.length / closed) * 100) : null,
+    revenue,
+    averageTicket: sold.length ? Math.round(revenue / sold.length) : null,
+  }
+}
+
+/** Productos más pedidos (unidades) en los últimos `days` días. */
+export function orderedProducts(orders: Order[], days: number) {
+  const since = Date.now() - days * DAY
+  const map = new Map<string, { productId: string; name: string; units: number; orders: number }>()
+  for (const o of orders) {
+    if (Date.parse(o.createdAt) < since) continue
+    for (const i of o.items) {
+      const entry = map.get(i.productId) ?? { productId: i.productId, name: i.name, units: 0, orders: 0 }
+      entry.units += i.quantity
+      entry.orders++
+      map.set(i.productId, entry)
+    }
+  }
+  return [...map.values()].sort((a, b) => b.units - a.units)
 }

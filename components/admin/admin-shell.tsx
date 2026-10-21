@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  ClipboardList,
   ExternalLink,
   Inbox,
   LayoutDashboard,
@@ -21,6 +22,7 @@ import { cn } from '@/lib/utils'
 
 const NAV = [
   { href: '/admin', label: 'Resumen', icon: LayoutDashboard },
+  { href: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
   { href: '/admin/productos', label: 'Productos', icon: Package },
   { href: '/admin/categorias', label: 'Categorías', icon: Tags },
   { href: '/admin/consultas', label: 'Consultas', icon: Inbox },
@@ -28,7 +30,15 @@ const NAV = [
   { href: '/admin/ajustes', label: 'Ajustes', icon: Settings },
 ]
 
-export function AdminShell({ children, newLeads }: { children: React.ReactNode; newLeads: number }) {
+export function AdminShell({
+  children,
+  newLeads,
+  newOrders,
+}: {
+  children: React.ReactNode
+  newLeads: number
+  newOrders: number
+}) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
@@ -37,6 +47,7 @@ export function AdminShell({ children, newLeads }: { children: React.ReactNode; 
   const nav = (
     <nav aria-label="Panel" className="flex flex-1 flex-col gap-1">
       {NAV.map(({ href, label, icon: Icon }) => {
+        const badge = href === '/admin/consultas' ? newLeads : href === '/admin/pedidos' ? newOrders : 0
         const active = href === '/admin' ? pathname === href : pathname.startsWith(href)
         return (
           <Link
@@ -50,15 +61,15 @@ export function AdminShell({ children, newLeads }: { children: React.ReactNode; 
           >
             <Icon aria-hidden="true" className="size-4" />
             <span className="flex-1">{label}</span>
-            {href === '/admin/consultas' && newLeads > 0 && (
+            {badge > 0 && (
               <span
                 className={cn(
                   'rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
                   active ? 'bg-primary-foreground/20' : 'bg-promo text-promo-foreground',
                 )}
-                aria-label={`${newLeads} nuevas`}
+                aria-label={`${badge} ${href === '/admin/pedidos' ? 'nuevos' : 'nuevas'}`}
               >
-                {newLeads}
+                {badge}
               </span>
             )}
           </Link>

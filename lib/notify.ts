@@ -44,7 +44,9 @@ async function send(to: string, subject: string, html: string, text: string): Pr
   }
 }
 
-export async function notifyNewLead(lead: Lead, settings: Settings, adminUrl: string) {
+export async function notifyNewLead(lead: Lead, settings: Settings, adminUrl: string, kind: 'consulta' | 'pedido' = 'consulta') {
+  const section = kind === 'pedido' ? 'pedidos' : 'consultas'
+  const heading = kind === 'pedido' ? 'Nuevo pedido desde la web' : 'Nueva consulta desde la web'
   const rows: [string, string][] = [
     ['Nombre', lead.name],
     ['Teléfono', lead.phone || '—'],
@@ -53,7 +55,7 @@ export async function notifyNewLead(lead: Lead, settings: Settings, adminUrl: st
   ]
   const html = `
 <div style="font-family:Arial,sans-serif;max-width:560px;color:#1f2937">
-  <h2 style="color:#4A5D23;margin:0 0 12px">Nueva consulta desde la web</h2>
+  <h2 style="color:#4A5D23;margin:0 0 12px">${heading}</h2>
   <table style="border-collapse:collapse;width:100%">
     ${rows
       .map(
@@ -62,11 +64,11 @@ export async function notifyNewLead(lead: Lead, settings: Settings, adminUrl: st
       )
       .join('')}
   </table>
-  <p style="margin:20px 0"><a href="${adminUrl}/admin/consultas" style="background:#4A5D23;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Ver en el panel</a></p>
+  <p style="margin:20px 0"><a href="${adminUrl}/admin/${section}" style="background:#4A5D23;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Ver en el panel</a></p>
   <p style="color:#9ca3af;font-size:12px">${escape(settings.businessName)}</p>
 </div>`
-  const text = `Nueva consulta desde la web\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nVer en el panel: ${adminUrl}/admin/consultas`
-  return send(settings.notifyEmail, `Nueva consulta: ${lead.name} – ${lead.product}`.slice(0, 120), html, text)
+  const text = `${heading}\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nVer en el panel: ${adminUrl}/admin/${section}`
+  return send(settings.notifyEmail, `${kind === 'pedido' ? 'Nuevo pedido' : 'Nueva consulta'}: ${lead.name} – ${lead.product}`.slice(0, 120), html, text)
 }
 
 export async function sendTestEmail(settings: Settings) {

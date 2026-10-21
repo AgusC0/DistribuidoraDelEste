@@ -6,7 +6,7 @@ import { cookies, headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { checkCredentials, createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from '@/lib/auth'
-import { categoryDepth, descendantIds, MAX_CATEGORY_DEPTH, variantLabel } from '@/lib/catalog'
+import { categoryDepth, descendantIds, EMPTY_PROMOTION, MAX_CATEGORY_DEPTH, variantLabel } from '@/lib/catalog'
 import { applyImport, type ImportMode, type ImportResult } from '@/lib/catalog-io'
 import { parseCsv } from '@/lib/csv'
 import { sendTestEmail } from '@/lib/notify'
@@ -19,6 +19,7 @@ import type {
   CategoryFilter,
   Database,
   LeadStatus,
+  OrderStatus,
   Product,
   ProductOption,
   ProductSpec,
@@ -303,20 +304,119 @@ export async function setProductPrice(id: string, price: number | null) {
   refreshSite()
 }
 
-/** Ajuste masivo de precios por porcentaje (p. ej. +8% por inflación). */
+/** Precio de una variante y/o su stock, desde la tabla de productos. */
+export async function setVariantQuick(productId: string, variantId: string, patch: { price?: number | null; stock?: StockStatus }) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    const p = db.products.find((x) => x.id === productId)
+    const v = p?.variants.find((x) => x.id === variantId)
+    if (!p || !v) return
+    if ('price' in patch) {
+      const price = patch.price
+      v.price = price != null && Number.isFinite(price) && price >= 0 ? Math.round(price) : null
+    }
+    if (patch.stock && isStock(patch.stock)) v.stock = patch.stock
+    p.updatedAt = new Date().toISOString()
+  })
+  refreshSite()
+}
+
+/** Redondea a la decena, como se ven los precios en el mostrador. */
+const round10 = (n: number) => Math.round(n / 10) * 10
+
+/** Ajuste masivo de precios por porcentaje (p. ej. +8% por inflación). Incluye variantes y precios anteriores. */
 export async function adjustPrices(ids: string[], percent: number) {
   await requireAdmin()
   if (!Number.isFinite(percent) || percent < -90 || percent > 500) return
+  const factor = 1 + percent / 100
+  const scale = (n: number | null) => (n == null ? null : round10(n * factor))
   await mutateDb((db) => {
     const now = new Date().toISOString()
     for (const p of db.products) {
-      if (ids.includes(p.id) && p.price != null) {
-        p.price = Math.round((p.price * (1 + percent / 100)) / 10) * 10
-        p.updatedAt = now
+      if (!ids.includes(p.id)) continue
+      p.price = scale(p.price)
+      p.promotion.originalPrice = scale(p.promotion.originalPrice)
+      for (const v of p.variants) {
+        v.price = scale(v.price)
+        v.originalPrice = scale(v.originalPrice)
       }
+      p.updatedAt = now
     }
   })
   refreshSite()
+}
+
+export type BulkOperation =
+  | { type: 'active'; value: boolean }
+  | { type: 'featured'; value: boolean }
+  | { type: 'stock'; value: StockStatus }
+  | { type: 'category'; categoryId: string }
+  | { type: 'promo_on'; percent: number; endsAt: string | null; limitedStock: boolean }
+  | { type: 'promo_off' }
+  | { type: 'delete' }
+
+/** Acciones sobre varios productos a la vez, desde la barra de selección. Devuelve cuántos cambió. */
+export async function bulkUpdateProducts(ids: string[], op: BulkOperation): Promise<number> {
+  await requireAdmin()
+  const selected = new Set(ids)
+  const count = await mutateDb((db) => {
+    const now = new Date().toISOString()
+    if (op.type === 'delete') {
+      const before = db.products.length
+      db.products = db.products.filter((p) => !selected.has(p.id))
+      for (const p of db.products) p.related = p.related.filter((id) => !selected.has(id))
+      return before - db.products.length
+    }
+    if (op.type === 'category' && !db.categories.some((c) => c.id === op.categoryId)) return 0
+
+    let n = 0
+    for (const p of db.products) {
+      if (!selected.has(p.id)) continue
+      n++
+      p.updatedAt = now
+      if (op.type === 'active') p.active = op.value
+      else if (op.type === 'featured') p.featured = op.value
+      else if (op.type === 'stock' && isStock(op.value)) {
+        p.stock = op.value
+        for (const v of p.variants) v.stock = op.value
+      } else if (op.type === 'category') p.categoryId = op.categoryId
+      else if (op.type === 'promo_on') {
+        const pct = Math.min(90, Math.max(0, Math.round(op.percent) || 0))
+        const endsAt = op.endsAt && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(op.endsAt) ? op.endsAt : null
+        // El descuento se calcula siempre sobre el precio de lista, aunque ya estuviera en promo.
+        if (pct > 0) {
+          if (p.price != null) {
+            const list = p.promotion.originalPrice ?? p.price
+            p.promotion.originalPrice = list
+            p.price = round10(list * (1 - pct / 100))
+          }
+          for (const v of p.variants) {
+            if (v.price == null) continue
+            const list = v.originalPrice ?? v.price
+            v.originalPrice = list
+            v.price = round10(list * (1 - pct / 100))
+          }
+          p.promotion.discountPercent = pct
+        }
+        p.promotion.startsAt = null
+        p.promotion.endsAt = endsAt
+        p.promotion.limitedStock = op.limitedStock
+        p.promo = true
+      } else if (op.type === 'promo_off') {
+        // Vuelve al precio de lista.
+        if (p.promotion.originalPrice != null) p.price = p.promotion.originalPrice
+        for (const v of p.variants) {
+          if (v.originalPrice != null) v.price = v.originalPrice
+          v.originalPrice = null
+        }
+        p.promotion = { ...EMPTY_PROMOTION }
+        p.promo = false
+      }
+    }
+    return n
+  })
+  refreshSite()
+  return count
 }
 
 export async function duplicateProduct(id: string) {
@@ -501,6 +601,52 @@ export async function deleteLead(id: string) {
   revalidatePath('/admin', 'layout')
 }
 
+/* ---------- Pedidos ---------- */
+
+const ORDER_STATUSES: OrderStatus[] = ['nuevo', 'presupuestado', 'vendido', 'perdido']
+
+export async function setOrderStatus(id: string, status: OrderStatus) {
+  await requireAdmin()
+  if (!ORDER_STATUSES.includes(status)) return
+  await mutateDb((db) => {
+    const order = db.orders.find((o) => o.id === id)
+    if (!order) return
+    order.status = status
+    // Al marcarlo vendido arranca con el total estimado; después se corrige si se vendió otra cosa.
+    if (status === 'vendido' && order.saleAmount == null && order.estimatedTotal > 0) order.saleAmount = order.estimatedTotal
+    order.updatedAt = new Date().toISOString()
+  })
+  revalidatePath('/admin', 'layout')
+}
+
+export async function saveOrderSale(id: string, amount: number | null) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    const order = db.orders.find((o) => o.id === id)
+    if (!order) return
+    order.saleAmount = amount != null && Number.isFinite(amount) && amount >= 0 ? Math.round(amount) : null
+    order.updatedAt = new Date().toISOString()
+  })
+  revalidatePath('/admin', 'layout')
+}
+
+export async function saveOrderNotes(id: string, notes: string) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    const order = db.orders.find((o) => o.id === id)
+    if (order) order.notes = notes.slice(0, 1000)
+  })
+  revalidatePath('/admin', 'layout')
+}
+
+export async function deleteOrder(id: string) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    db.orders = db.orders.filter((o) => o.id !== id)
+  })
+  revalidatePath('/admin', 'layout')
+}
+
 /* ---------- Ajustes ---------- */
 
 export async function saveSettings(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -610,6 +756,7 @@ export async function restoreBackup(_prev: FormState, fd: FormData): Promise<For
     db.categories = data.categories
     db.products = data.products
     db.leads = Array.isArray(data.leads) ? data.leads : []
+    db.orders = Array.isArray(data.orders) ? data.orders : []
     db.events = Array.isArray(data.events) ? data.events : []
   })
   refreshSite()

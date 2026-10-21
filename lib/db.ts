@@ -16,12 +16,16 @@ export const UPLOADS_DIR = path.join(/*turbopackIgnore: true*/ DATA_DIR, 'upload
 
 const MAX_EVENTS = 5000
 
-let queue: Promise<unknown> = Promise.resolve()
+// La cola vive en globalThis: Next puede cargar este módulo más de una vez (acciones, rutas de API)
+// y con una cola por copia dos escrituras simultáneas se pisaban.
+const shared = globalThis as typeof globalThis & { __ddeDbQueue?: Promise<unknown> }
+shared.__ddeDbQueue ??= Promise.resolve()
 
 /** Completa campos que agregaron versiones nuevas, para que un db.json viejo siga funcionando. */
 function migrate(db: Database): Database {
   const defaults = createSeed().settings
   db.settings = { ...defaults, ...db.settings }
+  db.orders ??= []
   for (const c of db.categories) {
     c.parentId ??= null
     c.filters ??= []
@@ -81,20 +85,20 @@ async function save(db: Database) {
 
 export async function readDb(): Promise<Database> {
   // Espera a que terminen las escrituras pendientes para no leer un estado viejo.
-  await queue.catch(() => {})
+  await shared.__ddeDbQueue!.catch(() => {})
   return load()
 }
 
 /** Ejecuta las escrituras en serie para que dos requests no se pisen. */
 export function mutateDb<T>(fn: (db: Database) => T | Promise<T>): Promise<T> {
-  const run = queue.then(async () => {
+  const run = shared.__ddeDbQueue!.then(async () => {
     const db = await load()
     const result = await fn(db)
     if (db.events.length > MAX_EVENTS) db.events = db.events.slice(-MAX_EVENTS)
     await save(db)
     return result
   })
-  queue = run.catch(() => {})
+  shared.__ddeDbQueue = run.catch(() => {})
   return run
 }
 

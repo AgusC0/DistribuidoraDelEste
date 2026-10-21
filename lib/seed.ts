@@ -234,6 +234,7 @@ export function createSeed(): Database {
       },
     ],
     leads: [],
+    orders: [],
     events: [],
   }
 }
