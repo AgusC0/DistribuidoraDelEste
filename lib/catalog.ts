@@ -153,7 +153,69 @@ export function buildVariants(idPrefix: string, options: ProductOption[], rows: 
 
 /** Valores de una opción de variante que coincide con un filtro (opción "Medida" ↔ filtro "medida"). */
 export function optionValuesForFilter(p: Product, key: string): string[] {
-  const option = p.options.find((o) => slugify(o.name) === key)
+  const option = (p.options ?? []).find((o) => slugify(o.name) === key)
   if (!option) return []
-  return option.values.filter((v) => !p.variants.length || p.variants.some((variant) => variant.options[option.name] === v))
+  return option.values.filter((v) => !p.variants.length || p.variants.some((variant) => variant.options?.[option.name] === v))
+}
+
+/* ---------- Árbol de 3 niveles ---------- */
+
+export const MAX_CATEGORY_DEPTH = 3
+
+/** Nivel de la categoría: 1 = rubro, 2 = subcategoría, 3 = sub-subcategoría. */
+export const categoryDepth = (categories: Category[], id: string) => categoryPath(categories, id).length
+
+/** El árbol aplanado en orden de lectura, con su nivel (para listas y selects). */
+export function flattenCategories(categories: Category[]): { category: Category; depth: number }[] {
+  const out: { category: Category; depth: number }[] = []
+  const walk = (parentId: string | null, depth: number) => {
+    const level = parentId ? childCategories(categories, parentId) : rootCategories(categories)
+    for (const c of level) {
+      out.push({ category: c, depth })
+      walk(c.id, depth + 1)
+    }
+  }
+  walk(null, 1)
+  return out
+}
+
+/**
+ * Filtros que se muestran en una categoría: los propios o, si no tiene, los del ancestro más cercano
+ * (Inodoros usa los de Sanitarios). En una categoría con hijos sin filtros propios, los que comparten sus hijos.
+ */
+export function effectiveFilters(categories: Category[], id: string): Category['filters'] {
+  const own = categories.find((c) => c.id === id)
+  if (!own) return []
+  if (own.filters.length) return own.filters
+  const children = childCategories(categories, id)
+  if (children.length) {
+    const sets = children.map((c) => effectiveFilters(categories, c.id))
+    const [first = [], ...rest] = sets
+    return first.filter((f) => rest.every((s) => s.some((x) => x.key === f.key)))
+  }
+  const ancestors = categoryPath(categories, id).slice(0, -1).reverse()
+  return ancestors.find((a) => a.filters.length)?.filters ?? []
+}
+
+/* ---------- Venta cruzada ---------- */
+
+/**
+ * Complementos de un producto: primero los elegidos a mano; después, de la misma marca y línea/modelo
+ * en otra categoría (Inodoro Bari → Bidet Bari, Mochila Bari).
+ */
+export function complementsFor(product: Product, products: Product[], limit = 4): Product[] {
+  const out: Product[] = []
+  const add = (p?: Product) => {
+    if (p && p.id !== product.id && !out.some((x) => x.id === p.id)) out.push(p)
+  }
+  product.related.forEach((id) => add(products.find((p) => p.id === id)))
+  const lines = new Set([...(product.attributes.linea ?? []), ...(product.attributes.modelo ?? [])].map((v) => v.toLowerCase()))
+  if (product.brand && lines.size) {
+    for (const p of products) {
+      if (p.brand !== product.brand || p.categoryId === product.categoryId) continue
+      const theirs = [...(p.attributes.linea ?? []), ...(p.attributes.modelo ?? [])].map((v) => v.toLowerCase())
+      if (theirs.some((v) => lines.has(v))) add(p)
+    }
+  }
+  return out.slice(0, limit)
 }

@@ -6,7 +6,7 @@ import { cookies, headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { checkCredentials, createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE } from '@/lib/auth'
-import { variantLabel } from '@/lib/catalog'
+import { categoryDepth, descendantIds, MAX_CATEGORY_DEPTH, variantLabel } from '@/lib/catalog'
 import { applyImport, type ImportMode, type ImportResult } from '@/lib/catalog-io'
 import { parseCsv } from '@/lib/csv'
 import { sendTestEmail } from '@/lib/notify'
@@ -228,6 +228,9 @@ export async function saveProduct(_prev: FormState, fd: FormData): Promise<FormS
       shortDescription: str(fd, 'shortDescription', 200),
       specs,
       options,
+      related: parseJson<unknown[]>(fd.get('related'), [])
+        .filter((x): x is string => typeof x === 'string' && x !== id && db.products.some((p) => p.id === x))
+        .slice(0, 12),
       attributes,
       featured: fd.get('featured') === 'on',
       active: fd.get('active') === 'on',
@@ -397,12 +400,21 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
     if (db.categories.some((c) => c.slug === slug && c.id !== id)) {
       return { errors: { name: 'Ya existe una categoría con ese nombre.' } }
     }
+    // Hasta 3 niveles (Baño → Sanitarios → Inodoros). Una categoría no puede quedar dentro de sí misma.
     const parentRaw = str(fd, 'parentId', 80)
-    const parent = db.categories.find((c) => c.id === parentRaw && !c.parentId && c.id !== id)
-    if (parentRaw && !parent) return { errors: { parentId: 'Elegí un rubro válido.' } }
+    const parent = db.categories.find((c) => c.id === parentRaw)
+    if (parentRaw && !parent) return { errors: { parentId: 'Elegí una ubicación válida.' } }
     const existing = db.categories.find((c) => c.id === id)
-    if (existing && parent && db.categories.some((c) => c.parentId === existing.id)) {
-      return { errors: { parentId: 'Este rubro tiene subcategorías: no puede pasar a ser subcategoría.' } }
+    if (existing && parent && descendantIds(db.categories, existing.id).has(parent.id)) {
+      return { errors: { parentId: 'No puede quedar dentro de sí misma ni de una de sus subcategorías.' } }
+    }
+    const subtreeHeight = (catId: string): number => {
+      const children = db.categories.filter((c) => c.parentId === catId)
+      return 1 + (children.length ? Math.max(...children.map((c) => subtreeHeight(c.id))) : 0)
+    }
+    const parentDepth = parent ? categoryDepth(db.categories, parent.id) : 0
+    if (parentDepth + (existing ? subtreeHeight(existing.id) : 1) > MAX_CATEGORY_DEPTH) {
+      return { errors: { parentId: `El catálogo admite hasta ${MAX_CATEGORY_DEPTH} niveles (ej: Baño → Sanitarios → Inodoros).` } }
     }
     const parentId = parent?.id ?? null
     if (existing) {
@@ -526,6 +538,9 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
     announcementEnabled: fd.get('announcementEnabled') === 'on',
     announcementText: str(fd, 'announcementText', 160),
     priceNote: str(fd, 'priceNote', 200),
+    transferDiscount: Math.min(50, Math.max(0, Math.round(Number(str(fd, 'transferDiscount', 3).replace(/[^\d]/g, '')) || 0))),
+    installments: Math.min(24, Math.max(0, Math.round(Number(str(fd, 'installments', 3).replace(/[^\d]/g, '')) || 0))),
+    installmentsInterestFree: fd.get('installmentsInterestFree') === 'on',
     notifyEmail,
     gaId,
     googleVerification: str(fd, 'googleVerification', 120).replace(/^.*content="([^"]+)".*$/, '$1'),

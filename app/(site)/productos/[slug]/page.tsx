@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Headphones, ShieldCheck, Wrench } from 'lucide-react'
 import { ProductCard } from '@/components/product-card'
 import { ProductShowcase } from '@/components/product-detail'
+import { RecentlyViewed } from '@/components/recently-viewed'
 import { ProductView } from '@/components/product-view'
 import { getPublicCatalog } from '@/lib/db'
 import { categoryPath, categoryUrl } from '@/lib/catalog'
@@ -26,12 +27,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const { product, catalog } = await getProduct(slug)
   if (!product) return { title: 'Producto no encontrado' }
-  const title = `${product.name} – ${categoryName(catalog.categories, product.categoryId)}`
+  // "Inodoro largo Bari Ferrum – Inodoros": nombre + marca (si no está en el nombre) + categoría.
+  const withBrand = product.brand && !product.name.toLowerCase().includes(product.brand.toLowerCase()) ? `${product.name} ${product.brand}` : product.name
+  const title = `${withBrand} – ${categoryName(catalog.categories, product.categoryId)}`
+  const base = product.shortDescription || product.description
+  const description = `${base.length > 150 ? `${base.slice(0, 147)}…` : base} En Distribuidora del Este, Villa María.`
   return {
     title,
-    description: product.description,
+    description,
     alternates: { canonical: `/productos/${product.slug}` },
-    openGraph: { title, description: product.description, images: [product.image], type: 'website' },
+    openGraph: { title, description, images: product.images, type: 'website' },
   }
 }
 
@@ -54,6 +59,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const next = position >= 0 && position < siblings.length - 1 ? siblings[position + 1] : undefined
 
   const variantPrices = product.variants.map((v) => v.price).filter((v): v is number => v != null)
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Productos', item: `${SITE_URL}/productos` },
+      ...categoryPath(catalog.categories, product.categoryId).map((c, i) => ({
+        '@type': 'ListItem',
+        position: i + 3,
+        name: c.name,
+        item: `${SITE_URL}${categoryUrl(catalog.categories, c.id)}`,
+      })),
+    ],
+  }
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -169,9 +189,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </section>
       )}
 
+      <RecentlyViewed excludeId={product.id} />
+
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumbLd]).replace(/</g, '\\u003c') }}
       />
     </div>
   )

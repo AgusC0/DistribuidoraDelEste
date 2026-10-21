@@ -36,6 +36,7 @@ function migrate(db: Database): Database {
     p.sku ??= ''
     p.shortDescription ??= ''
     p.specs ??= []
+    p.related ??= []
     // Variantes viejas (sólo nombre) → una opción genérica "Opción".
     if (!p.options) {
       p.options = p.variants.length ? [{ name: 'Opción', values: p.variants.map((v) => v.name) }] : []
@@ -113,7 +114,20 @@ export async function getPublicCatalog(): Promise<PublicCatalog> {
           variants: p.variants.map((v) => ({ ...v, price: null, originalPrice: null })),
         })),
     popularSearches: topSearches(db.events, 30, 6).map((s) => s.term),
+    popularity: productPopularity(db.events, 30),
   }
+}
+
+/** Vistas + consultas a WhatsApp (que pesan el doble) por producto en los últimos `days` días. */
+export function productPopularity(events: TrackEvent[], days: number) {
+  const since = Date.now() - days * 86_400_000
+  const score: Record<string, number> = {}
+  for (const e of events) {
+    if (Date.parse(e.ts) < since) continue
+    if (e.type === 'view') score[e.productId] = (score[e.productId] ?? 0) + 1
+    if (e.type === 'wa_click' && e.productId) score[e.productId] = (score[e.productId] ?? 0) + 2
+  }
+  return score
 }
 
 export function topSearches(events: TrackEvent[], days: number, limit: number) {

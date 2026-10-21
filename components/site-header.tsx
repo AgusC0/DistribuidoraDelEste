@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/logo'
 import { SearchDialog } from '@/components/search-dialog'
+import { CategoryMegaMenu, MobileCategoryList } from '@/components/category-menu'
 import { OrderButton } from '@/components/order-drawer'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
@@ -80,12 +81,20 @@ export function SiteHeader() {
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Navegación principal">
             {NAV.map((item) => {
-              const isCurrent = item.id === 'productos' ? pathname.startsWith('/productos') : isHome && current === item.id
+              if (item.id === 'productos') {
+                return (
+                  <CategoryMegaMenu
+                    key={item.id}
+                    active={pathname.startsWith('/productos') || pathname.startsWith('/categoria')}
+                  />
+                )
+              }
+              const isCurrent = isHome && current === item.id
               return (
                 <Link
                   key={item.id}
                   href={item.href}
-                  aria-current={isCurrent ? (item.id === 'productos' ? 'page' : 'location') : undefined}
+                  aria-current={isCurrent ? 'location' : undefined}
                   className={cn(
                     'relative rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground',
                     isCurrent ? 'text-foreground' : 'text-muted-foreground',
@@ -141,7 +150,7 @@ export function SiteHeader() {
           )}
         >
           <nav className="overflow-hidden" aria-label="Navegación móvil">
-            <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
+            <div className="mx-auto flex max-h-[calc(100dvh-4rem)] max-w-7xl flex-col gap-1 overflow-y-auto px-4 py-3">
               {NAV.map((item) => (
                 <Link
                   key={item.id}
@@ -149,9 +158,11 @@ export function SiteHeader() {
                   onClick={() => setOpen(false)}
                   className="rounded-md px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-muted"
                 >
-                  {item.label}
+                  {item.id === 'productos' ? 'Todos los productos' : item.label}
                 </Link>
               ))}
+              <p className="mt-2 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Categorías</p>
+              <MobileCategoryList onNavigate={() => setOpen(false)} />
               <Button
                 size="lg"
                 nativeButton={false}

@@ -15,7 +15,7 @@ import {
   toggleProduct,
 } from '@/app/admin/actions'
 import { buildIndex, search } from '@/lib/search'
-import { categoryPath, childCategories, descendantIds, rootCategories } from '@/lib/catalog'
+import { categoryPath, descendantIds, flattenCategories } from '@/lib/catalog'
 import { categoryName, formatPrice, STOCK_LABEL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Category, Product, StockStatus } from '@/lib/types'
@@ -133,15 +133,12 @@ export function ProductTable({ products, categories }: { products: Product[]; ca
           className={cn(inputClass, 'lg:w-48')}
         >
           <option value="">Todas las categorías</option>
-          {rootCategories(categories).map((root) => (
-            <optgroup key={root.id} label={root.name}>
-              <option value={root.id}>Todo {root.name}</option>
-              {childCategories(categories, root.id).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </optgroup>
+          {flattenCategories(categories).map(({ category: c, depth }) => (
+            <option key={c.id} value={c.id}>
+              {'   '.repeat(depth - 1)}
+              {depth > 1 ? '└ ' : ''}
+              {c.name}
+            </option>
           ))}
         </select>
       </div>

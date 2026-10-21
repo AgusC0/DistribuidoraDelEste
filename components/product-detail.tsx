@@ -1,16 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
-import { Check, ChevronLeft, ChevronRight, Copy, Minus, Plus } from 'lucide-react'
+import { Banknote, Check, ChevronLeft, ChevronRight, Copy, CreditCard, Minus, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { AddToOrderButton } from '@/components/add-to-order'
+import { CompletePurchase } from '@/components/complete-purchase'
+import { rememberProduct } from '@/components/recently-viewed'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { useCatalog } from '@/components/catalog-provider'
 import { categoryPath, isOnPromotion, promotionEndsLabel } from '@/lib/catalog'
-import { displayPrice, formatPrice, hasPrice, productWaMessage, STOCK_LABEL } from '@/lib/site'
+import { displayPrice, formatPrice, hasPrice, minPrice, paymentOptions, productWaMessage, STOCK_LABEL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Product, StockStatus, Variant } from '@/lib/types'
 
@@ -163,7 +165,9 @@ export function useVariantSelection(product: Product, initialVariantId?: string 
     })
   }
 
-  return { selected, variant, choose, candidateFor }
+  const selectVariant = (v: Variant) => setSelected({ ...v.options })
+
+  return { selected, variant, choose, candidateFor, selectVariant }
 }
 
 function VariantSelector({
@@ -294,6 +298,7 @@ export function ProductPurchase({
   const original = variant ? variant.originalPrice : product.promotion.originalPrice
   const showOldPrice = settings.showPrices && onPromo && original != null && (variant ? variant.price : product.price) != null
   const sku = variant?.sku || product.sku
+  const payment = paymentOptions(variant ? variant.price : minPrice(product), settings)
 
   return (
     <div className="flex flex-col gap-5">
@@ -337,6 +342,25 @@ export function ProductPurchase({
             </span>
           )}
         </div>
+        {settings.showPrices && payment && (payment.transfer != null || payment.installmentsLabel) && (
+          <div className="mt-2 flex flex-col gap-1.5 rounded-xl border border-border bg-secondary/40 p-3 text-sm">
+            {payment.transfer != null && (
+              <p className="flex flex-wrap items-center gap-x-2">
+                <Banknote aria-hidden="true" className="size-4 shrink-0 text-whatsapp" />
+                <span className="font-bold tabular-nums text-whatsapp">{formatPrice(payment.transfer)}</span>
+                <span className="text-muted-foreground">
+                  con transferencia ({settings.transferDiscount}% OFF) · ahorrás {formatPrice(payment.saving)}
+                </span>
+              </p>
+            )}
+            {payment.installmentsLabel && (
+              <p className="flex items-center gap-2 text-muted-foreground">
+                <CreditCard aria-hidden="true" className="size-4 shrink-0" />
+                {payment.installmentsLabel}
+              </p>
+            )}
+          </div>
+        )}
         {settings.showPrices && settings.priceNote && !compact && <p className="mt-1 text-xs text-muted-foreground">{settings.priceNote}</p>}
       </div>
 
@@ -437,19 +461,40 @@ export function SpecsTable({ rows }: { rows: { label: string; value: string }[] 
 
 export function ProductShowcase({ product, children }: { product: Product; children?: React.ReactNode }) {
   const { categories } = useCatalog()
-  // ?v=<id> deja compartir el link con la variante ya elegida.
-  const [initialId] = useState(() => (typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('v')))
-  const selection = useVariantSelection(product, initialId)
-  const { variant } = selection
+  const selection = useVariantSelection(product)
+  const { variant, selectVariant } = selection
   const [imageIndex, setImageIndex] = useState(0)
+  const [ready, setReady] = useState(false)
+  const purchaseRef = useRef<HTMLDivElement>(null)
+  const [showBar, setShowBar] = useState(false)
+
+  // ?v=<id> deja compartir el link con la variante ya elegida. Se lee después de montar
+  // (el HTML del servidor no conoce la URL) para no generar diferencias de hidratación.
+  useEffect(() => {
+    const fromUrl = product.variants.find((v) => v.id === new URLSearchParams(window.location.search).get('v'))
+    if (fromUrl) selectVariant(fromUrl)
+    rememberProduct(product.id)
+    setReady(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id])
 
   useEffect(() => {
+    if (!ready) return
     if (variant?.imageIndex != null) setImageIndex(variant.imageIndex)
     const url = new URL(window.location.href)
     if (variant) url.searchParams.set('v', variant.id)
     else url.searchParams.delete('v')
     window.history.replaceState(window.history.state, '', url)
-  }, [variant])
+  }, [variant, ready])
+
+  // Barra fija en el celular cuando el bloque de compra queda fuera de pantalla.
+  useEffect(() => {
+    const node = purchaseRef.current
+    if (!node) return
+    const observer = new IntersectionObserver(([entry]) => setShowBar(!entry.isIntersecting && entry.boundingClientRect.top < 0))
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
 
   const category = categories.find((c) => c.id === product.categoryId)
   const rows = productSpecRows(product, categories, variant)
@@ -473,10 +518,15 @@ export function ProductShowcase({ product, children }: { product: Product; child
             {product.shortDescription && <p className="text-base text-muted-foreground text-pretty">{product.shortDescription}</p>}
           </div>
 
-          <ProductPurchase product={product} selection={selection} />
+          <div ref={purchaseRef}>
+            <ProductPurchase product={product} selection={selection} />
+          </div>
           {children}
         </div>
       </div>
+
+      <CompletePurchase product={product} variant={variant} />
+      <StickyBuyBar product={product} variant={variant} visible={showBar} onChoose={() => purchaseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })} />
 
       <div className="mt-14 grid grid-cols-1 gap-10 border-t border-border pt-10 lg:grid-cols-2 lg:gap-12">
         <section aria-labelledby="descripcion-title">
@@ -542,6 +592,40 @@ function VariantsTable({ product, activeId, onPick }: { product: Product; active
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+/** Barra inferior fija (sólo celular): precio y agregar al pedido sin volver arriba. */
+function StickyBuyBar({ product, variant, visible, onChoose }: { product: Product; variant?: Variant; visible: boolean; onChoose: () => void }) {
+  const { settings } = useCatalog()
+  const needsChoice = product.variants.length > 0 && !variant
+  return (
+    <div
+      aria-hidden={!visible}
+      inert={!visible}
+      className={cn(
+        'fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur transition-transform duration-300 md:hidden',
+        visible ? 'translate-y-0' : 'translate-y-full',
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{product.name}</p>
+          {settings.showPrices && (
+            <p className={cn('text-base font-bold tabular-nums', isOnPromotion(product) ? 'text-promo' : 'text-foreground')}>
+              {variant ? formatPrice(variant.price) : displayPrice(product)}
+            </p>
+          )}
+        </div>
+        {needsChoice ? (
+          <Button className="h-11 px-4" onClick={onChoose}>
+            Elegir opción
+          </Button>
+        ) : (
+          <AddToOrderButton product={product} variant={variant} size="default" className="h-11 px-4" label="Agregar" />
+        )}
+      </div>
     </div>
   )
 }

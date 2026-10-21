@@ -16,6 +16,7 @@ export default async function NewProductPage() {
         categories={[...db.categories].sort((a, b) => a.order - b.order)}
         brands={suggestions.brands}
         attributeSuggestions={suggestions.attributes}
+        catalogProducts={db.products.map((p) => ({ id: p.id, name: p.name, image: p.image, brand: p.brand }))}
       />
     </>
   )

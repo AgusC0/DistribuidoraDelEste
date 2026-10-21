@@ -5,7 +5,7 @@ import { Download, Sparkles, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmButton, FieldError, FormMessage, inputClass, Panel, SubmitButton, submitKeepingValues } from '@/components/admin/ui'
 import { loadDemoCatalog, restoreBackup, saveSettings, testNotification, type FormState } from '@/app/admin/actions'
-import { DAY_NAMES, groupHours } from '@/lib/site'
+import { DAY_NAMES, formatPrice, groupHours } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Settings, WeeklyHours } from '@/lib/types'
 
@@ -47,6 +47,9 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
   const [announcement, setAnnouncement] = useState(settings.announcementText)
   const e = state.errors ?? {}
   const [testState, setTestState] = useState<FormState>({})
+  const [transfer, setTransfer] = useState(String(settings.transferDiscount || ''))
+  const [installments, setInstallments] = useState(String(settings.installments || ''))
+  const [interestFree, setInterestFree] = useState(settings.installmentsInterestFree)
   const [testing, startTest] = useTransition()
   const order = [1, 2, 3, 4, 5, 6, 0]
 
@@ -135,13 +138,68 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
       </Panel>
 
       <Panel>
-        <h2 className={sectionTitle}>Ficha de producto</h2>
-        <Text
-          name="priceNote"
-          label="Aclaración debajo del precio"
-          defaultValue={settings.priceNote}
-          hint="Ej: Precios de contado, débito o transferencia. Consultá otras formas de pago."
-        />
+        <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Precios y formas de pago</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Se muestran en las tarjetas, la ficha de producto y el pedido. Dejá en 0 lo que no quieras mostrar.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="transferDiscount" className="text-sm font-medium">
+              Descuento por transferencia (%)
+            </label>
+            <input
+              id="transferDiscount"
+              name="transferDiscount"
+              inputMode="numeric"
+              value={transfer}
+              onChange={(ev) => setTransfer(ev.target.value.replace(/\D/g, '').slice(0, 2))}
+              className={inputClass}
+              placeholder="0"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="installments" className="text-sm font-medium">
+              Cuotas
+            </label>
+            <input
+              id="installments"
+              name="installments"
+              inputMode="numeric"
+              value={installments}
+              onChange={(ev) => setInstallments(ev.target.value.replace(/\D/g, '').slice(0, 2))}
+              className={inputClass}
+              placeholder="0"
+            />
+          </div>
+          <label className="flex cursor-pointer items-center gap-3 pt-6">
+            <input type="checkbox" name="installmentsInterestFree" checked={interestFree} onChange={(ev) => setInterestFree(ev.target.checked)} className="size-4 accent-primary" />
+            <span className="text-sm font-medium">Sin interés</span>
+          </label>
+        </div>
+        {(Number(transfer) > 0 || Number(installments) > 1) && (
+          <div className="mt-4 rounded-lg bg-muted/60 p-3 text-sm">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ejemplo con un producto de $ 100.000</p>
+            {Number(transfer) > 0 && (
+              <p className="font-semibold text-whatsapp">
+                {formatPrice(Math.round(100000 * (1 - Number(transfer) / 100)))} con transferencia · ahorrás{' '}
+                {formatPrice(Math.round(100000 * (Number(transfer) / 100)))}
+              </p>
+            )}
+            {Number(installments) > 1 && (
+              <p>
+                {installments} cuotas{interestFree ? ' sin interés' : ''} de {formatPrice(Math.round(100000 / Number(installments)))}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="mt-4">
+          <Text
+            name="priceNote"
+            label="Aclaración debajo del precio"
+            defaultValue={settings.priceNote}
+            hint="Ej: Precios de contado, débito o transferencia. Consultá otras formas de pago."
+          />
+        </div>
       </Panel>
 
       <Panel>

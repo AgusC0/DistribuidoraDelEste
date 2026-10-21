@@ -27,6 +27,8 @@ export function createDemoProducts(): Product[] {
     stock?: StockStatus
     featured?: boolean
     tags?: string[]
+    /** Slugs de productos que se compran junto con este. */
+    related?: string[]
   }
 
   const make = (
@@ -55,6 +57,7 @@ export function createDemoProducts(): Product[] {
       shortDescription: extra.shortDescription ?? '',
       specs: extra.specs ?? [],
       options,
+      related: (extra.related ?? []).map((slug) => `demo-${slug}`),
       featured: extra.featured ?? false,
       active: true,
       stock: extra.stock ?? 'disponible',
@@ -94,6 +97,7 @@ export function createDemoProducts(): Product[] {
         ]),
       promotion: { originalPrice: 8500, limitedStock: true },
       tags: ['termofusion', 'caño', 'agua'],
+      related: ['codo-termofusion', 'tee-termofusion', 'union-doble-termofusion', 'adaptador-rosca-hembra'],
     }),
     make('codo-termofusion', 'Codo 90° termofusión', 'canerias', 'Saladillo', 650, IMG.canerias, { tipo: ['Codo'], material: [pp] }, {
       sku: 'SA-COD90',
@@ -158,6 +162,7 @@ export function createDemoProducts(): Product[] {
         ]),
       promotion: { originalPrice: 26000, endsAt: inDays(5) },
       tags: ['desague', 'cloaca'],
+      related: ['codo-pvc-desague'],
     }),
     make('codo-pvc-desague', 'Codo PVC desagüe 90°', 'canerias', 'Awaduct', 1100, IMG.canerias, { tipo: ['Codo'], material: ['PVC'] }, {
       sku: 'AW-COD',
@@ -175,7 +180,7 @@ export function createDemoProducts(): Product[] {
     }),
 
     /* ---------- Griferías ---------- */
-    make('monocomando-cocina-arizona', 'Monocomando de cocina caño alto Arizona', 'griferias', 'FV', 98000, IMG.griferia, {
+    make('monocomando-cocina-arizona', 'Monocomando de cocina caño alto Arizona', 'griferias-de-cocina', 'FV', 98000, IMG.griferia, {
       tipo: ['Monocomando'], linea: ['Arizona'], material: ['Bronce'], instalacion: ['Mesada'],
     }, {
       sku: 'FV-0411-ARZ',
@@ -202,8 +207,9 @@ export function createDemoProducts(): Product[] {
         ]),
       promotion: { originalPrice: 125000 },
       featured: true,
+      related: ['canilla-servicio'],
     }),
-    make('monocomando-lavatorio-libby', 'Monocomando para lavatorio Libby', 'griferias', 'FV', 64000, IMG.griferia, {
+    make('monocomando-lavatorio-libby', 'Monocomando para lavatorio Libby', 'griferias-de-bano', 'FV', 64000, IMG.griferia, {
       tipo: ['Monocomando'], linea: ['Libby'], color: ['Cromo'], material: ['Bronce'], instalacion: ['Mesada'],
     }, {
       sku: 'FV-0181-LBY',
@@ -213,7 +219,7 @@ export function createDemoProducts(): Product[] {
         ['Garantía', '10 años'],
       ]),
     }),
-    make('juego-ducha-embutir', 'Juego para ducha de embutir', 'griferias', 'Peirano', 76000, IMG.griferia, {
+    make('juego-ducha-embutir', 'Juego para ducha de embutir', 'griferias-de-bano', 'Peirano', 76000, IMG.griferia, {
       tipo: ['Juego de ducha'], linea: ['Línea 30'], color: ['Cromo'], material: ['Bronce'], instalacion: ['Pared'],
     }, {
       sku: 'PE-30-DUCHA',
@@ -223,7 +229,7 @@ export function createDemoProducts(): Product[] {
         ['Garantía', '5 años'],
       ]),
     }),
-    make('canilla-servicio', 'Canilla de servicio', 'griferias', 'Hidromet', 9500, IMG.griferia, {
+    make('canilla-servicio', 'Canilla de servicio', 'canillas-de-servicio', 'Hidromet', 9500, IMG.griferia, {
       tipo: ['Canilla'], color: ['Cromo'], material: ['Bronce'], instalacion: ['Pared'],
     }, {
       sku: 'HM-CS',
@@ -236,7 +242,7 @@ export function createDemoProducts(): Product[] {
     }),
 
     /* ---------- Sanitarios (ficha estilo "Detalles de producto") ---------- */
-    make('inodoro-bari', 'Inodoro largo Bari', 'sanitarios', 'Ferrum', 145000, IMG.bano, {
+    make('inodoro-bari', 'Inodoro largo Bari', 'inodoros', 'Ferrum', 145000, IMG.bano, {
       tipo: ['Inodoro'], linea: ['Bari'], sistema: ['Mochila'], instalacion: ['Piso'],
     }, {
       sku: 'FE-IBA',
@@ -259,8 +265,9 @@ export function createDemoProducts(): Product[] {
         ]),
       promotion: { originalPrice: 172000, limitedStock: true },
       featured: true,
+      related: ['mochila-bari', 'bidet-bari'],
     }),
-    make('bidet-bari', 'Bidet Bari 3 agujeros', 'sanitarios', 'Ferrum', 98000, IMG.bano, {
+    make('bidet-bari', 'Bidet Bari 3 agujeros', 'bidets', 'Ferrum', 98000, IMG.bano, {
       tipo: ['Bidet'], linea: ['Bari'], instalacion: ['Piso'],
     }, {
       sku: 'FE-BBA',
@@ -276,7 +283,7 @@ export function createDemoProducts(): Product[] {
           { values: ['Hueso'], sku: 'FE-BBA-H', price: 105000 },
         ]),
     }),
-    make('mochila-bari', 'Mochila de apoyo Bari doble descarga', 'sanitarios', 'Ferrum', 89000, IMG.bano, {
+    make('mochila-bari', 'Mochila de apoyo Bari doble descarga', 'mochilas-y-depositos', 'Ferrum', 89000, IMG.bano, {
       tipo: ['Mochila'], linea: ['Bari'], color: ['Blanco'], sistema: ['Doble descarga'], instalacion: ['Apoyo'],
     }, {
       sku: 'FE-MBA-B',

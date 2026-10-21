@@ -1,4 +1,4 @@
-import type { Category, OrderItem, Product, StockStatus, Variant, WeeklyHours } from '@/lib/types'
+import type { Category, OrderItem, Product, Settings, StockStatus, Variant, WeeklyHours } from '@/lib/types'
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://distribuidoradeleste.com.ar'
 
@@ -16,6 +16,21 @@ const priceFormatter = new Intl.NumberFormat('es-AR', {
 
 export function formatPrice(price: number | null) {
   return price == null ? 'Consultar precio' : priceFormatter.format(price)
+}
+
+/** Precio por transferencia y valor de cuota, según lo configurado en Ajustes. */
+export function paymentOptions(price: number | null, settings: Pick<Settings, 'transferDiscount' | 'installments' | 'installmentsInterestFree'>) {
+  if (price == null) return null
+  const transfer = settings.transferDiscount > 0 ? Math.round(price * (1 - settings.transferDiscount / 100)) : null
+  const installment = settings.installments > 1 ? Math.round(price / settings.installments) : null
+  return {
+    transfer,
+    saving: transfer != null ? price - transfer : null,
+    installment,
+    installmentsLabel: installment
+      ? `${settings.installments} cuotas${settings.installmentsInterestFree ? ' sin interés' : ''} de ${formatPrice(installment)}`
+      : null,
+  }
 }
 
 /** Precio a mostrar: con variantes de distinto precio, "Desde $X". */

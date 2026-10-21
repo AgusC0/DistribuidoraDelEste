@@ -9,7 +9,7 @@ import { useOrder } from '@/components/order-provider'
 import { useQuickView } from '@/components/quick-view'
 import { highlight } from '@/lib/search'
 import { discountPercent, isOnPromotion, promotionEndsLabel } from '@/lib/catalog'
-import { categoryName, displayPrice, formatPrice, hasPrice, STOCK_LABEL } from '@/lib/site'
+import { categoryName, displayPrice, formatPrice, hasPrice, minPrice, paymentOptions, STOCK_LABEL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 
@@ -46,6 +46,8 @@ export function ProductCard({
   const pct = onPromo ? discountPercent(product) : null
   const endsLabel = onPromo ? promotionEndsLabel(product) : null
   const isPromoCard = variant === 'promo'
+  const hasVariants = product.variants.some((v) => v.price != null)
+  const payment = paymentOptions(minPrice(product), settings)
 
   const go = (dir: 1 | -1) => setIndex((i) => (i + dir + images.length) % images.length)
   const openQuick = () => media.current && open(product, media.current.getBoundingClientRect())
@@ -208,6 +210,17 @@ export function ProductCard({
                 {onPromo && pct && <span className="text-xs font-bold text-promo">{pct}% OFF</span>}
               </p>
             ))}
+          {settings.showPrices && payment && (payment.transfer || payment.installmentsLabel) && (
+            <div className="mt-1 flex flex-col text-xs leading-snug">
+              {payment.transfer != null && (
+                <span className="font-semibold text-whatsapp">
+                  {hasVariants ? 'Desde ' : ''}
+                  {formatPrice(payment.transfer)} con transferencia
+                </span>
+              )}
+              {payment.installmentsLabel && <span className="text-muted-foreground">{payment.installmentsLabel}</span>}
+            </div>
+          )}
           {onPromo && (product.promotion.limitedStock || endsLabel) && (
             <p className="mt-1 flex flex-wrap gap-x-2 text-[0.7rem] font-semibold uppercase tracking-wide text-promo">
               {product.promotion.limitedStock && <span>Hasta agotar stock</span>}

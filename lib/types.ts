@@ -90,6 +90,8 @@ export type Product = {
   specs: ProductSpec[]
   /** Ejes de variación; las variantes son sus combinaciones. */
   options: ProductOption[]
+  /** Complementos elegidos a mano ("se compra junto con"): ids de otros productos. */
+  related: string[]
   /** Foto principal (siempre igual a `images[0]`). */
   image: string
   /** Galería completa; la primera es la principal. */
@@ -136,6 +138,11 @@ export type Settings = {
   announcementText: string
   /** Aclaración debajo de los precios en la ficha de producto (formas de pago, IVA…). */
   priceNote: string
+  /** % de descuento pagando por transferencia (0 = no se muestra). */
+  transferDiscount: number
+  /** Cantidad de cuotas a mostrar (0 = no se muestran). */
+  installments: number
+  installmentsInterestFree: boolean
   /** `false` oculta todos los montos del sitio público (tarjetas, fichas, pedido y WhatsApp). */
   showPrices: boolean
   /** Email que recibe el aviso de cada consulta nueva. */
@@ -180,4 +187,6 @@ export type PublicCatalog = {
   categories: Category[]
   products: Product[]
   popularSearches: string[]
+  /** Interés de los últimos 30 días por producto (vistas + consultas), para "Más vistos". */
+  popularity: Record<string, number>
 }

@@ -245,6 +245,7 @@ export function applyImport(
         shortDescription: '',
         specs: [],
         options: [],
+        related: [],
         featured: false,
         active: true,
         stock: 'disponible',

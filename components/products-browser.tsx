@@ -20,6 +20,7 @@ import {
   childCategories,
   descendantIds,
   discountPercent,
+  effectiveFilters,
   isOnPromotion,
   rootCategories,
   sortValues,
@@ -173,13 +174,11 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
   const sorts = SORTS.filter((o) => settings.showPrices || !o.needsPrices)
 
   // Filtros de esta categoría (en un rubro: los que comparten todas sus subcategorías).
-  const attrFilters = useMemo(() => {
-    if (!category) return []
-    const children = childCategories(categories, category.id)
-    if (!children.length) return category.filters.filter((f) => !RESERVED.has(f.key))
-    const [first, ...rest] = children
-    return first.filters.filter((f) => !RESERVED.has(f.key) && rest.every((c) => c.filters.some((x) => x.key === f.key)))
-  }, [categories, category])
+  // Filtros propios o heredados (Inodoros usa los de Sanitarios); en un rubro, los que comparten sus subcategorías.
+  const attrFilters = useMemo(
+    () => (category ? effectiveFilters(categories, category.id).filter((f) => !RESERVED.has(f.key)) : []),
+    [categories, category],
+  )
 
   useEffect(() => {
     // Enlaces viejos: /productos?categoria=canerias → /categoria/agua-y-canerias/canerias
@@ -344,6 +343,43 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
 
   /* ---------- barra lateral ---------- */
 
+  const CategoryNode = ({ node, level }: { node: Category; level: number }) => {
+    const count = categoryCount(node.id)
+    const active = category?.id === node.id
+    const inPath = path.some((c) => c.id === node.id)
+    if (!count && !inPath) return null
+    const children = childCategories(categories, node.id).filter((c) => categoryCount(c.id) > 0 || path.some((x) => x.id === c.id))
+    return (
+      <li>
+        <Link
+          href={hrefFor(node)}
+          onClick={() => setFiltersOpen(false)}
+          aria-current={active ? 'page' : undefined}
+          className={cn(
+            'flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-muted',
+            level === 0 ? 'font-medium' : 'text-muted-foreground',
+            active && 'bg-primary/10 font-semibold text-primary',
+          )}
+        >
+          <span className="flex items-center gap-1">
+            {children.length > 0 && (
+              <ChevronRight aria-hidden="true" className={cn('size-3.5 text-muted-foreground transition-transform', inPath && 'rotate-90')} />
+            )}
+            {node.name}
+          </span>
+          <span className="text-xs tabular-nums text-muted-foreground">{count}</span>
+        </Link>
+        {inPath && children.length > 0 && (
+          <ul className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
+            {children.map((child) => (
+              <CategoryNode key={child.id} node={child} level={level + 1} />
+            ))}
+          </ul>
+        )}
+      </li>
+    )
+  }
+
   const sidebar = (
     <div>
       <FilterGroup title="Categorías">
@@ -361,57 +397,9 @@ export function ProductsBrowser({ categoryId }: { categoryId?: string }) {
               <span className="text-xs tabular-nums text-muted-foreground">{searched.length}</span>
             </Link>
           </li>
-          {rootCategories(categories).map((root) => {
-            const count = categoryCount(root.id)
-            const expanded = path.some((c) => c.id === root.id)
-            if (!count && !expanded) return null
-            return (
-              <li key={root.id}>
-                <Link
-                  href={hrefFor(root)}
-                  onClick={() => setFiltersOpen(false)}
-                  aria-current={category?.id === root.id ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center justify-between rounded-lg px-2 py-1.5 font-medium transition-colors hover:bg-muted',
-                    category?.id === root.id && 'bg-primary/10 font-semibold text-primary',
-                  )}
-                >
-                  <span className="flex items-center gap-1">
-                    <ChevronRight
-                      aria-hidden="true"
-                      className={cn('size-3.5 text-muted-foreground transition-transform', expanded && 'rotate-90')}
-                    />
-                    {root.name}
-                  </span>
-                  <span className="text-xs tabular-nums text-muted-foreground">{count}</span>
-                </Link>
-                {expanded && (
-                  <ul className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
-                    {childCategories(categories, root.id).map((child) => {
-                      const childCount = categoryCount(child.id)
-                      if (!childCount && category?.id !== child.id) return null
-                      return (
-                        <li key={child.id}>
-                          <Link
-                            href={hrefFor(child)}
-                            onClick={() => setFiltersOpen(false)}
-                            aria-current={category?.id === child.id ? 'page' : undefined}
-                            className={cn(
-                              'flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-muted',
-                              category?.id === child.id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground',
-                            )}
-                          >
-                            {child.name}
-                            <span className="text-xs tabular-nums">{childCount}</span>
-                          </Link>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </li>
-            )
-          })}
+          {rootCategories(categories).map((root) => (
+            <CategoryNode key={root.id} node={root} level={0} />
+          ))}
         </ul>
       </FilterGroup>
 

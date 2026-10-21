@@ -5,7 +5,15 @@ import { ArrowDown, ArrowUp, Check, CornerDownRight, Pencil, Plus, SlidersHorizo
 import { Button } from '@/components/ui/button'
 import { ConfirmButton, FieldError, FormMessage, inputClass, Panel, SubmitButton } from '@/components/admin/ui'
 import { deleteCategory, moveCategory, saveCategory, type FormState } from '@/app/admin/actions'
-import { childCategories, rootCategories } from '@/lib/catalog'
+import {
+  categoryPath,
+  childCategories,
+  descendantIds,
+  effectiveFilters,
+  flattenCategories,
+  MAX_CATEGORY_DEPTH,
+  rootCategories,
+} from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/lib/types'
 
@@ -65,15 +73,17 @@ function FiltersInput({ initial }: { initial: string[] }) {
 
 function CategoryForm({
   category,
-  roots,
+  categories,
   defaultParent,
   onDone,
 }: {
   category?: Category
-  roots: Category[]
+  categories: Category[]
   defaultParent?: string
   onDone?: () => void
 }) {
+  const blocked = category ? descendantIds(categories, category.id) : new Set<string>()
+  const parents = flattenCategories(categories).filter(({ category: c, depth }) => depth < MAX_CATEGORY_DEPTH && !blocked.has(c.id))
   const [parentId, setParentId] = useState(category ? (category.parentId ?? '') : (defaultParent ?? ''))
   const [state, action] = useActionState<FormState, FormData>(async (prev, fd) => {
     const result = await saveCategory(prev, fd)
@@ -111,14 +121,12 @@ function CategoryForm({
             onChange={(e) => setParentId(e.target.value)}
             className={inputClass}
           >
-            <option value="">Rubro principal</option>
-            {roots
-              .filter((r) => r.id !== category?.id)
-              .map((r) => (
-                <option key={r.id} value={r.id}>
-                  Subcategoría de {r.name}
-                </option>
-              ))}
+            <option value="">Rubro principal (nivel 1)</option>
+            {parents.map(({ category: c, depth }) => (
+              <option key={c.id} value={c.id}>
+                {'\u00a0\u00a0'.repeat(depth - 1)}Dentro de {categoryPath(categories, c.id).map((x) => x.name).join(' › ')}
+              </option>
+            ))}
           </select>
           <FieldError message={state.errors?.parentId} />
         </div>
@@ -139,7 +147,7 @@ function CategoryForm({
         <div className="flex flex-col gap-1">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <SlidersHorizontal className="size-3.5" />
-            Filtros de esta subcategoría (además de Marca, Precio y Disponibilidad, que están siempre)
+            Filtros (además de Marca, Precio y Disponibilidad). Si se deja vacío, usa los de la categoría de arriba.
           </span>
           <FiltersInput initial={category?.filters.map((f) => f.label) ?? []} />
         </div>
@@ -169,19 +177,22 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
   const [error, setError] = useState('')
   const [pending, start] = useTransition()
   const roots = rootCategories(categories)
+  const indent = (depth: number) => (depth === 2 ? 'ml-8' : depth === 3 ? 'ml-16' : '')
 
-  const row = (c: Category, siblings: Category[], i: number, isChild: boolean) => {
+  const row = (c: Category, siblings: Category[], i: number, depth: number) => {
+    const isChild = depth > 1
     const children = childCategories(categories, c.id)
-    const total = (counts[c.id] ?? 0) + children.reduce((s, ch) => s + (counts[ch.id] ?? 0), 0)
+    const total = [...descendantIds(categories, c.id)].reduce((sum, id) => sum + (counts[id] ?? 0), 0)
+    const inherited = isChild && !c.filters.length ? effectiveFilters(categories, c.id) : []
     if (editing === c.id) {
       return (
-        <div className={cn('rounded-lg bg-muted/40 p-4', isChild && 'ml-8')}>
-          <CategoryForm category={c} roots={roots} onDone={() => setEditing(null)} />
+        <div className={cn('rounded-lg bg-muted/40 p-4', indent(depth))}>
+          <CategoryForm category={c} categories={categories} onDone={() => setEditing(null)} />
         </div>
       )
     }
     return (
-      <div className={cn('flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40', isChild && 'ml-8')}>
+      <div className={cn('flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/40', indent(depth))}>
         <div className="flex flex-col">
           <Button variant="ghost" size="icon-xs" disabled={i === 0} aria-label={`Subir ${c.name}`} onClick={() => start(() => moveCategory(c.id, -1))}>
             <ArrowUp />
@@ -203,7 +214,12 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
           </p>
           {isChild ? (
             <p className="truncate text-xs text-muted-foreground">
-              Filtros: {c.filters.length ? c.filters.map((f) => f.label).join(', ') : 'sólo los generales'}
+              Filtros:{' '}
+              {c.filters.length
+                ? c.filters.map((f) => f.label).join(', ')
+                : inherited.length
+                  ? `los de arriba (${inherited.map((f) => f.label).join(', ')})`
+                  : 'sólo los generales'}
             </p>
           ) : (
             <p className="truncate text-sm text-muted-foreground">{c.description || 'Sin descripción'}</p>
@@ -212,7 +228,7 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
         <span className="hidden shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium tabular-nums sm:inline">
           {total} {total === 1 ? 'producto' : 'productos'}
         </span>
-        {!isChild && (
+        {depth < MAX_CATEGORY_DEPTH && (
           <Button variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setAddingTo(addingTo === c.id ? null : c.id)}>
             <Plus className="size-4" />
             <span className="hidden sm:inline">Subcategoría</span>
@@ -245,14 +261,34 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
     )
   }
 
+  const renderBranch = (c: Category, siblings: Category[], i: number, depth: number): React.ReactNode => {
+    const children = childCategories(categories, c.id)
+    return (
+      <>
+        {row(c, siblings, i, depth)}
+        {children.map((child, j) => (
+          <div key={child.id} className="flex flex-col gap-1">
+            {renderBranch(child, children, j, depth + 1)}
+          </div>
+        ))}
+        {addingTo === c.id && (
+          <div className={cn('rounded-lg bg-muted/40 p-4', indent(depth + 1))}>
+            <CategoryForm categories={categories} defaultParent={c.id} onDone={() => setAddingTo(null)} />
+          </div>
+        )}
+      </>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <Panel>
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Nueva categoría</h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          Los rubros agrupan subcategorías (Baño → Griferías). Cada subcategoría define sus propios filtros.
+          Hasta 3 niveles: rubro → subcategoría → sub-subcategoría (Baño → Sanitarios → Inodoros). Cada una puede tener sus
+          filtros o usar los de la categoría de arriba.
         </p>
-        <CategoryForm roots={roots} />
+        <CategoryForm categories={categories} />
       </Panel>
 
       <Panel className={cn('p-3', pending && 'opacity-70')}>
@@ -262,22 +298,11 @@ export function CategoryManager({ categories, counts }: { categories: Category[]
           </p>
         )}
         <ul className="flex flex-col divide-y divide-border">
-          {roots.map((root, i) => {
-            const children = childCategories(categories, root.id)
-            return (
-              <li key={root.id} className="flex flex-col gap-1 py-3">
-                {row(root, roots, i, false)}
-                {children.map((child, j) => (
-                  <div key={child.id}>{row(child, children, j, true)}</div>
-                ))}
-                {addingTo === root.id && (
-                  <div className="ml-8 rounded-lg bg-muted/40 p-4">
-                    <CategoryForm roots={roots} defaultParent={root.id} onDone={() => setAddingTo(null)} />
-                  </div>
-                )}
-              </li>
-            )
-          })}
+          {roots.map((root, i) => (
+            <li key={root.id} className="flex flex-col gap-1 py-3">
+              {renderBranch(root, roots, i, 1)}
+            </li>
+          ))}
         </ul>
       </Panel>
     </div>

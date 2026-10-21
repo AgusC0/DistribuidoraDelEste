@@ -10,7 +10,9 @@ import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { useCatalog } from '@/components/catalog-provider'
 import { itemKey, useOrder } from '@/components/order-provider'
 import { submitLead } from '@/app/actions'
-import { formatPrice, orderWaMessage, waLink } from '@/lib/site'
+import { complementsFor } from '@/lib/catalog'
+import { displayPrice, formatPrice, orderWaMessage, paymentOptions, waLink } from '@/lib/site'
+import type { Product } from '@/lib/types'
 import { track } from '@/lib/track'
 import { cn } from '@/lib/utils'
 
@@ -42,12 +44,25 @@ export function OrderButton({ className }: { className?: string }) {
 
 export function OrderDrawer() {
   const { settings, products } = useCatalog()
-  const { items, open, setOpen, setQuantity, remove, clear } = useOrder()
+  const { items, open, setOpen, setQuantity, remove, clear, add } = useOrder()
   const [name, setName] = useState('')
   const [note, setNote] = useState('')
   const [sent, setSent] = useState(false)
 
   const priced = items.filter((i) => i.price != null)
+  // Complementos de lo que ya está en el pedido (sin repetir lo que ya se agregó).
+  const suggestions = (() => {
+    const inOrder = new Set(items.map((i) => i.productId))
+    const out: Product[] = []
+    for (const item of items) {
+      const product = products.find((p) => p.id === item.productId)
+      if (!product) continue
+      for (const c of complementsFor(product, products, 6)) {
+        if (!inOrder.has(c.id) && !out.some((x) => x.id === c.id)) out.push(c)
+      }
+    }
+    return out.slice(0, 3)
+  })()
   const total = priced.reduce((s, i) => s + (i.price ?? 0) * i.quantity, 0)
 
   function send() {
@@ -132,7 +147,8 @@ export function OrderDrawer() {
             </div>
           ) : (
             <>
-              <ul className="flex-1 divide-y divide-border overflow-y-auto px-5">
+              <div className="flex-1 overflow-y-auto">
+              <ul className="divide-y divide-border px-5">
                 {items.map((item) => {
                   const key = itemKey(item)
                   const product = products.find((p) => p.id === item.productId)
@@ -212,6 +228,45 @@ export function OrderDrawer() {
                   )
                 })}
               </ul>
+              {suggestions.length > 0 && (
+                <div className="border-t border-border bg-secondary/30 px-5 py-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Te puede servir</p>
+                  <ul className="flex flex-col gap-3">
+                    {suggestions.map((p) => (
+                      <li key={p.id} className="flex items-center gap-3">
+                        <span className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
+                          <Image src={p.image || '/placeholder.svg'} alt="" fill sizes="48px" className="object-cover" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <Link href={`/productos/${p.slug}`} onClick={() => setOpen(false)} className="line-clamp-1 text-sm font-medium hover:text-primary">
+                            {p.name}
+                          </Link>
+                          {settings.showPrices && <p className="text-xs text-muted-foreground">{displayPrice(p)}</p>}
+                        </div>
+                        {p.variants.length ? (
+                          <Link
+                            href={`/productos/${p.slug}`}
+                            onClick={() => setOpen(false)}
+                            className="shrink-0 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+                          >
+                            Elegir
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => add(p)}
+                            aria-label={`Agregar ${p.name} al pedido`}
+                            className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border hover:border-primary/40 hover:bg-muted"
+                          >
+                            <Plus className="size-4" />
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              </div>
 
               <div className="flex flex-col gap-3 border-t border-border bg-secondary/40 p-5">
                 {settings.showPrices ? (
@@ -220,6 +275,12 @@ export function OrderDrawer() {
                       <span className="text-sm text-muted-foreground">Total estimado</span>
                       <span className="font-heading text-2xl font-bold tabular-nums text-primary">{formatPrice(total)}</span>
                     </div>
+                    {settings.transferDiscount > 0 && total > 0 && (
+                      <p className="-mt-2 flex items-baseline justify-between text-sm">
+                        <span className="text-muted-foreground">Con transferencia ({settings.transferDiscount}% OFF)</span>
+                        <span className="font-bold tabular-nums text-whatsapp">{formatPrice(paymentOptions(total, settings)?.transfer ?? total)}</span>
+                      </p>
+                    )}
                     {priced.length < items.length && (
                       <p className="-mt-2 text-xs text-muted-foreground">
                         Sin incluir {items.length - priced.length} producto(s) con precio a consultar.

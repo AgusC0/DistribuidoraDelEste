@@ -7,12 +7,13 @@ import { ArrowLeft, ImagePlus, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { GalleryEditor } from '@/components/admin/gallery-editor'
+import { RelatedPicker, type PickerProduct } from '@/components/admin/related-picker'
 import { SpecsEditor } from '@/components/admin/specs-editor'
 import { VariantsEditor } from '@/components/admin/variants-editor'
 import { FieldError, FormMessage, inputClass, Panel, SubmitButton, submitKeepingValues } from '@/components/admin/ui'
 import { saveProduct, type FormState } from '@/app/admin/actions'
 import { formatPrice, slugify, STOCK_LABEL } from '@/lib/site'
-import { childCategories, rootCategories } from '@/lib/catalog'
+import { flattenCategories } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 import type { Category, Product, StockStatus } from '@/lib/types'
 
@@ -25,6 +26,7 @@ export function ProductForm({
   created,
   brands = [],
   attributeSuggestions = {},
+  catalogProducts = [],
 }: {
   product?: Product
   categories: Category[]
@@ -33,6 +35,8 @@ export function ProductForm({
   brands?: string[]
   /** Valores usados en otros productos por cada filtro (tipo → Codo, Tee…). */
   attributeSuggestions?: Record<string, string[]>
+  /** Todos los productos, para elegir complementos. */
+  catalogProducts?: PickerProduct[]
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
     saveProduct,
@@ -51,7 +55,6 @@ export function ProductForm({
   const [attrs, setAttrs] = useState<Record<string, string>>(() =>
     Object.fromEntries(Object.entries(product?.attributes ?? {}).map(([k, v]) => [k, v.join(', ')])),
   )
-  const roots = rootCategories(categories)
   const selectedCategory = categories.find((c) => c.id === categoryId)
   const categoryFilters = selectedCategory?.filters ?? []
   const attributesValue = JSON.stringify(
@@ -148,22 +151,13 @@ export function ProductForm({
                 aria-invalid={!!e.categoryId}
                 className={inputClass}
               >
-                {roots.map((root) => {
-                  const children = childCategories(categories, root.id)
-                  return children.length ? (
-                    <optgroup key={root.id} label={root.name}>
-                      {children.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ) : (
-                    <option key={root.id} value={root.id}>
-                      {root.name}
-                    </option>
-                  )
-                })}
+                {flattenCategories(categories).map(({ category: c, depth }) => (
+                  <option key={c.id} value={c.id} className={depth === 1 ? 'font-semibold' : undefined}>
+                    {'   '.repeat(depth - 1)}
+                    {depth > 1 ? '└ ' : ''}
+                    {c.name}
+                  </option>
+                ))}
               </select>
               <FieldError message={e.categoryId} />
             </div>
@@ -358,6 +352,14 @@ export function ProductForm({
             baseSku={sku}
             imageCount={product?.images.length ?? 0}
           />
+        </Panel>
+
+        <Panel className="flex flex-col gap-4">
+          <div>
+            <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Complementos</h2>
+            <p className={hintClass}>Productos que se compran junto con este. Aparecen en “Completá tu compra” y en el pedido.</p>
+          </div>
+          <RelatedPicker key={product?.updatedAt ?? 'nuevo'} products={catalogProducts} initial={product?.related ?? []} currentId={product?.id} />
         </Panel>
 
         <Panel className="flex flex-col gap-4">

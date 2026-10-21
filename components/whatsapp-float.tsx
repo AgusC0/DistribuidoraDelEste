@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { cn } from '@/lib/utils'
@@ -8,6 +9,8 @@ import { cn } from '@/lib/utils'
 /** Botón flotante: aparece después del hero y se oculta en la sección de contacto (ya hay CTAs ahí). */
 export function WhatsappFloat() {
   const [visible, setVisible] = useState(false)
+  // En la ficha de producto el celular ya tiene la barra fija de compra: no se superponen.
+  const onProductPage = usePathname().startsWith('/productos/')
 
   useEffect(() => {
     const update = () => {
@@ -29,6 +32,7 @@ export function WhatsappFloat() {
       className={cn(
         'fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-5 z-30 flex size-14 items-center justify-center rounded-full bg-whatsapp text-whatsapp-foreground shadow-lg ring-4 ring-whatsapp/25 transition-[transform,opacity] duration-300 hover:scale-105 active:scale-95',
         visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
+        onProductPage && 'max-md:hidden',
       )}
     >
       <WhatsappIcon className="size-7" />
