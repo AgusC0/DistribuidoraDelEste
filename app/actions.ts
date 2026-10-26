@@ -1,7 +1,7 @@
 'use server'
 
 import { after } from 'next/server'
-import { mutateDb, newId } from '@/lib/db'
+import { getCatalog, insertLead, insertOrder, newId } from '@/lib/db'
 import { notifyNewLead } from '@/lib/notify'
 import { SITE_URL } from '@/lib/site'
 import type { Lead, Order, OrderItem } from '@/lib/types'
@@ -33,10 +33,8 @@ export async function submitLead(input: {
     notes: '',
     createdAt: new Date().toISOString(),
   }
-  const settings = await mutateDb((db) => {
-    db.leads.unshift(lead)
-    return db.settings
-  })
+  await insertLead(lead)
+  const { settings } = await getCatalog()
 
   // El email sale después de responder, así el visitante no espera.
   after(async () => {
@@ -60,10 +58,12 @@ export async function submitOrder(input: OrderInput, message: string): Promise<{
   const clean = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
   const raw = Array.isArray(input?.items) ? input.items.slice(0, 60) : []
 
-  const result = await mutateDb((db) => {
+  const catalog = await getCatalog()
+  const byId = new Map(catalog.products.map((p) => [p.id, p]))
+  const result = await (async () => {
     const items: OrderItem[] = []
     for (const r of raw) {
-      const product = db.products.find((p) => p.id === r?.productId)
+      const product = byId.get(r?.productId)
       if (!product) continue
       const variant = r.variantId ? product.variants.find((v) => v.id === r.variantId) : undefined
       items.push({
@@ -78,9 +78,9 @@ export async function submitOrder(input: OrderInput, message: string): Promise<{
     }
     if (!items.length) return null
     const now = new Date().toISOString()
-    const order: Order = {
+    // El número correlativo lo asigna la base (sin repetirse aunque lleguen dos pedidos a la vez).
+    const order = await insertOrder({
       id: newId('o_'),
-      number: db.orders.reduce((max, o) => Math.max(max, o.number), 0) + 1,
       name: clean(input.name, 80),
       note: clean(input.note, 500),
       items,
@@ -90,10 +90,9 @@ export async function submitOrder(input: OrderInput, message: string): Promise<{
       notes: '',
       createdAt: now,
       updatedAt: now,
-    }
-    db.orders.unshift(order)
-    return { order, settings: db.settings }
-  })
+    })
+    return { order, settings: catalog.settings }
+  })()
   if (!result) return { ok: false }
 
   const { order, settings } = result

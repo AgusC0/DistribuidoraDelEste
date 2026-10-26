@@ -4,10 +4,15 @@ Sitio de Distribuidora del Este SRL (Next.js 16 + Tailwind 4) con catálogo, bus
 
 ## Desarrollo
 
+Necesita PostgreSQL. Lo más simple es Docker Desktop abierto y:
+
 ```bash
 pnpm install
+pnpm db:up
 pnpm dev
 ```
+
+Las tablas se crean solas al arrancar (o con `pnpm db:migrate`).
 
 - Sitio: http://localhost:3000
 - Panel: http://localhost:3000/admin — en desarrollo, usuario **admin** y contraseña **admin**
@@ -23,7 +28,7 @@ pnpm install
 pnpm dev
 ```
 
-Abrí http://localhost:3000. La base de datos (`data/`) no viaja por git: en la otra compu arranca con el catálogo inicial. Para llevar productos, fotos y consultas cargados, usá **Panel → Ajustes → Descargar respaldo** en esta compu y **Restaurar** en la otra (las fotos subidas están en `data/uploads/` y hay que copiarlas a mano).
+Abrí http://localhost:3000. La base de datos no viaja por git: en la otra compu arranca vacía (sólo categorías y ajustes). Para llevar productos, fotos y consultas cargados, usá **Panel → Ajustes → Descargar respaldo** en esta compu y **Restaurar** en la otra (las fotos subidas están en `data/uploads/` y hay que copiarlas a mano).
 
 ## Configuración
 
@@ -35,16 +40,25 @@ Copiá `.env.example` a `.env.local` y completá:
 | `ADMIN_PASSWORD` | Contraseña del panel. **Obligatoria en producción.** |
 | `SESSION_SECRET` | Firma de la sesión (32+ caracteres al azar). |
 | `NEXT_PUBLIC_SITE_URL` | Dominio real, para el sitemap, Open Graph y Google. |
-| `DATA_DIR` | Dónde se guardan datos y fotos (por defecto `./data`). |
+| `DATABASE_URL` | Conexión a PostgreSQL, ej. `postgres://dde:dde@127.0.0.1:5433/distribuidora`. **Obligatoria.** |
+| `DATABASE_POOL_MAX` | Conexiones simultáneas (por defecto 10). |
+| `DATA_DIR` | Dónde se guardan las fotos subidas (por defecto `./data`). |
 | `RESEND_API_KEY` | Activa el aviso por email de cada consulta ([resend.com](https://resend.com), plan gratis). |
 | `EMAIL_FROM` | Remitente de los avisos, con dominio verificado en Resend. |
 
 ## Datos
 
-Todo (productos, categorías, consultas, ajustes y métricas) vive en `data/db.json`, y las fotos subidas en `data/uploads/`. El archivo se crea solo con el catálogo inicial (`lib/seed.ts`) la primera vez.
+Todo (productos, variantes, categorías, consultas, pedidos, ajustes y métricas) vive en PostgreSQL, en tablas con índices y claves foráneas (`db/migrations/`). Las fotos subidas quedan en `data/uploads/`.
 
-- Hacé un respaldo desde **Panel → Ajustes → Descargar respaldo**.
-- Necesita un servidor con disco persistente (VPS, Railway, Render, Fly.io…). En Vercel el disco se borra: para ahí hay que reemplazar `readDb`/`mutateDb` en `lib/db.ts` por una base de datos (Postgres, Supabase, etc.).
+- Los cambios de estructura van como archivos `.sql` nuevos y numerados en `db/migrations/`; se aplican una sola vez, al arrancar o con `pnpm db:migrate`.
+- El catálogo se guarda en memoria y sólo se recarga cuando cambia; al guardar se escriben únicamente las filas modificadas.
+- Las métricas se conservan 400 días.
+
+### En el VPS
+
+1. Instalá PostgreSQL 16+ y creá usuario y base (`createuser -P dde`, `createdb -O dde distribuidora`).
+2. Poné `DATABASE_URL` en `.env.local`, luego `pnpm install && pnpm db:migrate && pnpm build && pnpm start`.
+3. Respaldo diario por cron: `pg_dump -Fc distribuidora > respaldo-$(date +%F).dump`, y copiá `data/uploads/`. Para volver: `pg_restore -c -d distribuidora archivo.dump`.
 
 ## Panel de administración
 

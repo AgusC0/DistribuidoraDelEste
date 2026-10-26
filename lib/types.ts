@@ -18,6 +18,10 @@ export type Category = {
   filters: CategoryFilter[]
   /** Marcas que trabaja el negocio en esta categoría: accesos rápidos en la página y sugerencias en el panel. */
   brands?: string[]
+  /** Título para Google (sin el nombre del negocio). Vacío = el definido en lib/category-seo.ts. */
+  seoTitle?: string
+  /** Texto local que se muestra debajo de los productos (un párrafo por línea). Vacío = el por defecto. */
+  seoText?: string
 }
 
 /**

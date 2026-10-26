@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/admin/ui'
 import { ProductTable, type ProductStatusFilter } from '@/components/admin/product-table'
 import { PriceVisibilityToggle } from '@/components/admin/price-visibility'
+import { adminRows } from '@/lib/admin-rows'
 import { readDb } from '@/lib/db'
 
 export const metadata: Metadata = { title: 'Productos' }
@@ -37,7 +38,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       <ProductTable
         key={initialStatus}
         initialStatus={initialStatus}
-        products={db.products}
+        {...(({ rows, quality }) => ({ products: rows, quality }))(adminRows(db.products, db.categories))}
         categories={[...db.categories].sort((a, b) => a.order - b.order)}
       />
     </>

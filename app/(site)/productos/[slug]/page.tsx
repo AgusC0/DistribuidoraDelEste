@@ -89,10 +89,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     category: category?.name,
     ...(product.sku && { sku: product.sku }),
     ...(product.brand && { brand: { '@type': 'Brand', name: product.brand } }),
+    url: `${SITE_URL}/productos/${product.slug}`,
     ...(variantPrices.length > 1 && {
       offers: {
         '@type': 'AggregateOffer',
         priceCurrency: 'ARS',
+        availability: product.variants.some((v) => v.stock !== 'sin_stock') ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        seller: { '@id': `${SITE_URL}/#negocio` },
         lowPrice: Math.min(...variantPrices),
         highPrice: Math.max(...variantPrices),
         offerCount: variantPrices.length,
@@ -102,6 +105,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       offers: {
         '@type': 'Offer',
         priceCurrency: 'ARS',
+        itemCondition: 'https://schema.org/NewCondition',
+        seller: { '@id': `${SITE_URL}/#negocio` },
         price: product.price,
         availability:
           product.stock === 'sin_stock' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',

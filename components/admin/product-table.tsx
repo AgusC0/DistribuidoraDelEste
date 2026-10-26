@@ -11,7 +11,8 @@ import { ConfirmButton, inputClass, Panel, Switch } from '@/components/admin/ui'
 import { deleteProduct, duplicateProduct, setProductPrice, setProductStock, setVariantQuick, toggleProduct } from '@/app/admin/actions'
 import { buildIndex, search } from '@/lib/search'
 import { categoryPath, descendantIds, flattenCategories } from '@/lib/catalog'
-import { productQuality, QUALITY_GOOD, qualityTone, type QualityCheck } from '@/lib/quality'
+import { QUALITY_GOOD, qualityTone, type QualityCheck } from '@/lib/quality'
+import type { AdminQuality } from '@/lib/admin-rows'
 import { categoryName, displayPrice, formatPrice, STOCK_LABEL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import type { Category, Product, StockStatus } from '@/lib/types'
@@ -211,10 +212,12 @@ function RowActions({ product, start }: { product: Product; start: (fn: () => Pr
 
 export function ProductTable({
   products,
+  quality: qualityById,
   categories,
   initialStatus = 'todos',
 }: {
   products: Product[]
+  quality: AdminQuality
   categories: Category[]
   initialStatus?: ProductStatusFilter
 }) {
@@ -228,7 +231,8 @@ export function ProductTable({
   const [, start] = useTransition()
 
   const index = useMemo(() => buildIndex(products, categories), [products, categories])
-  const quality = useMemo(() => new Map(products.map((p) => [p.id, productQuality(p, categories)])), [products, categories])
+  // La calidad viene calculada del servidor (las filas no traen descripción ni ficha completas).
+  const quality = useMemo(() => new Map(Object.entries(qualityById)), [qualityById])
   const incomplete = products.filter((p) => quality.get(p.id)!.score < QUALITY_GOOD).length
 
   const rows = useMemo(() => {

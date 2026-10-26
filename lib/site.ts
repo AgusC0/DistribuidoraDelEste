@@ -1,6 +1,6 @@
 import type { Category, OrderItem, Product, Settings, StockStatus, Variant, WeeklyHours } from '@/lib/types'
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://distribuidoradeleste.com.ar'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://distdelestevm.com.ar'
 
 export const GENERAL_WA_MESSAGE = 'Hola Distribuidora del Este, quería hacer una consulta.'
 
@@ -182,4 +182,18 @@ export function openStatus(hours: WeeklyHours, date = new Date()): OpenStatus {
     }
   }
   return { open: false, label: 'Cerrado' }
+}
+
+/**
+ * Datos del lugar a partir del mapa de Google cargado en Ajustes (el iframe "Insertar mapa" de la ficha del negocio):
+ * coordenadas exactas y el enlace a la ficha (cid). Sirven para los datos estructurados de negocio local.
+ */
+export function placeFromMapsEmbed(embedUrl: string) {
+  const coords = embedUrl.match(/!2d(-?\d+(?:\.\d+)?)!3d(-?\d+(?:\.\d+)?)/)
+  const place = embedUrl.match(/!1s0x[0-9a-f]+(?:%3A|:)0x([0-9a-f]+)/i)
+  return {
+    latitude: coords ? Number(coords[2]) : null,
+    longitude: coords ? Number(coords[1]) : null,
+    mapUrl: place ? `https://maps.google.com/?cid=${BigInt(`0x${place[1]}`).toString()}` : null,
+  }
 }

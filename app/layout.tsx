@@ -16,8 +16,9 @@ const oswald = Oswald({
   display: 'swap',
 })
 
+// ~155 caracteres: lo que más vende primero (termotanques, claraboyas, puertas plegadizas, repuestos) y la ciudad.
 const description =
-  'Todo en sanitarios y conducción de agua. Griferías, purificadores, claraboyas, puertas de PVC, cañerías y termotanques. Distribuidora del Este SRL, Villa María, Córdoba.'
+  'Termotanques, claraboyas, puertas plegadizas, repuestos, sanitarios, griferías y materiales de construcción en Villa María, Córdoba. Pedí tu presupuesto.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -26,7 +27,15 @@ export const metadata: Metadata = {
     template: '%s | Distribuidora del Este',
   },
   description,
-  keywords: ['sanitarios', 'corralón', 'griferías', 'purificadores de agua', 'termotanques', 'Villa María', 'Córdoba'],
+  keywords: [
+    'sanitarios Villa María',
+    'termotanques Villa María',
+    'claraboyas',
+    'puertas plegadizas',
+    'repuestos sanitarios',
+    'materiales de construcción Villa María',
+    'corralón',
+  ],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',

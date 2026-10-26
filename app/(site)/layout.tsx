@@ -8,7 +8,9 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { WhatsappFloat } from '@/components/whatsapp-float'
 import { getShell } from '@/lib/public-catalog'
-import { parseRanges, SITE_URL } from '@/lib/site'
+import { categoryUrl, rootCategories } from '@/lib/catalog'
+import { categorySeoTitle } from '@/lib/category-seo'
+import { parseRanges, placeFromMapsEmbed, SITE_URL } from '@/lib/site'
 
 // Se regenera al guardar cambios desde el panel (revalidatePath) y, como mínimo, cada hora.
 export const revalidate = 3600
@@ -26,21 +28,44 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const { settings } = shell
 
   const t = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+  // Negocio local (HardwareStore): lo que Google usa para el mapa y las búsquedas "… en Villa María".
+  // Coordenadas y ficha salen del mapa cargado en Ajustes; los rubros enlazan a cada categoría.
+  const place = placeFromMapsEmbed(settings.mapsEmbedUrl)
+  const rubros = rootCategories(shell.categories).filter((c) => (shell.categoryCounts[c.id] ?? 0) > 0)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'HardwareStore',
+    '@id': `${SITE_URL}/#negocio`,
     name: settings.businessName,
-    description: settings.tagline,
+    alternateName: 'Distribuidora del Este',
+    description: `${settings.tagline}. Termotanques, claraboyas, puertas plegadizas, repuestos sanitarios y de griferías, sanitarios, griferías y materiales de construcción.`,
     url: SITE_URL,
-    image: `${SITE_URL}/images/logo-del-este.png`,
+    logo: `${SITE_URL}/images/logo-del-este.png`,
+    image: [`${SITE_URL}/images/logo-del-este.png`, `${SITE_URL}/images/hero-bathroom.png`],
     telephone: `+${settings.whatsappNumber}`,
     email: settings.email,
+    priceRange: '$$',
+    currenciesAccepted: 'ARS',
     address: {
       '@type': 'PostalAddress',
       streetAddress: settings.address.split(',')[0],
       addressLocality: 'Villa María',
+      postalCode: '5900',
       addressRegion: 'Córdoba',
       addressCountry: 'AR',
+    },
+    ...(place.latitude != null && { geo: { '@type': 'GeoCoordinates', latitude: place.latitude, longitude: place.longitude } }),
+    ...((place.mapUrl || settings.mapsUrl) && { hasMap: place.mapUrl ?? settings.mapsUrl }),
+    areaServed: ['Villa María', 'Villa Nueva', 'Departamento General San Martín, Córdoba'].map((name) => ({ '@type': 'Place', name })),
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Rubros',
+      itemListElement: rubros.map((c) => ({
+        '@type': 'OfferCatalog',
+        name: c.name,
+        description: categorySeoTitle(c, shell.categories),
+        url: `${SITE_URL}${categoryUrl(shell.categories, c.id)}`,
+      })),
     },
     openingHoursSpecification: settings.hours.flatMap((value, day) =>
       parseRanges(value).map(([a, b]) => ({

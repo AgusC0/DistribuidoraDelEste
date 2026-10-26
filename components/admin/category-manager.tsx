@@ -155,6 +155,38 @@ function CategoryForm({
           placeholder="Ej: FV, Mozart, Bayco"
         />
       </div>
+      <details className="rounded-lg bg-muted/40 px-3 py-2">
+        <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Google (opcional): título y texto para aparecer en las búsquedas</summary>
+        <div className="mt-3 flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <label htmlFor={`seo-title-${uid}`} className="text-xs font-medium text-muted-foreground">
+              Título para Google (hasta 60 caracteres, con la palabra clave primero). Vacío = automático.
+            </label>
+            <input
+              id={`seo-title-${uid}`}
+              name="seoTitle"
+              maxLength={70}
+              defaultValue={category?.seoTitle}
+              className={inputClass}
+              placeholder="Ej: Termotanques en Villa María"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor={`seo-text-${uid}`} className="text-xs font-medium text-muted-foreground">
+              Texto para Google (se muestra debajo de los productos; un párrafo por línea). Vacío = automático.
+            </label>
+            <textarea
+              id={`seo-text-${uid}`}
+              name="seoText"
+              rows={3}
+              maxLength={1500}
+              defaultValue={category?.seoText}
+              className={cn(inputClass, 'h-auto py-2')}
+              placeholder="Ej: Termotanques a gas, eléctricos y solares en Villa María…"
+            />
+          </div>
+        </div>
+      </details>
       {parentId ? (
         <div className="flex flex-col gap-1">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">

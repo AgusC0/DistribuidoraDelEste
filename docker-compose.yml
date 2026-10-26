@@ -1,0 +1,16 @@
+# Base de datos para desarrollo: `docker compose up -d`.
+# En producción (VPS) se usa un PostgreSQL instalado en el servidor; la app sólo necesita DATABASE_URL.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dde
+      POSTGRES_PASSWORD: dde
+      POSTGRES_DB: distribuidora
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

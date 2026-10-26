@@ -20,10 +20,9 @@ export function Hero({ settings }: { settings: Settings }) {
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-brand-blue via-brand-blue/90 to-brand-blue/50" />
 
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-20 sm:px-6 md:py-28 lg:px-8 lg:py-32">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-aqua">
-          Sanitarios y corralón · Villa María
-        </p>
-        <h1 className="max-w-3xl font-heading text-4xl font-bold uppercase leading-[1.05] tracking-tight text-primary-foreground text-balance sm:text-5xl lg:text-6xl">
+        {/* La bajada forma parte del H1: así el título principal de la portada incluye la ciudad, sin cambiar el diseño. */}
+        <h1 className="flex max-w-3xl flex-col gap-6 font-heading text-4xl font-bold uppercase leading-[1.05] tracking-tight text-primary-foreground text-balance sm:text-5xl lg:text-6xl">
+          <span className="font-sans text-sm font-semibold tracking-[0.2em] text-aqua">Sanitarios y corralón en Villa María</span>
           {settings.heroTitle}
         </h1>
 

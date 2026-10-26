@@ -5,12 +5,13 @@ import { Features } from '@/components/features'
 import { About } from '@/components/about'
 import { Contact } from '@/components/contact'
 import { isOnPromotion } from '@/lib/catalog'
-import { getPublicCatalog, leanProduct } from '@/lib/public-catalog'
+import { getPublicCatalog, getShell, leanProduct } from '@/lib/public-catalog'
 
 const MAX = 8
 
 export default async function Page() {
   const { settings, products, popularity } = await getPublicCatalog()
+  const { categories, categoryCounts } = await getShell()
   // Tres miradas del catálogo: lo que elige el negocio, lo último que entró y lo que más mira la gente.
   const hasPromos = products.some((p) => isOnPromotion(p))
   const lists = {
@@ -35,7 +36,7 @@ export default async function Page() {
         lists={{ destacados: lists.destacados.map(leanProduct), novedades: lists.novedades.map(leanProduct), 'mas-vistos': lists['mas-vistos'].map(leanProduct) }}
         brands={brands}
       />
-      <Features />
+      <Features categories={categories} counts={categoryCounts} />
       <About settings={settings} />
       <Contact />
     </>

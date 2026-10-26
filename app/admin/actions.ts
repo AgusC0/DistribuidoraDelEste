@@ -11,7 +11,6 @@ import { applyImport, type ImportMode, type ImportResult } from '@/lib/catalog-i
 import { parseCsv } from '@/lib/csv'
 import { sendTestEmail } from '@/lib/notify'
 import { mutateDb, newId, readDb, UPLOADS_DIR } from '@/lib/db'
-import { createDemoProducts } from '@/lib/demo-catalog'
 import { CATEGORIES_VERSION, createCategories } from '@/lib/seed'
 import { requireAdmin } from '@/lib/session'
 import { slugify } from '@/lib/site'
@@ -528,6 +527,8 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
       existing.parentId = parentId
       existing.filters = filters
       existing.brands = brands
+      existing.seoTitle = str(fd, 'seoTitle', 70)
+      existing.seoText = str(fd, 'seoText', 1500)
     } else {
       // El id/slug es único en todo el catálogo: si el nombre ya se usa en otro rubro, se le suma el del rubro.
       const base = slugify(name) || 'categoria'
@@ -542,6 +543,8 @@ export async function saveCategory(_prev: FormState, fd: FormData): Promise<Form
         parentId,
         filters,
         brands,
+        seoTitle: str(fd, 'seoTitle', 70),
+        seoText: str(fd, 'seoText', 1500),
       })
     }
     return { ok: true, message: existing ? 'Categoría actualizada.' : 'Categoría creada.' }
@@ -736,18 +739,6 @@ export async function clearEvents() {
 }
 
 /** Reemplaza categorías y productos por el catálogo de demostración (no toca consultas ni ajustes). */
-export async function loadDemoCatalog(): Promise<FormState> {
-  await requireAdmin()
-  const count = await mutateDb((db) => {
-    db.categories = createCategories()
-    db.categoriesVersion = CATEGORIES_VERSION
-    db.products = createDemoProducts()
-    return db.products.length
-  })
-  refreshSite()
-  return { ok: true, message: `Catálogo de demostración cargado: ${count} productos.` }
-}
-
 export async function restoreBackup(_prev: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin()
   const file = fd.get('backup')

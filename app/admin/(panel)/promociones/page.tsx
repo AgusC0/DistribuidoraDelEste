@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/admin/empty-state'
 import { PageHeader } from '@/components/admin/ui'
 import { ProductTable } from '@/components/admin/product-table'
+import { adminRows } from '@/lib/admin-rows'
 import { readDb } from '@/lib/db'
 
 export const metadata: Metadata = { title: 'Promociones' }
@@ -21,7 +22,7 @@ export default async function PromotionsPage() {
         help="promociones"
       />
       {count ? (
-        <ProductTable initialStatus="promo" products={db.products} categories={[...db.categories].sort((a, b) => a.order - b.order)} />
+        <ProductTable initialStatus="promo" {...(({ rows, quality }) => ({ products: rows, quality }))(adminRows(db.products, db.categories))} categories={[...db.categories].sort((a, b) => a.order - b.order)} />
       ) : (
         <EmptyState
           icon={BadgePercent}

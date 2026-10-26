@@ -1,4 +1,5 @@
 import { isOnPromotion } from '@/lib/catalog'
+import { categoryKeywords } from '@/lib/category-seo'
 import type { Category, Product } from '@/lib/types'
 
 /**
@@ -186,7 +187,8 @@ export function matchCategories(categories: Category[], query: string) {
   const tokens = tokenize(query)
   if (!tokens.length) return []
   return categories.filter((c) => {
-    const words = normalize(`${c.name} ${c.description}`).split(/[^a-z0-9ñ]+/)
+    // Nombre, descripción y sinónimos de búsqueda (ej: "corredizas" encuentra Puertas plegadizas).
+    const words = normalize(`${c.name} ${c.description} ${categoryKeywords(c.id).join(' ')}`).split(/[^a-z0-9ñ]+/)
     return tokens.every((t) =>
       words.some((w) => w.startsWith(t) || (t.length >= 4 && fuzzy(t, w, 1) <= 1)),
     )

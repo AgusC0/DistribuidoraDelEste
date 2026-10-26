@@ -1,4 +1,4 @@
-import { mutateDb } from '@/lib/db'
+import { insertEvent } from '@/lib/db'
 import type { TrackEvent } from '@/lib/types'
 
 /** Métricas anónimas del sitio: búsquedas, clics a WhatsApp y vistas de producto. */
@@ -26,8 +26,6 @@ export async function POST(request: Request) {
 
   if (!event) return new Response(null, { status: 400 })
   const e = event
-  await mutateDb((db) => {
-    db.events.push(e)
-  })
+  await insertEvent(e)
   return new Response(null, { status: 204 })
 }
