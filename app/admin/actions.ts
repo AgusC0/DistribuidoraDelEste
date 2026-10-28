@@ -13,10 +13,15 @@ import { sendTestEmail } from '@/lib/notify'
 import { mutateDb, newId, readDb, UPLOADS_DIR } from '@/lib/db'
 import { CATEGORIES_VERSION, createCategories } from '@/lib/seed'
 import { requireAdmin } from '@/lib/session'
+import sharp from 'sharp'
+import { DEFAULT_FOOTER_LOGO, DEFAULT_HEADER_LOGO, isLogoChoice, type LogoChoice } from '@/lib/logos'
 import { slugify } from '@/lib/site'
+import { galleryOf } from '@/lib/gallery'
 import type {
   CategoryFilter,
   Database,
+  GalleryItem,
+  GallerySection,
   LeadStatus,
   OrderStatus,
   Product,
@@ -93,13 +98,29 @@ const IMAGE_TYPES: Record<string, string> = {
   'image/avif': '.avif',
 }
 
-async function saveUpload(file: File): Promise<string> {
-  const ext = IMAGE_TYPES[file.type]
-  if (!ext) throw new Error('Formato no soportado. Usá JPG, PNG, WEBP o AVIF.')
-  if (file.size > 4 * 1024 * 1024) throw new Error('La imagen supera los 4 MB.')
+/** Fotos del celular sin achicar: después se comprimen a unos cientos de KB. */
+const MAX_IMAGE_MB = 10
+
+/**
+ * Guarda una foto lista para la web: la endereza según el celular, la achica a 2000 px como máximo,
+ * le quita los datos ocultos (ubicación GPS, modelo de cámara) y la pasa a WEBP, que pesa mucho menos.
+ * El nombre del archivo lleva el nombre del producto o de la foto (Google también lo lee).
+ */
+async function saveUpload(file: File, label = ''): Promise<string> {
+  if (!IMAGE_TYPES[file.type]) throw new Error('Formato no soportado. Usá JPG, PNG, WEBP o AVIF.')
+  if (file.size > MAX_IMAGE_MB * 1024 * 1024) throw new Error(`La imagen supera los ${MAX_IMAGE_MB} MB.`)
   await fs.mkdir(UPLOADS_DIR, { recursive: true })
-  const name = `${newId()}${ext}`
-  await fs.writeFile(path.join(/*turbopackIgnore: true*/ UPLOADS_DIR, name), Buffer.from(await file.arrayBuffer()))
+  const webp = await sharp(Buffer.from(await file.arrayBuffer()))
+    .rotate()
+    .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toBuffer()
+    .catch(() => {
+      throw new Error('No se pudo leer la imagen. Probá con otra foto.')
+    })
+  const base = slugify(label).slice(0, 60).replace(/-+$/, '')
+  const name = `${base ? `${base}-` : ''}${newId().slice(0, 8)}.webp`
+  await fs.writeFile(path.join(/*turbopackIgnore: true*/ UPLOADS_DIR, name), webp)
   return `/media/${name}`
 }
 
@@ -131,7 +152,7 @@ export async function saveProduct(_prev: FormState, fd: FormData): Promise<FormS
     for (const token of parseJson<string[]>(fd.get('imageOrder'), []).slice(0, 12)) {
       if (token.startsWith('new:')) {
         const file = files[Number(token.slice(4))]
-        if (file) images.push(await saveUpload(file))
+        if (file) images.push(await saveUpload(file, name))
       } else if (token.startsWith('/')) {
         images.push(token.slice(0, 300))
       }
@@ -703,10 +724,12 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
     gaId,
     googleVerification: str(fd, 'googleVerification', 120).replace(/^.*content="([^"]+)".*$/, '$1'),
     googleReviewUrl: str(fd, 'googleReviewUrl', 300),
+    logoHeader: isLogoChoice(fd.get('logoHeader')) ? (fd.get('logoHeader') as LogoChoice) : DEFAULT_HEADER_LOGO,
+    logoFooter: isLogoChoice(fd.get('logoFooter')) ? (fd.get('logoFooter') as LogoChoice) : DEFAULT_FOOTER_LOGO,
   }
   await mutateDb((db) => {
     // "Mostrar precios" se maneja con su propio switch; el formulario de ajustes no lo toca.
-    db.settings = { ...settings, showPrices: db.settings.showPrices }
+    db.settings = { ...settings, showPrices: db.settings.showPrices, gallery: db.settings.gallery }
   })
   refreshSite()
   return { ok: true, message: 'Ajustes guardados. El sitio ya muestra los cambios.' }
@@ -762,4 +785,102 @@ export async function restoreBackup(_prev: FormState, fd: FormData): Promise<For
   })
   refreshSite()
   return { ok: true, message: 'Respaldo restaurado.' }
+}
+
+/* ---------- Galería (fotos y videos del local) ---------- */
+
+const VIDEO_TYPES: Record<string, string> = { 'video/mp4': '.mp4', 'video/webm': '.webm', 'video/quicktime': '.mov' }
+const MAX_VIDEO_MB = 80
+
+async function saveVideo(file: File): Promise<string> {
+  const ext = VIDEO_TYPES[file.type]
+  if (!ext) throw new Error('Formato de video no soportado. Usá MP4 o WEBM.')
+  if (file.size > MAX_VIDEO_MB * 1024 * 1024) throw new Error(`El video supera los ${MAX_VIDEO_MB} MB.`)
+  await fs.mkdir(UPLOADS_DIR, { recursive: true })
+  const name = `${newId()}${ext}`
+  await fs.writeFile(path.join(/*turbopackIgnore: true*/ UPLOADS_DIR, name), Buffer.from(await file.arrayBuffer()))
+  return `/media/${name}`
+}
+
+const isSection = (v: unknown): v is GallerySection => v === 'videos' || v === 'local' || v === 'equipo'
+
+export async function addGalleryItem(_prev: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin()
+  const file = fd.get('file')
+  if (!(file instanceof File) || !file.size) return { message: 'Elegí una foto o un video.' }
+  const isVideo = file.type.startsWith('video/')
+  const section = isVideo ? 'videos' : str(fd, 'section', 20)
+  if (!isSection(section)) return { message: 'Elegí dónde va la foto.' }
+  const title = str(fd, 'title', 80)
+  const alt = str(fd, 'alt', 200) || title
+  try {
+    const src = isVideo ? await saveVideo(file) : await saveUpload(file, title || alt || 'distribuidora-del-este')
+    const posterFile = fd.get('poster')
+    const poster = isVideo && posterFile instanceof File && posterFile.size ? await saveUpload(posterFile, `${title || 'video'} portada`) : undefined
+    await mutateDb((db) => {
+      const gallery = [...galleryOf(db.settings)]
+      gallery.push({ id: newId(), kind: isVideo ? 'video' : 'image', section, src, poster, title, alt, active: true })
+      db.settings = { ...db.settings, gallery }
+    })
+  } catch (err) {
+    return { message: err instanceof Error ? err.message : 'No se pudo subir el archivo.' }
+  }
+  refreshSite()
+  revalidatePath('/admin/galeria')
+  return { ok: true, message: isVideo ? 'Video agregado.' : 'Foto agregada.' }
+}
+
+export async function updateGalleryItem(id: string, patch: Partial<Pick<GalleryItem, 'title' | 'alt' | 'active' | 'section'>>) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    db.settings = {
+      ...db.settings,
+      gallery: galleryOf(db.settings).map((i) =>
+        i.id !== id
+          ? i
+          : {
+              ...i,
+              ...(patch.title !== undefined && { title: patch.title.trim().slice(0, 80) }),
+              ...(patch.alt !== undefined && { alt: patch.alt.trim().slice(0, 200) }),
+              ...(patch.active !== undefined && { active: patch.active }),
+              ...(patch.section && i.kind === 'image' && isSection(patch.section) && { section: patch.section }),
+            },
+      ),
+    }
+  })
+  refreshSite()
+  revalidatePath('/admin/galeria')
+}
+
+/** Mueve un elemento un lugar dentro de su sección (el primer video es el destacado). */
+export async function moveGalleryItem(id: string, dir: -1 | 1) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    const gallery = [...galleryOf(db.settings)]
+    const i = gallery.findIndex((g) => g.id === id)
+    if (i < 0) return
+    let j = i + dir
+    while (j >= 0 && j < gallery.length && gallery[j].section !== gallery[i].section) j += dir
+    if (j < 0 || j >= gallery.length) return
+    ;[gallery[i], gallery[j]] = [gallery[j], gallery[i]]
+    db.settings = { ...db.settings, gallery }
+  })
+  refreshSite()
+  revalidatePath('/admin/galeria')
+}
+
+export async function deleteGalleryItem(id: string) {
+  await requireAdmin()
+  let removed: GalleryItem | undefined
+  await mutateDb((db) => {
+    const gallery = galleryOf(db.settings)
+    removed = gallery.find((g) => g.id === id)
+    db.settings = { ...db.settings, gallery: gallery.filter((g) => g.id !== id) }
+  })
+  // Borra del disco lo subido desde el panel (el material inicial vive en /public y no se toca).
+  for (const src of [removed?.src, removed?.poster]) {
+    if (src?.startsWith('/media/')) await fs.rm(path.join(/*turbopackIgnore: true*/ UPLOADS_DIR, path.basename(src)), { force: true })
+  }
+  refreshSite()
+  revalidatePath('/admin/galeria')
 }

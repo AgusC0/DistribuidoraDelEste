@@ -11,7 +11,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return products.some((p) => ids.has(p.categoryId))
   })
   return [
-    { url: SITE_URL, changeFrequency: 'weekly', priority: 1 },
+    {
+      url: SITE_URL,
+      changeFrequency: 'weekly',
+      priority: 1,
+      images: [`${SITE_URL}/images/local/fachada-distribuidora-del-este-villa-maria.jpg`],
+    },
     { url: `${SITE_URL}/productos`, changeFrequency: 'weekly', priority: 0.9 },
     ...withProducts.map((c) => ({ url: `${SITE_URL}${categoryUrl(categories, c.id)}`, changeFrequency: 'weekly' as const, priority: 0.85 })),
     ...products.map((p) => ({
@@ -19,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: p.updatedAt,
       changeFrequency: 'monthly' as const,
       priority: 0.8,
+      // Las fotos de cada producto: así aparecen en Google Imágenes.
+      ...(p.images.length > 0 && { images: p.images.map((src) => (src.startsWith('http') ? src : `${SITE_URL}${src}`)) }),
     })),
   ]
 }

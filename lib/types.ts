@@ -1,3 +1,4 @@
+import type { LogoChoice } from '@/lib/logos'
 export type StockStatus = 'disponible' | 'bajo' | 'sin_stock'
 
 /** Filtro propio de una categoría (ej: Tipo, Medida, Material). `key` es el atributo del producto. */
@@ -159,6 +160,27 @@ export type Settings = {
   googleVerification: string
   /** Enlace para dejar una reseña en Google. */
   googleReviewUrl: string
+  /** Variante del logo arriba y en el pie (ver lib/logos.ts). Sin definir = la de siempre. */
+  logoHeader?: LogoChoice
+  logoFooter?: LogoChoice
+  /** Fotos y videos del local y del equipo (sin definir = material inicial, ver lib/gallery.ts). */
+  gallery?: GalleryItem[]
+}
+
+export type GallerySection = 'videos' | 'local' | 'equipo'
+
+/** Foto o video de la sección "Conocé el local". */
+export type GalleryItem = {
+  id: string
+  kind: 'image' | 'video'
+  section: GallerySection
+  src: string
+  /** Imagen de portada del video (antes de darle play). */
+  poster?: string
+  title: string
+  /** Descripción para Google y lectores de pantalla. */
+  alt: string
+  active: boolean
 }
 
 /** Un ítem del pedido que arma el cliente en el sitio. */

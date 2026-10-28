@@ -7,6 +7,7 @@ import { ConfirmButton, FieldError, FormMessage, inputClass, Panel, SubmitButton
 import { restoreBackup, saveSettings, testNotification, type FormState } from '@/app/admin/actions'
 import { DAY_NAMES, formatPrice, groupHours } from '@/lib/site'
 import { cn } from '@/lib/utils'
+import { DEFAULT_FOOTER_LOGO, DEFAULT_HEADER_LOGO, LOGO_OPTIONS, type LogoChoice } from '@/lib/logos'
 import type { Settings, WeeklyHours } from '@/lib/types'
 
 function Text({
@@ -35,6 +36,44 @@ function Text({
       {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       <FieldError message={error} />
     </div>
+  )
+}
+
+/** Tarjetas para elegir una variante del logo, cada una sobre el fondo que tendría en el sitio. */
+function LogoPicker({
+  name,
+  label,
+  value,
+  dark,
+}: {
+  name: string
+  label: string
+  value: LogoChoice
+  dark: (o: (typeof LOGO_OPTIONS)[number]) => boolean
+}) {
+  const [selected, setSelected] = useState(value)
+  return (
+    <fieldset>
+      <legend className="mb-2 text-sm font-medium text-foreground">{label}</legend>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        {LOGO_OPTIONS.map((o) => (
+          <label
+            key={o.id}
+            className={cn(
+              'flex cursor-pointer flex-col gap-2 rounded-xl border-2 p-2 transition-colors',
+              selected === o.id ? 'border-primary' : 'border-border hover:border-muted-foreground/40',
+            )}
+          >
+            <input type="radio" name={name} value={o.id} checked={selected === o.id} onChange={() => setSelected(o.id)} className="sr-only" />
+            <span className={cn('flex h-20 items-center justify-center rounded-lg px-4', dark(o) ? 'bg-[#0b1220]' : 'border border-border bg-white')}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={o.src} alt="" className="max-h-12 w-auto max-w-full" />
+            </span>
+            <span className="px-1 text-xs font-medium text-foreground">{o.label}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   )
 }
 
@@ -199,6 +238,17 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
             defaultValue={settings.priceNote}
             hint="Ej: Precios de contado, débito o transferencia. Consultá otras formas de pago."
           />
+        </div>
+      </Panel>
+
+      <Panel data-guide="ajustes-logo">
+        <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Logo</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Elegí qué versión del logo se ve arriba y en el pie. Los colores de esa parte se ajustan solos para que se lea bien.
+        </p>
+        <div className="flex flex-col gap-6">
+          <LogoPicker name="logoHeader" label="Encabezado" value={settings.logoHeader ?? DEFAULT_HEADER_LOGO} dark={(o) => o.light} />
+          <LogoPicker name="logoFooter" label="Pie de página" value={settings.logoFooter ?? DEFAULT_FOOTER_LOGO} dark={(o) => !o.id.endsWith('negro')} />
         </div>
       </Panel>
 

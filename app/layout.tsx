@@ -20,6 +20,8 @@ const oswald = Oswald({
 const description =
   'Termotanques, claraboyas, puertas plegadizas, repuestos, sanitarios, griferías y materiales de construcción en Villa María, Córdoba. Pedí tu presupuesto.'
 
+const OG_ALT = 'Local de Distribuidora del Este, corralón y sanitarios en Villa María'
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -43,15 +45,25 @@ export const metadata: Metadata = {
     siteName: 'Distribuidora del Este',
     title: 'Distribuidora del Este | Sanitarios y Corralón en Villa María',
     description,
-    images: [{ url: '/images/hero-bathroom.png', alt: 'Showroom de sanitarios de Distribuidora del Este' }],
+    // 1200×630 para Facebook, WhatsApp, LinkedIn y X; la cuadrada la usa WhatsApp en vistas chicas.
+    images: [
+      { url: '/images/og-distribuidora-del-este.jpg', width: 1200, height: 630, alt: OG_ALT, type: 'image/jpeg' },
+      { url: '/images/og-distribuidora-del-este-cuadrada.jpg', width: 600, height: 600, alt: OG_ALT, type: 'image/jpeg' },
+    ],
   },
-  twitter: { card: 'summary_large_image' },
+  twitter: { card: 'summary_large_image', images: [{ url: '/images/og-distribuidora-del-este.jpg', alt: OG_ALT }] },
   formatDetection: { telephone: false },
+  // Permite que Google muestre las fotos grandes (Imágenes, Discover) y fragmentos completos.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
+  },
 }
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#2F5F26',
+  themeColor: '#ffffff',
 }
 
 export default function RootLayout({

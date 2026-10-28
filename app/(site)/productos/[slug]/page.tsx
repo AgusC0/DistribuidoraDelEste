@@ -8,7 +8,7 @@ import { RecentlyViewed } from '@/components/recently-viewed'
 import { ProductView } from '@/components/product-view'
 import { getComplements, getPublicCatalog, leanProduct } from '@/lib/public-catalog'
 import { categoryPath, categoryUrl } from '@/lib/catalog'
-import { categoryName, SITE_URL } from '@/lib/site'
+import { categoryName, OG_IMAGE, SITE_URL } from '@/lib/site'
 
 export const revalidate = 3600
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     description,
     alternates: { canonical: `/productos/${product.slug}` },
-    openGraph: { title, description, images: product.images, type: 'website' },
+    openGraph: { title, description, images: product.images.length ? product.images : [OG_IMAGE], type: 'website' },
   }
 }
 

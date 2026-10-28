@@ -58,7 +58,8 @@ Todo (productos, variantes, categorías, consultas, pedidos, ajustes y métricas
 
 1. Instalá PostgreSQL 16+ y creá usuario y base (`createuser -P dde`, `createdb -O dde distribuidora`).
 2. Poné `DATABASE_URL` en `.env.local`, luego `pnpm install && pnpm db:migrate && pnpm build && pnpm start`.
-3. Respaldo diario por cron: `pg_dump -Fc distribuidora > respaldo-$(date +%F).dump`, y copiá `data/uploads/`. Para volver: `pg_restore -c -d distribuidora archivo.dump`.
+3. Para actualizar con lo último de GitHub: `bash /var/www/distdelestevm/scripts/actualizar.sh`. Respalda la base, baja los cambios, instala, migra, compila y reinicia sólo el proceso `distdelestevm`; si la compilación falla, el sitio sigue con la versión anterior.
+4. Respaldo diario por cron: `pg_dump -Fc distribuidora > respaldo-$(date +%F).dump`, y copiá `data/uploads/`. Para volver: `pg_restore -c -d distribuidora archivo.dump`.
 
 ## Panel de administración
 

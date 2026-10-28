@@ -18,14 +18,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <Auth5
-      logo={<Logo className="h-16 sm:h-20" />}
+      logo={<Logo className="h-12 sm:h-14" />}
       heading="Ingresá al panel"
       subtext={
         <>
           Gestioná productos, precios, promociones y pedidos de la web de <span className="font-medium text-foreground">{settings.businessName}</span>.
         </>
       }
-      image={{ src: '/images/hero-bathroom.png', alt: 'Showroom con sanitarios, griferías y muebles de baño' }}
+      image={{ src: '/images/local/fachada-distribuidora-del-este-villa-maria.jpg', alt: 'Fachada del local de Distribuidora del Este en Villa María' }}
       panelHeading="Todo tu negocio online, en un solo lugar"
       features={[
         { icon: <ClipboardList className="size-5" />, title: 'Pedidos al día', description: 'Cada pedido de WhatsApp queda guardado con sus productos y precios.' },

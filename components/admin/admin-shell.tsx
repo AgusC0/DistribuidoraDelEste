@@ -7,6 +7,7 @@ import {
   BadgePercent,
   ClipboardList,
   ExternalLink,
+  Images,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -43,6 +44,7 @@ const NAV: { title?: string; items: { href: string; label: string; icon: React.E
   {
     title: 'Sitio',
     items: [
+      { href: '/admin/galeria', label: 'Fotos y videos', icon: Images },
       { href: '/admin/busquedas', label: 'Búsquedas', icon: Search },
       { href: '/admin/ajustes', label: 'Ajustes', icon: Settings },
     ],
@@ -130,7 +132,7 @@ export function AdminShell({
     <div className="min-h-dvh bg-secondary/40">
       {/* barra superior móvil */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background px-4 lg:hidden">
-        <Logo className="h-10" />
+        <Logo className="h-8" />
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -153,7 +155,7 @@ export function AdminShell({
         )}
       >
         <Link href="/admin" className="px-2 pt-1">
-          <Logo className="h-20" />
+          <Logo className="h-auto w-full" />
         </Link>
         {nav}
       </aside>

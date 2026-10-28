@@ -46,6 +46,9 @@
   --color-brand-blue: var(--brand-blue);
   --color-brand-blue-foreground: var(--brand-blue-foreground);
   --color-aqua: var(--aqua);
+  --color-ink: var(--ink);
+  --color-ink-bg: var(--ink-bg);
+  --color-ink-accent: var(--ink-accent);
   --color-aqua-foreground: var(--aqua-foreground);
   --color-whatsapp: var(--whatsapp);
   --color-whatsapp-foreground: var(--whatsapp-foreground);
@@ -259,4 +262,132 @@
   .quick-view .qv-fade {
     animation: none;
   }
+}
+
+/* Entrada del hero: cada pieza sube y se enfoca, escalonada con --d (retardo). */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+    filter: blur(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+@keyframes hero-bg {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.hero-rise {
+  animation: hero-rise 1s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both;
+}
+.hero-bg {
+  animation: hero-bg 1.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise,
+  .hero-bg {
+    animation: none;
+  }
+}
+
+/* Haces de luz de la tarjeta de asesoramiento (sección del local): corren al pasar el mouse. */
+@keyframes beam-x {
+  from {
+    left: -50%;
+  }
+  to {
+    left: 100%;
+  }
+}
+@keyframes beam-y {
+  from {
+    top: -50%;
+  }
+  to {
+    top: 100%;
+  }
+}
+.beam-x,
+.beam-y {
+  animation-play-state: paused;
+}
+.beam-x {
+  animation: beam-x 2.2s linear infinite;
+  animation-play-state: paused;
+}
+.beam-y {
+  animation: beam-y 2s linear 0.4s infinite;
+  animation-play-state: paused;
+}
+.group:hover .beam-x,
+.group:hover .beam-y {
+  animation-play-state: running;
+}
+/* Lista del pedido de ejemplo: cada línea aparece al pasar el mouse. */
+.order-line {
+  opacity: 0.45;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+  transition-delay: calc(var(--i, 0) * 0.12s);
+}
+.group:hover .order-line {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .beam-x,
+  .beam-y {
+    animation: none;
+  }
+}
+
+/* Detrás de las esquinas redondeadas del pie: el color de la sección de arriba.
+   En el inicio la última sección es Contacto (azul), así no queda una franja clara. */
+.footer-wrap {
+  background: var(--background);
+}
+body:has(#contacto) .footer-wrap {
+  background: var(--brand-blue);
+}
+
+/* Pie: oscuro (logo blanco o celeste) o claro (logo negro), según lo elegido en Ajustes. */
+.footer-dark {
+  --ink: oklch(1 0 0);
+  --ink-bg: #0b1220;
+  --ink-accent: var(--aqua);
+}
+.footer-light {
+  --ink: oklch(0.2 0.03 250);
+  --ink-bg: oklch(1 0 0);
+  --ink-accent: oklch(0.5 0.13 235);
+  box-shadow: 0 -1px 0 oklch(0.9 0.01 235);
+}
+
+/* Encabezado oscuro cuando se elige un logo blanco: se redefinen los colores de base. */
+.surface-dark {
+  --background: #0b1220;
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.22 0.03 250);
+  --popover: oklch(0.22 0.03 250);
+  --popover-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.26 0.03 250);
+  --muted-foreground: oklch(0.8 0.02 240);
+  --secondary: oklch(0.26 0.03 250);
+  --secondary-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 18%);
+  --primary: var(--aqua);
+  color: var(--foreground);
 }

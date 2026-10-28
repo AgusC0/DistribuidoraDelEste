@@ -5,7 +5,7 @@ import { ProductsBrowser } from '@/components/products-browser'
 import { categoryPath, categoryUrl, childCategories, descendantIds, findCategoryByPath } from '@/lib/catalog'
 import { categoryLabel, categorySeoText, categorySeoTitle, clip } from '@/lib/category-seo'
 import { getInitialPage, getPublicCatalog } from '@/lib/public-catalog'
-import { SITE_URL } from '@/lib/site'
+import { OG_IMAGE, SITE_URL } from '@/lib/site'
 import type { Category, Product } from '@/lib/types'
 
 export const revalidate = 3600
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     alternates: { canonical: `/categoria/${slug.join('/')}` },
     // Una categoría sin productos existe (para cargarle productos), pero Google no la indexa.
     ...(products.some((p) => ids.has(p.categoryId)) ? {} : { robots: { index: false, follow: true } }),
-    openGraph: { title: `${title} | Distribuidora del Este`, description, type: 'website', locale: 'es_AR' },
+    openGraph: { title: `${title} | Distribuidora del Este`, description, type: 'website', locale: 'es_AR', images: [OG_IMAGE] },
   }
 }
 

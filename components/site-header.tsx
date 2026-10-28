@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/logo'
+import { headerIsDark } from '@/lib/logos'
 import { SearchDialog } from '@/components/search-dialog'
 import { CategoryMegaMenu, MobileCategoryList } from '@/components/category-menu'
 import { OrderButton } from '@/components/order-drawer'
@@ -70,13 +71,14 @@ export function SiteHeader() {
       )}
       <header
         className={cn(
+          headerIsDark(settings.logoHeader) && 'surface-dark',
           'sticky top-0 z-40 w-full border-b bg-background/90 backdrop-blur transition-shadow supports-[backdrop-filter]:bg-background/80',
           scrolled ? 'border-border shadow-sm' : 'border-transparent',
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 md:h-20 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center rounded-lg" aria-label="Distribuidora del Este – Inicio">
-            <Logo className="h-[52px] md:h-[68px]" />
+            <Logo choice={settings.logoHeader} className="h-10 md:h-12" />
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Navegación principal">

@@ -37,11 +37,11 @@ const LEGACY_CATEGORY_REDIRECTS = [
 const nextConfig = {
   experimental: {
     serverActions: {
-      // Planillas de miles de productos (hasta 20 MB) y fotos desde el panel.
-      bodySizeLimit: '25mb',
+      // Planillas de miles de productos, fotos y videos de la galería (hasta 80 MB) desde el panel.
+      bodySizeLimit: '90mb',
     },
     // El proxy del panel (/admin) también recibe esos envíos: sin esto corta el cuerpo en 10 MB.
-    proxyClientMaxBodySize: '25mb',
+    proxyClientMaxBodySize: '90mb',
   },
   // Atajos para entrar al panel: /login y /ingresar llevan al ingreso real (/admin/login).
   async redirects() {

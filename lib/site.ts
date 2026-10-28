@@ -197,3 +197,14 @@ export function placeFromMapsEmbed(embedUrl: string) {
     mapUrl: place ? `https://maps.google.com/?cid=${BigInt(`0x${place[1]}`).toString()}` : null,
   }
 }
+
+/** Imagen al compartir el link (WhatsApp, Facebook…), para páginas sin foto propia. */
+export const OG_IMAGE = {
+  url: '/images/og-distribuidora-del-este.jpg',
+  width: 1200,
+  height: 630,
+  alt: 'Local de Distribuidora del Este, corralón y sanitarios en Villa María',
+}
+
+/** Verificación de Google Search Console. Se puede reemplazar desde Panel → Ajustes. */
+export const GOOGLE_SITE_VERIFICATION = 'G-S-Nj-2nX5q1c4juCWS17R6RZiQAzVdgK371I_q9qQ'

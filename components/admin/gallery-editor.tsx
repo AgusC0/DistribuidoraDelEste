@@ -46,8 +46,8 @@ export function GalleryEditor({
 
   function addFiles(list: FileList | null) {
     if (!list) return
-    const valid = [...list].filter((f) => ACCEPT.includes(f.type) && f.size <= 4 * 1024 * 1024)
-    setWarning(valid.length < list.length ? 'Algunas fotos se omitieron: deben ser JPG, PNG o WEBP de hasta 4 MB.' : '')
+    const valid = [...list].filter((f) => ACCEPT.includes(f.type) && f.size <= 10 * 1024 * 1024)
+    setWarning(valid.length < list.length ? 'Algunas fotos se omitieron: deben ser JPG, PNG o WEBP de hasta 10 MB.' : '')
     setItems((current) =>
       [...current, ...valid.map((file) => ({ key: `${file.name}-${file.size}-${Math.random()}`, src: URL.createObjectURL(file), file }))].slice(0, MAX),
     )
@@ -137,7 +137,7 @@ export function GalleryEditor({
         )}
       </div>
       <p className="text-xs text-muted-foreground">
-        Hasta {MAX} fotos (JPG, PNG o WEBP, máx. 4 MB c/u). Arrastralas acá. La primera es la que se ve en el catálogo; ideal cuadradas
+        Hasta {MAX} fotos (JPG, PNG o WEBP, máx. 10 MB c/u). Arrastralas acá. La primera es la que se ve en el catálogo; ideal cuadradas
         y con fondo claro.
       </p>
       {(warning || error) && <p className="text-sm text-destructive">{error || warning}</p>}

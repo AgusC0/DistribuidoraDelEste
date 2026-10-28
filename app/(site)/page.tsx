@@ -4,6 +4,10 @@ import { FeaturedProducts } from '@/components/featured-products'
 import { Features } from '@/components/features'
 import { About } from '@/components/about'
 import { Contact } from '@/components/contact'
+import { Showcase } from '@/components/showcase'
+import { Faq } from '@/components/faq'
+import { buildFaq, faqJsonLd } from '@/lib/faq'
+import { publicGallery } from '@/lib/gallery'
 import { isOnPromotion } from '@/lib/catalog'
 import { getPublicCatalog, getShell, leanProduct } from '@/lib/public-catalog'
 
@@ -28,6 +32,8 @@ export default async function Page() {
   const brandCount = new Map<string, number>()
   for (const p of products) if (p.brand) brandCount.set(p.brand, (brandCount.get(p.brand) ?? 0) + 1)
   const brands = [...brandCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16).map(([name]) => name)
+  const gallery = publicGallery(settings)
+  const faq = buildFaq(settings, categories)
   return (
     <>
       <Hero settings={settings} />
@@ -37,8 +43,11 @@ export default async function Page() {
         brands={brands}
       />
       <Features categories={categories} counts={categoryCounts} />
+      <Showcase local={gallery.local} videos={gallery.videos} equipo={gallery.equipo} address={settings.address} />
       <About settings={settings} />
+      <Faq groups={faq} />
       <Contact />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faq)).replace(/</g, '\\u003c') }} />
     </>
   )
 }

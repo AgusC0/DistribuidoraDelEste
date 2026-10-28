@@ -10,14 +10,14 @@ import { WhatsappFloat } from '@/components/whatsapp-float'
 import { getShell } from '@/lib/public-catalog'
 import { categoryUrl, rootCategories } from '@/lib/catalog'
 import { categorySeoTitle } from '@/lib/category-seo'
-import { parseRanges, placeFromMapsEmbed, SITE_URL } from '@/lib/site'
+import { GOOGLE_SITE_VERIFICATION, parseRanges, placeFromMapsEmbed, SITE_URL } from '@/lib/site'
 
 // Se regenera al guardar cambios desde el panel (revalidatePath) y, como mínimo, cada hora.
 export const revalidate = 3600
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await getShell()
-  return settings.googleVerification ? { verification: { google: settings.googleVerification } } : {}
+  return { verification: { google: settings.googleVerification || GOOGLE_SITE_VERIFICATION } }
 }
 
 const DAY_SCHEMA = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -40,8 +40,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     alternateName: 'Distribuidora del Este',
     description: `${settings.tagline}. Termotanques, claraboyas, puertas plegadizas, repuestos sanitarios y de griferías, sanitarios, griferías y materiales de construcción.`,
     url: SITE_URL,
-    logo: `${SITE_URL}/images/logo-del-este.png`,
-    image: [`${SITE_URL}/images/logo-del-este.png`, `${SITE_URL}/images/hero-bathroom.png`],
+    logo: `${SITE_URL}/images/logo/logo-distribuidora-del-este.png`,
+    image: [`${SITE_URL}/images/logo/logo-distribuidora-del-este.png`, `${SITE_URL}/images/local/fachada-distribuidora-del-este-villa-maria.jpg`],
     telephone: `+${settings.whatsappNumber}`,
     email: settings.email,
     priceRange: '$$',
