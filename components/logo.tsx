@@ -11,7 +11,7 @@ export function Logo({ className, priority = true, choice }: { className?: strin
   return (
     <Image
       src={img.src}
-      alt="Distribuidora del Este – Sanitarios y Corralón"
+      alt="Distribuidora del Este – Sanitarios"
       width={img.width}
       height={img.height}
       priority={priority}

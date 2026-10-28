@@ -31,7 +31,7 @@ export function Hero({ settings }: { settings: Settings }) {
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-between gap-12 px-4 pb-10 pt-16 sm:px-6 md:pt-24 lg:px-8">
         <div className="flex max-w-3xl flex-col items-start">
           <p className="hero-rise text-sm font-semibold uppercase tracking-[0.2em] text-aqua" style={d(0.2)}>
-            Corralón y sanitarios
+            Sanitarista en Villa María
           </p>
           <h1 className="mt-5 text-[2.6rem] font-normal leading-[1.05] tracking-[-0.025em] text-white text-balance sm:text-6xl lg:text-7xl">
             <span className="hero-rise block" style={d(0.35)}>

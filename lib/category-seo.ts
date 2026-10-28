@@ -163,7 +163,7 @@ export const CATEGORY_SEO: Record<string, SeoEntry> = {
       'Materiales para la construcción en Villa María: arena, cemento, cal, pegamento cerámico, pastinas, hidrófugos e impermeabilizantes y membranas asfálticas.',
       'Además de sanitarios y conducción de agua, tenés todo para tu obra o reforma en un solo lugar.',
     ],
-    keywords: ['materiales para la construcción', 'corralón', 'materiales de obra'],
+    keywords: ['materiales para la construcción', 'materiales de obra', 'materiales para reformas'],
   },
   cal: { title: 'Cal Hercal en Villa María', keywords: ['cal hidráulica', 'cal'] },
   sika: { title: 'Productos Sika en Villa María', keywords: ['impermeabilizantes', 'aditivos'] },

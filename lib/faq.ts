@@ -59,7 +59,7 @@ export function buildFaq(settings: Settings, categories: Category[]): FaqGroup[]
         {
           question: '¿Qué venden?',
           answer:
-            'Somos corralón y casa de sanitarios: termotanques, claraboyas, puertas plegadizas, griferías, sanitarios, vanitorys, cañerías y conexiones para agua, gas y cloaca, tanques, bombas, repuestos de sanitarios y griferías, y materiales de construcción.',
+            'Somos casa de sanitarios: termotanques, claraboyas, puertas plegadizas, griferías, sanitarios, vanitorys, cañerías y conexiones para agua, gas y cloaca, tanques, bombas, repuestos de sanitarios y griferías, y materiales de construcción.',
           link: { href: '/productos', label: 'Ver todas las categorías' },
         },
         ...(termoBrands.length

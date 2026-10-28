@@ -2,19 +2,22 @@
  * Variantes del logo que se eligen en Ajustes (fondo transparente).
  * `light: true` = el texto es blanco: necesita fondo oscuro para verse.
  * El encabezado y el pie cambian de color solos según la variante elegida.
+ * `tall: true` = logo con más altura (el del personaje): se muestra más grande para que se lea.
  */
 export const LOGO_OPTIONS = [
-  { id: 'logo-negro', label: 'Completo, texto negro', src: '/images/logo/logo-negro.webp', width: 1643, height: 415, light: false },
-  { id: 'logo-celeste', label: 'Completo, celeste', src: '/images/logo/logo-celeste.webp', width: 1643, height: 415, light: false },
-  { id: 'logo-blanco', label: 'Completo, texto blanco', src: '/images/logo/logo-blanco.webp', width: 1784, height: 448, light: true },
-  { id: 'marca-negro', label: 'Solo el nombre, negro', src: '/images/logo/marca-negro.webp', width: 1296, height: 342, light: false },
-  { id: 'marca-celeste', label: 'Solo el nombre, celeste', src: '/images/logo/marca-celeste.webp', width: 1296, height: 342, light: false },
-  { id: 'marca-blanco', label: 'Solo el nombre, blanco', src: '/images/logo/marca-blanco.webp', width: 1296, height: 342, light: true },
+  // Con el personaje: menos apaisado que los demás, por eso se muestra con más altura (`tall`).
+  { id: 'logo-personaje', label: 'Con el personaje', src: '/images/logo/logo-personaje.webp', width: 1291, height: 570, light: false, tall: true },
+  { id: 'logo-negro', label: 'Completo, texto negro', src: '/images/logo/logo-negro.webp', width: 1643, height: 415, light: false, tall: false },
+  { id: 'logo-celeste', label: 'Completo, celeste', src: '/images/logo/logo-celeste.webp', width: 1643, height: 415, light: false, tall: false },
+  { id: 'logo-blanco', label: 'Completo, texto blanco', src: '/images/logo/logo-blanco.webp', width: 1784, height: 448, light: true, tall: false },
+  { id: 'marca-negro', label: 'Solo el nombre, negro', src: '/images/logo/marca-negro.webp', width: 1296, height: 342, light: false, tall: false },
+  { id: 'marca-celeste', label: 'Solo el nombre, celeste', src: '/images/logo/marca-celeste.webp', width: 1296, height: 342, light: false, tall: false },
+  { id: 'marca-blanco', label: 'Solo el nombre, blanco', src: '/images/logo/marca-blanco.webp', width: 1296, height: 342, light: true, tall: false },
 ] as const
 
 export type LogoChoice = (typeof LOGO_OPTIONS)[number]['id']
 
-export const DEFAULT_HEADER_LOGO: LogoChoice = 'logo-negro'
+export const DEFAULT_HEADER_LOGO: LogoChoice = 'logo-personaje'
 export const DEFAULT_FOOTER_LOGO: LogoChoice = 'logo-blanco'
 
 export const isLogoChoice = (v: unknown): v is LogoChoice => LOGO_OPTIONS.some((o) => o.id === v)

@@ -26,11 +26,11 @@ export function About({ settings }: { settings: Settings }) {
             id="nosotros-title"
             className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground text-balance sm:text-4xl"
           >
-            Tu corralón de confianza en Villa María
+            Tu sanitarista de confianza en Villa María
           </h2>
           <p className="text-base leading-relaxed text-muted-foreground">
             En <strong className="text-foreground">{settings.businessName}</strong> somos especialistas en
-            sanitarios y materiales de corralón. Trabajamos con las mejores marcas del mercado para ofrecerte
+            sanitarios, conducción de agua y materiales para la construcción. Trabajamos con las mejores marcas del mercado para ofrecerte
             productos de calidad, y te acompañamos con asesoramiento técnico desde el primer momento hasta que
             tu proyecto esté terminado.
           </p>

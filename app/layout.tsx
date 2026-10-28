@@ -20,12 +20,12 @@ const oswald = Oswald({
 const description =
   'Termotanques, claraboyas, puertas plegadizas, repuestos, sanitarios, griferías y materiales de construcción en Villa María, Córdoba. Pedí tu presupuesto.'
 
-const OG_ALT = 'Local de Distribuidora del Este, corralón y sanitarios en Villa María'
+const OG_ALT = 'Local de Distribuidora del Este, casa de sanitarios en Villa María'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Distribuidora del Este | Sanitarios y Corralón en Villa María',
+    default: 'Distribuidora del Este | Sanitarista en Villa María',
     template: '%s | Distribuidora del Este',
   },
   description,
@@ -36,14 +36,14 @@ export const metadata: Metadata = {
     'puertas plegadizas',
     'repuestos sanitarios',
     'materiales de construcción Villa María',
-    'corralón',
+    'sanitarista Villa María',
   ],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     locale: 'es_AR',
     siteName: 'Distribuidora del Este',
-    title: 'Distribuidora del Este | Sanitarios y Corralón en Villa María',
+    title: 'Distribuidora del Este | Sanitarista en Villa María',
     description,
     // 1200×630 para Facebook, WhatsApp, LinkedIn y X; la cuadrada la usa WhatsApp en vistas chicas.
     images: [

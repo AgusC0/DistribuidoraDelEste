@@ -203,7 +203,7 @@ export const OG_IMAGE = {
   url: '/images/og-distribuidora-del-este.jpg',
   width: 1200,
   height: 630,
-  alt: 'Local de Distribuidora del Este, corralón y sanitarios en Villa María',
+  alt: 'Local de Distribuidora del Este, casa de sanitarios en Villa María',
 }
 
 /** Verificación de Google Search Console. Se puede reemplazar desde Panel → Ajustes. */

@@ -10,7 +10,7 @@ export function createSeed(): Database {
     categoriesVersion: CATEGORIES_VERSION,
     settings: {
       businessName: 'Distribuidora del Este SRL',
-      tagline: 'Sanitarios y corralón en Villa María, Córdoba',
+      tagline: 'Sanitarista en Villa María, Córdoba',
       phoneDisplay: '353 418-1819',
       whatsappNumber: '5493534181819',
       email: 'distribuidoradeleste23@gmail.com',
