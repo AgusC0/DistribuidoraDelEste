@@ -35,6 +35,8 @@ const LEGACY_CATEGORY_REDIRECTS = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // No anunciar con qué está hecha la web (encabezado X-Powered-By).
+  poweredByHeader: false,
   experimental: {
     serverActions: {
       // Planillas de miles de productos, fotos y videos de la galería (hasta 80 MB) desde el panel.

@@ -1,4 +1,3 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Oswald } from 'next/font/google'
 import { SITE_URL } from '@/lib/site'
@@ -76,7 +75,6 @@ export default function RootLayout({
       {/* suppressHydrationWarning: extensiones del navegador (ColorZilla, Grammarly…) agregan atributos al body antes de que cargue React. */}
       <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )

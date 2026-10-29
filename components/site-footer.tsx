@@ -156,7 +156,7 @@ export function SiteFooter({
 
       {/* Cierre: el logo completo en grande, en su versión blanca para el fondo oscuro. */}
       <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-8">
-        <Logo choice={settings.logoFooter ?? DEFAULT_FOOTER_LOGO} priority={false} className="mx-auto h-auto w-full max-w-5xl" />
+        <Logo choice={settings.logoFooter ?? DEFAULT_FOOTER_LOGO} priority={false} sizes="(min-width: 1024px) 1024px, 100vw" className="mx-auto h-auto w-full max-w-5xl" />
       </div>
 
       <div className="mx-auto mt-8 flex max-w-7xl flex-col items-center justify-between gap-2 border-t border-ink/10 px-6 py-6 text-xs text-ink/45 sm:flex-row sm:px-10 lg:px-8">
