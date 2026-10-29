@@ -74,12 +74,13 @@ export function Showcase({
             </span>
             <div className="relative z-10 flex flex-col gap-2 p-6 md:p-8">
               <h3 className="flex items-center gap-2 text-2xl font-semibold text-white drop-shadow-sm md:text-3xl">
-                Vení a ver los productos
+                Te damos la bienvenida
                 <Store aria-hidden="true" className="size-6 text-aqua" />
               </h3>
-              <p className="max-w-lg text-base text-white/85 text-balance">
-                Sanitarios, griferías y termotanques en exhibición, y depósito propio con cañerías, tanques y materiales para
-                llevar en el momento.
+              <p className="max-w-xl text-base text-white/85 text-pretty">
+                Para que conozcas nuestros productos y marcas. Sanitarios, corralón, griferías, conducción de agua, cloaca,
+                gas y aire, termotanques y calefactores. ¡Todo en repuestos sanitarios, griferías y todo lo que necesites para
+                arreglar tu vivienda!
               </p>
             </div>
           </FadeIn>
