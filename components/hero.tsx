@@ -16,7 +16,7 @@ export function Hero({ settings }: { settings: Settings }) {
     >
       <div className="hero-bg pointer-events-none absolute inset-0 -z-10 select-none">
         <Image
-          src="/images/local/fachada-distribuidora-del-este-villa-maria.jpg"
+          src="/images/local/local-distribuidora-del-este-villa-maria.jpg"
           alt="Fachada del local de Distribuidora del Este en Av. Presidente Perón 1001, Villa María"
           fill
           priority

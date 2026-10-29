@@ -41,7 +41,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     description: `${settings.tagline}. Termotanques, claraboyas, puertas plegadizas, repuestos sanitarios y de griferías, sanitarios, griferías y materiales de construcción.`,
     url: SITE_URL,
     logo: `${SITE_URL}/images/logo/logo-distribuidora-del-este.png`,
-    image: [`${SITE_URL}/images/logo/logo-distribuidora-del-este.png`, `${SITE_URL}/images/local/fachada-distribuidora-del-este-villa-maria.jpg`],
+    image: [`${SITE_URL}/images/logo/logo-distribuidora-del-este.png`, `${SITE_URL}/images/local/local-distribuidora-del-este-villa-maria.jpg`],
     telephone: `+${settings.whatsappNumber}`,
     email: settings.email,
     priceRange: '$$',

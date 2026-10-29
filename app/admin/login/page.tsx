@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           Gestioná productos, precios, promociones y pedidos de la web de <span className="font-medium text-foreground">{settings.businessName}</span>.
         </>
       }
-      image={{ src: '/images/local/fachada-distribuidora-del-este-villa-maria.jpg', alt: 'Fachada del local de Distribuidora del Este en Villa María' }}
+      image={{ src: '/images/local/local-distribuidora-del-este-villa-maria.jpg', alt: 'Fachada del local de Distribuidora del Este en Villa María' }}
       panelHeading="Todo tu negocio online, en un solo lugar"
       features={[
         { icon: <ClipboardList className="size-5" />, title: 'Pedidos al día', description: 'Cada pedido de WhatsApp queda guardado con sus productos y precios.' },

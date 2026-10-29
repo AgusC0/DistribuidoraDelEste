@@ -15,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: SITE_URL,
       changeFrequency: 'weekly',
       priority: 1,
-      images: [`${SITE_URL}/images/local/fachada-distribuidora-del-este-villa-maria.jpg`],
+      images: [`${SITE_URL}/images/local/local-distribuidora-del-este-villa-maria.jpg`],
     },
     { url: `${SITE_URL}/productos`, changeFrequency: 'weekly', priority: 0.9 },
     ...withProducts.map((c) => ({ url: `${SITE_URL}${categoryUrl(categories, c.id)}`, changeFrequency: 'weekly' as const, priority: 0.85 })),

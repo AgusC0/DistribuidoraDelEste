@@ -12,7 +12,7 @@ export const DEFAULT_GALLERY: GalleryItem[] = [
     id: 'fachada',
     kind: 'image',
     section: 'local',
-    src: '/images/local/fachada-distribuidora-del-este-villa-maria.jpg',
+    src: '/images/local/local-distribuidora-del-este-villa-maria.jpg',
     title: 'Nuestro local',
     alt: 'Fachada de Distribuidora del Este, casa de sanitarios en Villa María',
     active: true,
