@@ -39,14 +39,23 @@ export function ProductGallery({
     onIndexChange?.(i)
   }
   const go = (dir: 1 | -1) => setIndex((index + dir + images.length) % images.length)
+  // En el celular se pasa de foto deslizando con el dedo.
+  const touchX = useRef<number | null>(null)
 
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-secondary"
+        className="group relative aspect-square touch-pan-y overflow-hidden rounded-2xl border border-border bg-secondary"
         onKeyDown={(e) => {
           if (e.key === 'ArrowRight') go(1)
           if (e.key === 'ArrowLeft') go(-1)
+        }}
+        onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+        onTouchEnd={(e) => {
+          if (touchX.current == null || images.length < 2) return
+          const dx = e.changedTouches[0].clientX - touchX.current
+          touchX.current = null
+          if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1)
         }}
       >
         {images.map((src, i) => (
@@ -365,13 +374,13 @@ export function ProductPurchase({
 
       {hasVariants && <VariantSelector product={product} selected={selected} choose={choose} candidateFor={candidateFor} />}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex h-12 items-center self-start rounded-lg border border-input" role="group" aria-label="Cantidad">
+      <div className="flex items-stretch gap-2 sm:gap-3">
+        <div className="flex h-14 shrink-0 items-center rounded-xl border border-input bg-card" role="group" aria-label="Cantidad">
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             aria-label="Restar uno"
-            className="flex size-12 items-center justify-center text-muted-foreground hover:text-foreground"
+            className="flex h-full w-10 items-center justify-center text-muted-foreground hover:text-foreground sm:w-12"
           >
             <Minus className="size-4" />
           </button>
@@ -383,23 +392,23 @@ export function ProductPurchase({
             value={quantity}
             onChange={(e) => setQuantity(Math.min(999, Math.max(1, Number(e.target.value) || 1)))}
             aria-label="Cantidad"
-            className="h-full w-14 border-x border-input bg-transparent text-center tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            className="h-full w-10 border-x border-input text-base font-semibold sm:w-14 bg-transparent text-center tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
           />
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.min(999, q + 1))}
             aria-label="Sumar uno"
-            className="flex size-12 items-center justify-center text-muted-foreground hover:text-foreground"
+            className="flex h-full w-10 items-center justify-center text-muted-foreground hover:text-foreground sm:w-12"
           >
             <Plus className="size-4" />
           </button>
         </div>
         {needsChoice ? (
-          <Button size="lg" disabled className="h-12 flex-1 text-base">
+          <Button size="lg" disabled className="h-14 flex-1 rounded-xl text-base">
             Elegí {product.options.filter((o) => !selected[o.name]).map((o) => o.name.toLowerCase()).join(' y ') || 'una opción'}
           </Button>
         ) : (
-          <AddToOrderButton product={product} variant={variant} quantity={quantity} className="h-12 flex-1 text-base" />
+          <AddToOrderButton product={product} variant={variant} quantity={quantity} className="h-14 flex-1 rounded-xl text-base" />
         )}
       </div>
 
@@ -407,7 +416,7 @@ export function ProductPurchase({
         size="lg"
         variant="outline"
         nativeButton={false}
-        className="h-12 border-whatsapp/40 text-base text-whatsapp hover:bg-whatsapp/10 hover:text-whatsapp"
+        className="h-12 rounded-xl border-whatsapp/40 text-base text-whatsapp hover:bg-whatsapp/10 hover:text-whatsapp"
         render={<WaLink source="producto" productId={product.id} message={productWaMessage(product, variant)} />}
       >
         <WhatsappIcon className="size-5" />

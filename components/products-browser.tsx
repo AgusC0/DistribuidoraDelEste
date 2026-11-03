@@ -324,6 +324,10 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
   const pageItems = results.slice((page - 1) * s.perPage, page * s.perPage)
   const from = results.length ? (page - 1) * s.perPage + 1 : 0
   const to = Math.min(page * s.perPage, results.length)
+  const goToPage = (p: number) => {
+    update({ page: p }, { push: true })
+    listTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const fix = useMemo(
     () => (results.length === 0 && s.q.trim().length >= 3 ? correction(index, s.q) : null),
@@ -531,7 +535,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
 
         <div className="min-w-0">
           {/* 1. Ruta */}
-          <nav aria-label="Ruta de navegación" className="text-sm text-muted-foreground">
+          <nav aria-label="Ruta de navegación" className="text-xs text-muted-foreground sm:text-sm">
             <ol className="flex flex-wrap items-center gap-1">
               <li>
                 <Link href="/" className="hover:text-foreground">
@@ -574,22 +578,23 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
           </nav>
 
           {/* 2. Título y descripción */}
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="mt-2 flex flex-col gap-1.5 sm:mt-3 sm:gap-2">
             {parent && (
-              <Link href={hrefFor(parent)} className="inline-flex w-fit items-center gap-1 text-sm font-medium text-primary hover:underline">
+              <Link href={hrefFor(parent)} className="hidden w-fit items-center gap-1 text-sm font-medium text-primary hover:underline sm:inline-flex">
                 <ChevronLeft className="size-4" />
                 {parent.name}
               </Link>
             )}
-            <h1 className="font-heading text-3xl font-bold uppercase tracking-tight sm:text-4xl">{title}</h1>
-            <p className="max-w-2xl text-muted-foreground">
+            <h1 className="font-heading text-2xl font-bold uppercase tracking-tight sm:text-4xl">{title}</h1>
+            {/* En el celular se omite: el título alcanza y los productos quedan más arriba. */}
+            <p className="hidden max-w-2xl text-muted-foreground sm:block">
               {category?.description || 'Sanitarios, conducción de agua y materiales para la construcción. Armá tu pedido y pedí presupuesto por WhatsApp.'}
             </p>
           </div>
 
           {/* Accesos a subcategorías (en un rubro) */}
           {subcategories.length > 0 && (
-            <ul className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+            <ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto sm:mt-5 px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
               {subcategories.map((c) => (
                 <li key={c.id} className="shrink-0">
                   <Link
@@ -606,8 +611,8 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
 
           {/* Marcas que trabaja el negocio en esta categoría: un toque filtra (y se pueden combinar). */}
           {brandShortcuts.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Marcas</span>
+            <div className="-mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:mt-4 sm:flex-wrap sm:px-0">
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Marcas</span>
               {brandShortcuts.map((b) => {
                 const on = brands.includes(b)
                 return (
@@ -617,7 +622,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
                     aria-pressed={on}
                     onClick={() => toggleFacet('marca', b)}
                     className={cn(
-                      'inline-flex h-8 items-center rounded-full px-3 text-sm font-medium transition-colors',
+                      'inline-flex h-8 shrink-0 items-center rounded-full px-3 text-sm font-medium transition-colors',
                       on ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-muted',
                     )}
                   >
@@ -629,9 +634,9 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
           )}
 
           {/* 3. Listado: buscar, ordenar y productos */}
-          <div ref={listTop} className="mt-8 scroll-mt-24">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-end justify-between gap-2">
+          <div ref={listTop} className="mt-5 scroll-mt-24 sm:mt-8">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-muted-foreground" aria-live="polite">
                   {loading ? (
                     'Cargando…'
@@ -647,6 +652,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
                     'Sin resultados'
                   )}
                 </p>
+                {!loading && <Pagination compact page={page} total={totalPages} onChange={goToPage} />}
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <SearchBox
@@ -658,7 +664,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
                 />
                 <div className="flex gap-2">
                   <Dialog.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
-                    <Dialog.Trigger render={<Button variant="outline" className="h-12 flex-1 px-4 lg:hidden" />}>
+                    <Dialog.Trigger render={<Button variant="outline" className="h-11 flex-1 px-4 sm:h-12 lg:hidden" />}>
                       <SlidersHorizontal className="size-4" />
                       Filtros
                       {hasFilters && (
@@ -692,7 +698,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
                     value={sorts.some((o) => o.value === s.sort) ? s.sort : 'relevancia'}
                     onChange={(e) => update({ sort: e.target.value as Sort })}
                     aria-label="Ordenar por"
-                    className="h-12 flex-1 rounded-xl border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 sm:flex-none"
+                    className="h-11 flex-1 rounded-xl border border-input bg-card px-3 text-sm outline-none sm:h-12 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 sm:flex-none"
                   >
                     {sorts.map((o) => (
                       <option key={o.value} value={o.value}>
@@ -738,17 +744,17 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
             </div>
 
             {loading ? (
-              <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
+              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-6 sm:mt-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
                 {Array.from({ length: 8 }, (_, i) => (
                   <div key={i} className="flex flex-col gap-3">
-                    <span className="aspect-[4/5] animate-pulse rounded-2xl bg-muted" />
+                    <span className="aspect-square animate-pulse rounded-xl bg-muted md:rounded-2xl" />
                     <span className="h-3 w-2/3 animate-pulse rounded bg-muted" />
                     <span className="h-4 w-1/2 animate-pulse rounded bg-muted" />
                   </div>
                 ))}
               </div>
             ) : pageItems.length > 0 ? (
-              <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
+              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-6 sm:mt-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4">
                 {pageItems.map((p, i) => (
                   <ProductCard key={p.id} product={p} query={s.q} priority={i < 4} variantId={preferredVariant(p)} />
                 ))}
@@ -794,15 +800,8 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
               </div>
             )}
 
-            <div className="mt-12">
-              <Pagination
-                page={page}
-                total={totalPages}
-                onChange={(p) => {
-                  update({ page: p }, { push: true })
-                  listTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }}
-              />
+            <div className="mt-8 sm:mt-12">
+              <Pagination page={page} total={totalPages} onChange={goToPage} />
             </div>
           </div>
         </div>

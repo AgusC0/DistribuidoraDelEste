@@ -40,9 +40,13 @@ export function AddToOrderButton({
         setAdded(true)
       }}
       aria-live="polite"
-      className={cn('transition-colors', added && 'bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp', className)}
+      className={cn(
+        'gap-2 font-semibold shadow-md shadow-primary/25 transition-[background-color,box-shadow,transform] hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98]',
+        added && 'bg-whatsapp text-whatsapp-foreground shadow-whatsapp/25 hover:bg-whatsapp',
+        className,
+      )}
     >
-      {added ? <Check className="size-4" /> : <ClipboardPlus className="size-4" />}
+      {added ? <Check className="size-5" strokeWidth={2.5} /> : <ClipboardPlus className="size-5" />}
       {added ? 'Agregado' : label}
     </Button>
   )

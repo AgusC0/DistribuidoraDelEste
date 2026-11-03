@@ -25,12 +25,31 @@ export function Pagination({
   page,
   total,
   onChange,
+  compact = false,
 }: {
   page: number
   total: number
   onChange: (page: number) => void
+  /** Versión corta para arriba del listado: ‹ 2 / 4 › */
+  compact?: boolean
 }) {
   if (total <= 1) return null
+  if (compact) {
+    const arrow = cn(base, 'min-w-9 px-0 h-9 border border-border hover:bg-muted disabled:pointer-events-none disabled:opacity-40')
+    return (
+      <nav aria-label="Paginación" className="flex items-center gap-1.5">
+        <button type="button" onClick={() => onChange(page - 1)} disabled={page === 1} aria-label="Página anterior" className={arrow}>
+          <ChevronLeft className="size-4" />
+        </button>
+        <span className="min-w-12 text-center text-sm tabular-nums text-muted-foreground">
+          <strong className="text-foreground">{page}</strong> / {total}
+        </span>
+        <button type="button" onClick={() => onChange(page + 1)} disabled={page === total} aria-label="Página siguiente" className={arrow}>
+          <ChevronRight className="size-4" />
+        </button>
+      </nav>
+    )
+  }
   return (
     <nav aria-label="Paginación" className="flex items-center justify-center gap-1">
       <button

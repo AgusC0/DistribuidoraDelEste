@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Headphones, ShieldCheck, Wrench } from 'luci
 import { ProductCard } from '@/components/product-card'
 import { ProductShowcase } from '@/components/product-detail'
 import { RecentlyViewed } from '@/components/recently-viewed'
+import { ShareButton } from '@/components/share-button'
 import { ProductView } from '@/components/product-view'
 import { getComplements, getPublicCatalog, leanProduct } from '@/lib/public-catalog'
 import { categoryPath, categoryUrl } from '@/lib/catalog'
@@ -56,12 +57,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .concat(catalog.products.filter((p) => p.id !== product.id && p.categoryId !== product.categoryId && p.featured))
     .slice(0, 4)
 
-  const siblings = catalog.products
-    .filter((p) => p.categoryId === product.categoryId)
-    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
-  const position = siblings.findIndex((p) => p.id === product.id)
-  const prev = position > 0 ? siblings[position - 1] : undefined
-  const next = position >= 0 && position < siblings.length - 1 ? siblings[position + 1] : undefined
 
   const complements = await getComplements(product)
   const variantPrices = product.variants.map((v) => v.price).filter((v): v is number => v != null)
@@ -116,10 +111,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-8 md:py-12 lg:px-8">
       <ProductView productId={product.id} />
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <nav aria-label="Ruta de navegación" className="text-sm text-muted-foreground">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6">
+      <nav aria-label="Ruta de navegación" className="hidden text-sm text-muted-foreground sm:block">
         <ol className="flex flex-wrap items-center gap-1">
           <li>
             <Link href="/" className="hover:text-foreground">
@@ -146,30 +141,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </li>
         </ol>
       </nav>
-        {(prev || next) && (
-          <div className="flex items-center gap-1 text-sm">
-            {prev && (
-              <Link
-                href={`/productos/${prev.slug}`}
-                title={prev.name}
-                className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <ChevronLeft className="size-4" />
-                Anterior
-              </Link>
-            )}
-            {next && (
-              <Link
-                href={`/productos/${next.slug}`}
-                title={next.name}
-                className="inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                Siguiente
-                <ChevronRight className="size-4" />
-              </Link>
-            )}
-          </div>
-        )}
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/productos" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted">
+            <ChevronLeft className="size-4" />
+            Volver
+          </Link>
+          <ShareButton title={product.name} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted" />
+        </div>
       </div>
 
       <ProductShowcase product={product} complements={complements}>
