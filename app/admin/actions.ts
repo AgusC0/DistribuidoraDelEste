@@ -703,6 +703,7 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
     businessName: str(fd, 'businessName', 100),
     tagline: str(fd, 'tagline', 160),
     phoneDisplay: str(fd, 'phoneDisplay', 40),
+    landlinePhone: str(fd, 'landlinePhone', 40),
     whatsappNumber,
     email,
     address: str(fd, 'address', 160),

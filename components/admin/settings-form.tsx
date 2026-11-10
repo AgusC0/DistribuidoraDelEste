@@ -101,6 +101,12 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
           <Text name="tagline" label="Frase corta" defaultValue={settings.tagline} hint="Se usa en el pie y en Google." />
           <Text name="phoneDisplay" label="Teléfono (como se muestra)" defaultValue={settings.phoneDisplay} />
           <Text
+            name="landlinePhone"
+            label="Teléfono fijo"
+            defaultValue={settings.landlinePhone}
+            hint="Para el botón Llamar, con característica. Ej: 0353 461-4822. Si lo dejás vacío, se usa el de WhatsApp."
+          />
+          <Text
             name="whatsappNumber"
             label="Número de WhatsApp"
             defaultValue={settings.whatsappNumber}

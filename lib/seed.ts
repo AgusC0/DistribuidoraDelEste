@@ -12,6 +12,7 @@ export function createSeed(): Database {
       businessName: 'Distribuidora del Este SRL',
       tagline: 'Sanitarista en Villa María, Córdoba',
       phoneDisplay: '353 418-1819',
+      landlinePhone: '0353 461-4822',
       whatsappNumber: '5493534181819',
       email: 'distribuidoradeleste23@gmail.com',
       address: 'Av. Presidente Perón 1001, Villa María, Córdoba',

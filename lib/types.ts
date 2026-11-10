@@ -130,6 +130,8 @@ export type Settings = {
   businessName: string
   tagline: string
   phoneDisplay: string
+  /** Teléfono fijo para el botón "Llamar" (vacío: se usa el de WhatsApp). */
+  landlinePhone: string
   whatsappNumber: string
   email: string
   address: string

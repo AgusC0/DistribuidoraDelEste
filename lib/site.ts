@@ -14,6 +14,14 @@ const priceFormatter = new Intl.NumberFormat('es-AR', {
   maximumFractionDigits: 0,
 })
 
+/** Teléfono para "Llamar": el fijo si está cargado (0353 461-4822 → tel:+543534614822), si no el de WhatsApp. */
+export function callPhone(settings: Pick<Settings, 'landlinePhone' | 'phoneDisplay' | 'whatsappNumber'>) {
+  const digits = (settings.landlinePhone ?? '').replace(/\D/g, '')
+  if (!digits) return { href: `tel:+${settings.whatsappNumber}`, label: settings.phoneDisplay }
+  const national = digits.replace(/^54/, '').replace(/^0/, '')
+  return { href: `tel:+54${national}`, label: settings.landlinePhone }
+}
+
 export function formatPrice(price: number | null) {
   return price == null ? 'Consultar precio' : priceFormatter.format(price)
 }

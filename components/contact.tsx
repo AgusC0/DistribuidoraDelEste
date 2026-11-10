@@ -11,7 +11,7 @@ import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { useCatalog } from '@/components/catalog-provider'
 import { submitLead } from '@/app/actions'
-import { waLink } from '@/lib/site'
+import { callPhone, waLink } from '@/lib/site'
 import { track } from '@/lib/track'
 
 const GENERAL = 'Consulta general'
@@ -245,13 +245,13 @@ export function Contact() {
               </a>
 
               <a
-                href={`tel:+${settings.whatsappNumber}`}
+                href={callPhone(settings).href}
                 className="flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
               >
                 <Phone aria-hidden="true" className="mt-0.5 size-6 shrink-0 text-primary" />
                 <span>
                   <span className="block font-heading text-sm font-semibold uppercase tracking-wide text-foreground">Llamar</span>
-                  <span className="block text-sm text-muted-foreground">{settings.phoneDisplay}</span>
+                  <span className="block text-sm text-muted-foreground">{callPhone(settings).label}</span>
                 </span>
               </a>
             </div>
