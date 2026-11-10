@@ -268,6 +268,17 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
 
   const filtered = inScope.filter((p) => passes(p))
 
+  // Marcas en el orden que se cargó en la categoría (o en sus subcategorías, en un rubro); las demás, alfabéticas.
+  const brandOrder = category
+    ? (category.brands?.length ? category.brands : childCategories(categories, category.id).flatMap((c) => c.brands ?? [])).map((b) => b.toLowerCase())
+    : []
+  const orderValues = (key: string, values: string[]) => {
+    const sorted = sortValues(values)
+    if (key !== 'marca' || !brandOrder.length) return sorted
+    const rank = (v: string) => (brandOrder.includes(v.toLowerCase()) ? brandOrder.indexOf(v.toLowerCase()) : brandOrder.length)
+    return sorted.sort((a, b) => rank(a) - rank(b))
+  }
+
   const facetOptions = groups
     .map((g) => {
       const counts = new Map<string, number>()
@@ -276,7 +287,7 @@ export function ProductsBrowser({ categoryId, initial }: { categoryId?: string; 
         for (const v of new Set(valuesOf(p, g.key))) counts.set(v, (counts.get(v) ?? 0) + 1)
       }
       for (const v of s.facets[g.key] ?? []) if (!counts.has(v)) counts.set(v, 0)
-      return { ...g, options: sortValues([...counts.keys()]).map((value) => ({ value, count: counts.get(value)! })) }
+      return { ...g, options: orderValues(g.key, [...counts.keys()]).map((value) => ({ value, count: counts.get(value)! })) }
     })
     .filter((g) => g.options.length > 0)
 

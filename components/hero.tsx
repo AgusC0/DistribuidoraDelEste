@@ -88,8 +88,9 @@ export function Hero({ settings }: { settings: Settings }) {
               <dd className="text-[15px] font-semibold text-white">{settings.address}</dd>
             </div>
           </dl>
-          <p className="hero-rise max-w-xs text-base leading-relaxed text-white/85 text-pretty sm:text-right" style={d(1.75)}>
-            Termotanques, claraboyas, puertas plegadizas y repuestos, con asesoramiento en el local.
+          <p className="hero-rise max-w-sm text-base leading-relaxed text-white/85 text-pretty sm:text-right" style={d(1.75)}>
+            Todo para la conducción de agua, gas y cloacas. Termotanques, calefactores, puertas plegadizas, repuestos sanitarios con
+            asesoramiento.
           </p>
         </div>
       </div>
