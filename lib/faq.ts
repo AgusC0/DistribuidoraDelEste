@@ -59,14 +59,14 @@ export function buildFaq(settings: Settings, categories: Category[]): FaqGroup[]
         {
           question: '¿Qué venden?',
           answer:
-            'Somos casa de sanitarios: termotanques, claraboyas, puertas plegadizas, griferías, sanitarios, vanitorys, cañerías y conexiones para agua, gas y cloaca, tanques, bombas, repuestos de sanitarios y griferías, y materiales de construcción.',
+            'Sanitarios: termotanques, claraboyas, puertas plegadizas, griferías, sanitarios, vanitorys, cañerías y conexiones para agua, gas y cloaca, tanques, bombas, y repuestos de sanitarios y griferías.',
           link: { href: '/productos', label: 'Ver todas las categorías' },
         },
         ...(termoBrands.length
           ? [
               {
                 question: '¿Qué marcas de termotanques tienen?',
-                answer: `Trabajamos con ${list(termoBrands)}, en modelos a gas, eléctricos y solares de distintas capacidades.`,
+                answer: `Trabajamos con ${list(termoBrands)}, en modelos a gas y eléctricos de distintas capacidades.`,
                 link: { href: url('termotanques'), label: 'Ver termotanques' },
               },
             ]
