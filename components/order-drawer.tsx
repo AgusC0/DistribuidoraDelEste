@@ -48,7 +48,9 @@ export function OrderDrawer() {
   const picked = useProducts(open ? ids : [], { complements: true })
   const products = picked.items
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [note, setNote] = useState('')
+  const [touched, setTouched] = useState(false)
   const [sent, setSent] = useState(false)
 
   const priced = items.filter((i) => i.price != null)
@@ -56,13 +58,21 @@ export function OrderDrawer() {
   const suggestions = picked.complements.filter((c) => !ids.includes(c.id)).slice(0, 3)
   const total = priced.reduce((s, i) => s + (i.price ?? 0) * i.quantity, 0)
 
+  const nameOk = name.trim().length >= 2
+  const phoneOk = phone.replace(/D/g, '').length >= 8
+
   function send() {
-    const message = orderWaMessage(items, name.trim(), note.trim())
+    if (!nameOk || !phoneOk) {
+      setTouched(true)
+      return
+    }
+    const message = orderWaMessage(items, name.trim(), note.trim(), phone.trim())
     // Guardado en segundo plano: abrir WhatsApp debe ser inmediato para que el navegador no lo bloquee.
     void submitOrder(
       {
         name: name.trim(),
-        note: note.trim(),
+        note: `Tel: ${phone.trim()}${note.trim() ? `
+${note.trim()}` : ''}`,
         items: items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
       },
       message,
@@ -117,7 +127,7 @@ export function OrderDrawer() {
                   className="h-11 bg-whatsapp px-5 text-whatsapp-foreground hover:bg-whatsapp/90"
                   render={
                     <a
-                      href={waLink(settings.whatsappNumber, orderWaMessage(items, name.trim(), note.trim()))}
+                      href={waLink(settings.whatsappNumber, orderWaMessage(items, name.trim(), note.trim(), phone.trim()))}
                       target="_blank"
                       rel="noopener noreferrer"
                     />
@@ -290,10 +300,29 @@ export function OrderDrawer() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoComplete="name"
-                  placeholder="Tu nombre (opcional)"
+                  required
+                  placeholder="Tu nombre y apellido *"
                   aria-label="Tu nombre"
-                  className="h-10 rounded-lg border border-input bg-card px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm"
+                  aria-invalid={touched && !nameOk}
+                  className={cn('h-10 rounded-lg border bg-card px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm', touched && !nameOk ? 'border-destructive' : 'border-input')}
                 />
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  placeholder="Tu teléfono (con código de área) *"
+                  aria-label="Tu teléfono"
+                  aria-invalid={touched && !phoneOk}
+                  className={cn('h-10 rounded-lg border bg-card px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm', touched && !phoneOk ? 'border-destructive' : 'border-input')}
+                />
+                {touched && (!nameOk || !phoneOk) && (
+                  <p role="alert" className="-mt-1 text-xs text-destructive">
+                    Completá tu nombre y tu teléfono para poder responderte.
+                  </p>
+                )}
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}

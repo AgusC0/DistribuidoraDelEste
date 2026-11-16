@@ -67,7 +67,7 @@ export function productWaMessage(product: Product, variant?: Variant) {
 }
 
 /** Mensaje de WhatsApp con todo el pedido armado en el sitio. */
-export function orderWaMessage(items: OrderItem[], name?: string, note?: string) {
+export function orderWaMessage(items: OrderItem[], name?: string, note?: string, phone?: string) {
   const lines = items.map((i) => {
     const label = i.variantName ? `${i.name} – ${i.variantName}` : i.name
     const price = i.price != null ? ` – ${formatPrice(i.price * i.quantity)}` : ''
@@ -83,6 +83,7 @@ export function orderWaMessage(items: OrderItem[], name?: string, note?: string)
     priced.length
       ? `Total estimado: ${formatPrice(total)}${priced.length < items.length ? ' (más los productos a consultar)' : ''}`
       : 'Quedo a la espera del presupuesto.',
+    phone ? `\nMi teléfono: ${phone}` : '',
     note ? `\nComentario: ${note}` : '',
   ]
     .filter((l, i, arr) => !(l === '' && arr[i - 1] === ''))
