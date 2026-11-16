@@ -68,8 +68,8 @@ export function SiteFooter({
         </FadeIn>
 
         {/* Enlaces */}
-        <nav aria-label="Enlaces del pie" className="flex flex-wrap gap-x-16 gap-y-12 lg:col-span-8 lg:justify-end">
-          <FadeIn delay={60} className="flex min-w-[170px] flex-col gap-5">
+        <nav aria-label="Enlaces del pie" className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-3 lg:col-span-8 lg:grid-cols-[1fr_1fr_1.6fr] lg:gap-x-10">
+          <FadeIn delay={60} className="flex flex-col gap-5">
             <p className={titleClass}>Sitio</p>
             <ul className="flex flex-col gap-3">
               {LINKS.map((l) => (
@@ -80,6 +80,23 @@ export function SiteFooter({
                 </li>
               ))}
             </ul>
+          </FadeIn>
+
+          <FadeIn delay={120} className="flex flex-col gap-5">
+            {rubros.length > 0 && (
+              <>
+                <p className={titleClass}>Productos</p>
+                <ul className="flex flex-col gap-3">
+                  {rubros.map((c) => (
+                    <li key={c.id}>
+                      <Link href={categoryUrl(categories, c.id)} className={linkClass}>
+                        {c.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
             {social.length > 0 && (
               <>
                 <p className={`${titleClass} mt-4`}>Seguinos</p>
@@ -96,22 +113,7 @@ export function SiteFooter({
             )}
           </FadeIn>
 
-          {rubros.length > 0 && (
-            <FadeIn delay={120} className="flex min-w-[170px] flex-col gap-5">
-              <p className={titleClass}>Productos</p>
-              <ul className="flex flex-col gap-3">
-                {rubros.map((c) => (
-                  <li key={c.id}>
-                    <Link href={categoryUrl(categories, c.id)} className={linkClass}>
-                      {c.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </FadeIn>
-          )}
-
-          <FadeIn delay={180} className="flex min-w-[260px] max-w-sm flex-col gap-5">
+          <FadeIn delay={180} className="col-span-2 flex flex-col gap-5 sm:col-span-3 lg:col-span-1">
             <p className={titleClass}>Contacto</p>
             <ul className="flex flex-col gap-4">
               <li>
