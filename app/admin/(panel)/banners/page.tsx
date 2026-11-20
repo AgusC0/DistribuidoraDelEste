@@ -11,9 +11,15 @@ export default async function BannersPage() {
     <>
       <PageHeader
         title="Banners"
-        description="Las imágenes de promociones que se ven en la portada, debajo del título principal. Podés subir las que armes en Canva, elegir a dónde llevan y ordenarlas."
+        description="Lo que se ve en la portada debajo del título principal: el carrusel de promociones y las tarjetas con foto. Subí las imágenes que armes en Canva, elegí a dónde llevan y ordenalas."
       />
-      <BannerManager items={db.settings.banners ?? []} />
+      <h2 className="mt-2 font-heading text-xl font-semibold uppercase tracking-wide">Banners (carrusel)</h2>
+      <BannerManager kind="banners" items={db.settings.banners ?? []} />
+      <h2 className="mt-10 font-heading text-xl font-semibold uppercase tracking-wide">Tarjetas con foto</h2>
+      <p className="-mt-1 mb-2 text-sm text-muted-foreground">
+        Van debajo de los banners: una foto con un título encima que lleva a una sección (Repuestos, Accesorios, Griferías…).
+      </p>
+      <BannerManager kind="tiles" items={db.settings.tiles ?? []} />
     </>
   )
 }

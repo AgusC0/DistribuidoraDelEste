@@ -29,7 +29,7 @@ export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product
   const current = tabs.some((t) => t.value === tab) ? tab : 'destacados'
 
   return (
-    <section id="catalogo" aria-labelledby="catalogo-title" className="scroll-mt-16 md:scroll-mt-20 bg-background py-16 md:py-24">
+    <section id="catalogo" aria-labelledby="catalogo-title" className="scroll-mt-16 md:scroll-mt-20 bg-background py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-2">
@@ -81,14 +81,20 @@ export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product
             </button>
           ))}
         </div>
-        <div role="tabpanel" className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+        {/* Una sola fila deslizable: la portada muestra una muestra, el catálogo completo está a un toque. */}
+        <div
+          role="tabpanel"
+          className="-mx-4 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:mx-0 sm:px-0"
+        >
           {lists[current].map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <div key={product.id} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-[calc(25%-12px)]">
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
 
         {brands.length > 1 && (
-          <div className="mt-16 flex flex-col gap-4 sm:flex-row sm:items-baseline sm:gap-8">
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-baseline sm:gap-8">
             <h3 className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Marcas que trabajamos</h3>
             <ul className="flex flex-wrap gap-x-7 gap-y-3">
               {brands.map((b) => (
@@ -105,7 +111,7 @@ export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product
           </div>
         )}
 
-        <div className="mt-12 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <Button size="lg" nativeButton={false} className="h-12 px-8 text-base" render={<Link href="/productos" />}>
             Ver todos los productos
             <ArrowRight className="size-4" />

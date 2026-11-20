@@ -169,6 +169,8 @@ export type Settings = {
   gallery?: GalleryItem[]
   /** Banners de promociones de la portada, debajo del hero (se cargan desde el panel). */
   banners?: Banner[]
+  /** Tarjetas con foto y título debajo de los banners (Repuestos, Accesorios…). */
+  tiles?: Banner[]
 }
 
 /** Banner de la portada: imagen (y versión para celular) que lleva a un link. */
@@ -180,6 +182,8 @@ export type Banner = {
   mobileImage?: string
   /** Descripción para Google y lectores de pantalla. */
   alt: string
+  /** Título que se ve sobre la imagen (solo en las tarjetas). */
+  title?: string
   /** Destino al tocarlo: ruta del sitio (/productos?oferta=1) o link completo. Vacío = no es clickeable. */
   link: string
   active: boolean

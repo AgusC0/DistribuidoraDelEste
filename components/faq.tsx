@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Accordion } from '@base-ui/react/accordion'
 import { ArrowRight, Plus } from 'lucide-react'
 import { FadeIn } from '@/components/fade-in'
@@ -7,9 +8,15 @@ import { WaLink } from '@/components/wa-link'
 import type { FaqGroup } from '@/lib/faq'
 
 /** Preguntas frecuentes: título fijo a la izquierda y respuestas desplegables a la derecha. */
-export function Faq({ groups }: { groups: FaqGroup[] }) {
+const VISIBLE = 4
+
+export function Faq({ groups: all }: { groups: FaqGroup[] }) {
+  // Primero solo 4 preguntas: el resto se abre con "Ver más" para que la portada no quede larga.
+  const [showAll, setShowAll] = useState(false)
+  const total = all.reduce((n, g) => n + g.items.length, 0)
+  const groups = showAll || !all.length ? all : [{ ...all[0], items: all[0].items.slice(0, VISIBLE) }]
   return (
-    <section id="preguntas" aria-label="Preguntas frecuentes" className="scroll-mt-16 bg-secondary/40 py-16 md:scroll-mt-20 md:py-24">
+    <section id="preguntas" aria-label="Preguntas frecuentes" className="scroll-mt-16 bg-secondary/40 py-14 md:scroll-mt-20 md:py-20">
       <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 sm:px-6 md:gap-24 lg:px-8">
         {groups.map((group, gi) => (
           <div key={group.title} className="grid grid-cols-1 items-start gap-8 md:gap-12 lg:grid-cols-12 lg:gap-16">
@@ -52,6 +59,16 @@ export function Faq({ groups }: { groups: FaqGroup[] }) {
                   </Accordion.Panel>
                 </Accordion.Item>
               ))}
+              {!showAll && total > VISIBLE && gi === 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAll(true)}
+                  className="mt-6 inline-flex h-11 items-center gap-2 rounded-full border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  Ver más preguntas ({total - VISIBLE})
+                  <Plus aria-hidden="true" className="size-4" />
+                </button>
+              )}
             </Accordion.Root>
           </div>
         ))}

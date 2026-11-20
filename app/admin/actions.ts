@@ -731,7 +731,7 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
   }
   await mutateDb((db) => {
     // "Mostrar precios" se maneja con su propio switch; el formulario de ajustes no lo toca.
-    db.settings = { ...settings, showPrices: db.settings.showPrices, gallery: db.settings.gallery, banners: db.settings.banners }
+    db.settings = { ...settings, showPrices: db.settings.showPrices, gallery: db.settings.gallery, banners: db.settings.banners, tiles: db.settings.tiles }
   })
   refreshSite()
   return { ok: true, message: 'Ajustes guardados. El sitio ya muestra los cambios.' }
@@ -888,7 +888,12 @@ export async function deleteGalleryItem(id: string) {
 }
 
 
-/* ---------- Banners de la portada ---------- */
+/* ---------- Banners y tarjetas de la portada ---------- */
+
+/** "banners": carrusel bajo el hero. "tiles": tarjetas con foto y título (rubros, repuestos, accesorios…). */
+export type BannerKind = 'banners' | 'tiles'
+const isKind = (v: unknown): v is BannerKind => v === 'banners' || v === 'tiles'
+const listOf = (settings: Settings, kind: BannerKind) => settings[kind] ?? []
 
 /** Acepta rutas del sitio (/...) y links https; cualquier otra cosa se descarta. */
 function cleanLink(v: string) {
@@ -901,43 +906,49 @@ function cleanLink(v: string) {
 
 export async function addBanner(_prev: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin()
+  const kind = fd.get('kind') ?? 'banners'
+  if (!isKind(kind)) return { message: 'Tipo inválido.' }
   const file = fd.get('image')
-  if (!(file instanceof File) || !file.size) return { message: 'Elegí la imagen del banner.' }
-  const alt = str(fd, 'alt', 200)
+  if (!(file instanceof File) || !file.size) return { message: 'Elegí la imagen.' }
+  const title = str(fd, 'title', 60)
+  if (kind === 'tiles' && !title) return { message: 'Escribí el título de la tarjeta (ej: Repuestos).' }
+  const alt = str(fd, 'alt', 200) || title
   const rawLink = str(fd, 'link', 500)
   const link = cleanLink(rawLink)
   if (rawLink && !link) return { message: 'El link tiene que empezar con / (una página del sitio) o con https://.' }
   try {
-    const image = await saveUpload(file, alt || 'banner distribuidora del este')
+    const image = await saveUpload(file, alt || title || 'banner distribuidora del este')
     const mobileFile = fd.get('mobileImage')
     const mobileImage = mobileFile instanceof File && mobileFile.size ? await saveUpload(mobileFile, `${alt || 'banner'} celular`) : undefined
     await mutateDb((db) => {
-      const banners = [...(db.settings.banners ?? [])]
-      banners.push({ id: newId(), image, mobileImage, alt, link, active: true })
-      db.settings = { ...db.settings, banners }
+      const list = [...listOf(db.settings, kind)]
+      list.push({ id: newId(), image, mobileImage, alt, title, link, active: true })
+      db.settings = { ...db.settings, [kind]: list }
     })
   } catch (err) {
-    return { message: err instanceof Error ? err.message : 'No se pudo subir el banner.' }
+    return { message: err instanceof Error ? err.message : 'No se pudo subir la imagen.' }
   }
   refreshSite()
   revalidatePath('/admin/banners')
-  return { ok: true, message: 'Banner agregado. Ya se ve en la portada.' }
+  return { ok: true, message: kind === 'tiles' ? 'Tarjeta agregada. Ya se ve en la portada.' : 'Banner agregado. Ya se ve en la portada.' }
 }
 
-export async function updateBanner(id: string, patch: Partial<Pick<Banner, 'alt' | 'link' | 'active'>>): Promise<FormState> {
+export async function updateBanner(kind: BannerKind, id: string, patch: Partial<Pick<Banner, 'alt' | 'title' | 'link' | 'active'>>): Promise<FormState> {
   await requireAdmin()
+  if (!isKind(kind)) return { message: 'Tipo inválido.' }
   if (patch.link !== undefined && patch.link.trim() && !cleanLink(patch.link)) {
     return { message: 'El link tiene que empezar con / (una página del sitio) o con https://.' }
   }
   await mutateDb((db) => {
     db.settings = {
       ...db.settings,
-      banners: (db.settings.banners ?? []).map((b) =>
+      [kind]: listOf(db.settings, kind).map((b) =>
         b.id !== id
           ? b
           : {
               ...b,
               ...(patch.alt !== undefined && { alt: patch.alt.trim().slice(0, 200) }),
+              ...(patch.title !== undefined && { title: patch.title.trim().slice(0, 60) }),
               ...(patch.link !== undefined && { link: cleanLink(patch.link) }),
               ...(patch.active !== undefined && { active: patch.active }),
             },
@@ -949,27 +960,29 @@ export async function updateBanner(id: string, patch: Partial<Pick<Banner, 'alt'
   return { ok: true }
 }
 
-export async function moveBanner(id: string, dir: -1 | 1) {
+export async function moveBanner(kind: BannerKind, id: string, dir: -1 | 1) {
   await requireAdmin()
+  if (!isKind(kind)) return
   await mutateDb((db) => {
-    const banners = [...(db.settings.banners ?? [])]
-    const i = banners.findIndex((b) => b.id === id)
+    const list = [...listOf(db.settings, kind)]
+    const i = list.findIndex((b) => b.id === id)
     const j = i + dir
-    if (i < 0 || j < 0 || j >= banners.length) return
-    ;[banners[i], banners[j]] = [banners[j], banners[i]]
-    db.settings = { ...db.settings, banners }
+    if (i < 0 || j < 0 || j >= list.length) return
+    ;[list[i], list[j]] = [list[j], list[i]]
+    db.settings = { ...db.settings, [kind]: list }
   })
   refreshSite()
   revalidatePath('/admin/banners')
 }
 
-export async function deleteBanner(id: string) {
+export async function deleteBanner(kind: BannerKind, id: string) {
   await requireAdmin()
+  if (!isKind(kind)) return
   let removed: Banner | undefined
   await mutateDb((db) => {
-    const banners = db.settings.banners ?? []
-    removed = banners.find((b) => b.id === id)
-    db.settings = { ...db.settings, banners: banners.filter((b) => b.id !== id) }
+    const list = listOf(db.settings, kind)
+    removed = list.find((b) => b.id === id)
+    db.settings = { ...db.settings, [kind]: list.filter((b) => b.id !== id) }
   })
   for (const src of [removed?.image, removed?.mobileImage]) {
     if (src?.startsWith('/media/')) await fs.rm(path.join(/*turbopackIgnore: true*/ UPLOADS_DIR, path.basename(src)), { force: true })

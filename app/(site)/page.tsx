@@ -1,9 +1,10 @@
 import { Hero } from '@/components/hero'
 import { BannersSection } from '@/components/banners-section'
+import { TilesSection } from '@/components/tiles-section'
 import { PromotionsSection } from '@/components/promotions-section'
 import { FeaturedProducts } from '@/components/featured-products'
 import { Features } from '@/components/features'
-import { About } from '@/components/about'
+import { LocalInfo } from '@/components/about'
 import { Contact } from '@/components/contact'
 import { Showcase } from '@/components/showcase'
 import { Faq } from '@/components/faq'
@@ -39,6 +40,7 @@ export default async function Page() {
     <>
       <Hero settings={settings} />
       <BannersSection />
+      <TilesSection />
       <PromotionsSection />
       <FeaturedProducts
         lists={{ destacados: lists.destacados.map(leanProduct), novedades: lists.novedades.map(leanProduct), 'mas-vistos': lists['mas-vistos'].map(leanProduct) }}
@@ -46,7 +48,7 @@ export default async function Page() {
       />
       <Features categories={categories} counts={categoryCounts} />
       <Showcase local={gallery.local} videos={gallery.videos} equipo={gallery.equipo} address={settings.address} />
-      <About settings={settings} />
+      <LocalInfo settings={settings} />
       <Faq groups={faq} />
       <Contact />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faq)).replace(/</g, '\\u003c') }} />
