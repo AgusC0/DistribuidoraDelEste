@@ -1,4 +1,5 @@
 import { Hero } from '@/components/hero'
+import { BannersSection } from '@/components/banners-section'
 import { PromotionsSection } from '@/components/promotions-section'
 import { FeaturedProducts } from '@/components/featured-products'
 import { Features } from '@/components/features'
@@ -37,6 +38,7 @@ export default async function Page() {
   return (
     <>
       <Hero settings={settings} />
+      <BannersSection />
       <PromotionsSection />
       <FeaturedProducts
         lists={{ destacados: lists.destacados.map(leanProduct), novedades: lists.novedades.map(leanProduct), 'mas-vistos': lists['mas-vistos'].map(leanProduct) }}

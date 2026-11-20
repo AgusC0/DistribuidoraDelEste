@@ -16,6 +16,7 @@ import {
   Search,
   Settings,
   Tags,
+  Megaphone,
   X,
 } from 'lucide-react'
 import { Logo } from '@/components/logo'
@@ -44,6 +45,7 @@ const NAV: { title?: string; items: { href: string; label: string; icon: React.E
   {
     title: 'Sitio',
     items: [
+      { href: '/admin/banners', label: 'Banners', icon: Megaphone },
       { href: '/admin/galeria', label: 'Fotos y videos', icon: Images },
       { href: '/admin/busquedas', label: 'Búsquedas', icon: Search },
       { href: '/admin/ajustes', label: 'Ajustes', icon: Settings },

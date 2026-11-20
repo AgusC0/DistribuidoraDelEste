@@ -167,6 +167,22 @@ export type Settings = {
   logoFooter?: LogoChoice
   /** Fotos y videos del local y del equipo (sin definir = material inicial, ver lib/gallery.ts). */
   gallery?: GalleryItem[]
+  /** Banners de promociones de la portada, debajo del hero (se cargan desde el panel). */
+  banners?: Banner[]
+}
+
+/** Banner de la portada: imagen (y versión para celular) que lleva a un link. */
+export type Banner = {
+  id: string
+  /** Imagen principal (horizontal). */
+  image: string
+  /** Versión para celular (cuadrada o vertical), opcional. */
+  mobileImage?: string
+  /** Descripción para Google y lectores de pantalla. */
+  alt: string
+  /** Destino al tocarlo: ruta del sitio (/productos?oferta=1) o link completo. Vacío = no es clickeable. */
+  link: string
+  active: boolean
 }
 
 export type GallerySection = 'videos' | 'local' | 'equipo'
