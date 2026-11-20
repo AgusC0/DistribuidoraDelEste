@@ -66,7 +66,7 @@ const TEXT = {
     list: 'Tarjetas cargadas',
     hint: 'Foto cuadrada (recomendado 1080 × 1080 px), por ejemplo una foto grupal de repuestos o accesorios. El título se escribe acá y aparece encima de la foto.',
     empty: 'Todavía no hay tarjetas. Mientras no haya ninguna, esta parte no aparece en el sitio.',
-    order: 'Se muestran en este orden, de a 4 por fila en la computadora y de a 2 en el celular.',
+    order: 'Se muestran en este orden: hasta 5 por fila en la computadora y de a 2 en el celular. Lo ideal son 5.',
   },
 }
 

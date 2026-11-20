@@ -34,19 +34,19 @@ export default async function Page() {
   const brandCount = new Map<string, number>()
   for (const p of products) if (p.brand) brandCount.set(p.brand, (brandCount.get(p.brand) ?? 0) + 1)
   const brands = [...brandCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16).map(([name]) => name)
+  const tiles = (settings.tiles ?? []).filter((t) => t.active && t.image)
   const gallery = publicGallery(settings)
   const faq = buildFaq(settings, categories)
   return (
     <>
       <Hero settings={settings} />
       <BannersSection />
-      <TilesSection />
       <PromotionsSection />
       <FeaturedProducts
         lists={{ destacados: lists.destacados.map(leanProduct), novedades: lists.novedades.map(leanProduct), 'mas-vistos': lists['mas-vistos'].map(leanProduct) }}
         brands={brands}
       />
-      <Features categories={categories} counts={categoryCounts} />
+      {tiles.length ? <TilesSection tiles={tiles} /> : <Features categories={categories} counts={categoryCounts} />}
       <Showcase local={gallery.local} videos={gallery.videos} equipo={gallery.equipo} address={settings.address} />
       <LocalInfo settings={settings} />
       <Faq groups={faq} />

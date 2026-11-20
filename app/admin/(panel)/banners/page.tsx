@@ -17,7 +17,7 @@ export default async function BannersPage() {
       <BannerManager kind="banners" items={db.settings.banners ?? []} />
       <h2 className="mt-10 font-heading text-xl font-semibold uppercase tracking-wide">Tarjetas con foto</h2>
       <p className="-mt-1 mb-2 text-sm text-muted-foreground">
-        Van debajo de los banners: una foto con un título encima que lleva a una sección (Repuestos, Accesorios, Griferías…).
+        Forman la sección "Todo para tu obra en Villa María" de la portada: una foto con un título encima que lleva a una sección (Repuestos, Accesorios, Griferías…). Mientras no haya tarjetas, se muestra la versión en texto.
       </p>
       <BannerManager kind="tiles" items={db.settings.tiles ?? []} />
     </>
