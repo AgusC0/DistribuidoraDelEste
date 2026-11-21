@@ -44,7 +44,7 @@ export function Showcase({
   const photos = [...morePhotos, ...equipo]
 
   return (
-    <section id="local" aria-labelledby="local-title" className="scroll-mt-16 bg-background pb-6 pt-14 md:scroll-mt-20 md:pt-20">
+    <section id="local" aria-labelledby="local-title" className="scroll-mt-16 pb-6 pt-10 md:scroll-mt-20 md:pt-14">
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
         <FadeIn className="max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Conocé el local</p>

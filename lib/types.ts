@@ -184,6 +184,12 @@ export type SocialPost = {
   /** Link público de la publicación, tal como se copia desde la red. */
   url: string
   active: boolean
+  /** Foto de la publicación, guardada en el servidor (las de Facebook/Instagram vencen). */
+  image?: string
+  /** Comienzo del texto de la publicación (se puede editar en el panel). */
+  text?: string
+  /** Es un video o reel (se marca en la tarjeta). */
+  video?: boolean
 }
 
 /** Banner de la portada: imagen (y versión para celular) que lleva a un link. */

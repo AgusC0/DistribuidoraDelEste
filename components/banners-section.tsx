@@ -57,11 +57,11 @@ export function BannersSection() {
   return (
     <section
       aria-label="Promociones"
-      className="w-full pt-6 md:pt-10"
+      className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 md:pt-10 lg:px-8"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="relative overflow-hidden bg-muted">
+      <div className="relative overflow-hidden rounded-3xl bg-muted shadow-sm">
         <div className="flex transition-transform duration-500 ease-out motion-reduce:transition-none" style={{ transform: `translateX(-${current * 100}%)` }}>
           {banners.map((b, i) => (
             <div key={b.id} className="w-full shrink-0" aria-hidden={i !== current}>

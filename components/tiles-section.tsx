@@ -40,7 +40,7 @@ export function TilesSection({ tiles }: { tiles: Banner[] }) {
   if (!tiles.length) return null
   const cols = tiles.length >= 5 ? 'lg:grid-cols-5' : tiles.length === 4 ? 'lg:grid-cols-4' : tiles.length === 3 ? 'lg:grid-cols-3' : ''
   return (
-    <section aria-labelledby="rubros-title" className="bg-secondary/60 py-14 md:py-20">
+    <section aria-labelledby="rubros-title" className="py-10 md:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-8 flex flex-col gap-3">
           <h2 id="rubros-title" className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground text-balance sm:text-4xl">

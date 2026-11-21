@@ -41,17 +41,20 @@ export default async function Page() {
   return (
     <>
       <Hero settings={settings} />
+      {/* Un solo fondo claro para toda la portada: las secciones van en bloques, sin cortes de color. */}
+      <div className="bg-secondary/40">
       <BannersSection />
+      {tiles.length ? <TilesSection tiles={tiles} /> : <Features categories={categories} counts={categoryCounts} />}
       <PromotionsSection />
       <FeaturedProducts
         lists={{ destacados: lists.destacados.map(leanProduct), novedades: lists.novedades.map(leanProduct), 'mas-vistos': lists['mas-vistos'].map(leanProduct) }}
         brands={brands}
       />
-      {tiles.length ? <TilesSection tiles={tiles} /> : <Features categories={categories} counts={categoryCounts} />}
       <SocialSection posts={(settings.socialPosts ?? []).filter((p) => p.active)} instagram={settings.instagram} facebook={settings.facebook} />
       <Showcase local={gallery.local} videos={gallery.videos} equipo={gallery.equipo} address={settings.address} />
       <LocalInfo settings={settings} />
       <Faq groups={faq} />
+      </div>
       <Contact />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faq)).replace(/</g, '\\u003c') }} />
     </>

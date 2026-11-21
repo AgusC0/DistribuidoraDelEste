@@ -22,9 +22,9 @@ const socialClass =
  */
 export function LocalInfo({ settings }: { settings: Settings }) {
   return (
-    <div id="nosotros" className="scroll-mt-16 bg-background pb-14 md:scroll-mt-20 md:pb-20">
+    <div id="nosotros" className="scroll-mt-16 pb-10 md:scroll-mt-20 md:pb-14">
       <FadeIn className="mx-auto grid max-w-7xl grid-cols-1 gap-4 px-4 sm:px-6 md:grid-cols-3 lg:px-8">
-        <div className="rounded-2xl bg-secondary/60 p-5">
+        <div className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border/60">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 className="flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-foreground">
               <Clock aria-hidden="true" className="size-4 text-primary" />
@@ -46,7 +46,7 @@ export function LocalInfo({ settings }: { settings: Settings }) {
           href={settings.mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-start gap-3 rounded-2xl bg-secondary/60 p-5 transition-colors hover:bg-secondary"
+          className="group flex items-start gap-3 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border/60 transition-colors hover:ring-primary/40"
         >
           <MapPin aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
           <span>
@@ -56,7 +56,7 @@ export function LocalInfo({ settings }: { settings: Settings }) {
           </span>
         </a>
 
-        <div className="flex flex-col justify-between gap-3 rounded-2xl bg-secondary/60 p-5">
+        <div className="flex flex-col justify-between gap-3 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border/60">
           <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-foreground">Seguinos</h3>
           <div className="flex flex-wrap items-center gap-3">
             {settings.facebook && (
@@ -120,7 +120,7 @@ export function About({ settings }: { settings: Settings }) {
             ))}
           </ul>
 
-          <div className="mt-2 rounded-2xl bg-secondary/60 p-5">
+          <div className="mt-2 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border/60">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-wide text-foreground">
                 <Clock aria-hidden="true" className="size-4 text-primary" />

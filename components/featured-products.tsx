@@ -29,7 +29,7 @@ export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product
   const current = tabs.some((t) => t.value === tab) ? tab : 'destacados'
 
   return (
-    <section id="catalogo" aria-labelledby="catalogo-title" className="scroll-mt-16 md:scroll-mt-20 bg-background py-12 md:py-16">
+    <section id="catalogo" aria-labelledby="catalogo-title" className="scroll-mt-16 md:scroll-mt-20 py-10 md:py-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-2">

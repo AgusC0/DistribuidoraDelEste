@@ -1,12 +1,12 @@
 'use client'
 
-import { useActionState, useRef, useTransition } from 'react'
-import { ArrowDown, ArrowUp, ExternalLink, Link2, Trash2 } from 'lucide-react'
+import { useActionState, useRef, useState, useTransition } from 'react'
+import { ArrowDown, ArrowUp, ExternalLink, Link2, RefreshCw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ConfirmButton, FormMessage, Panel, SubmitButton, Switch } from '@/components/admin/ui'
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
-import { addSocialPost, deleteSocialPost, moveSocialPost, updateSocialPost, type FormState } from '@/app/admin/actions'
+import { addSocialPost, deleteSocialPost, moveSocialPost, refreshSocialPost, updateSocialPost, type FormState } from '@/app/admin/actions'
 import type { SocialPost } from '@/lib/types'
 
 export function SocialManager({ items }: { items: SocialPost[] }) {
@@ -61,13 +61,46 @@ export function SocialManager({ items }: { items: SocialPost[] }) {
 function Row({ post, first, last }: { post: SocialPost; first: boolean; last: boolean }) {
   const [pending, start] = useTransition()
   const Icon = post.network === 'instagram' ? InstagramIcon : FacebookIcon
+  const [text, setText] = useState(post.text ?? '')
+  const [msg, setMsg] = useState('')
   return (
     <li className={`flex flex-wrap items-center gap-3 rounded-xl border border-border p-3 ${post.active ? '' : 'opacity-60'}`}>
+      {post.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={post.image} alt="" className="size-16 shrink-0 rounded-lg object-cover" />
+      ) : (
+        <span className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-muted text-center text-[10px] text-muted-foreground">Sin foto</span>
+      )}
       <Icon className="size-5 shrink-0 text-muted-foreground" />
       <a href={post.url} target="_blank" rel="noopener noreferrer" className="flex min-w-0 flex-1 items-center gap-1.5 text-sm hover:text-primary">
         <span className="truncate">{post.url}</span>
         <ExternalLink className="size-3.5 shrink-0" />
       </a>
+      <Input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => text !== (post.text ?? '') && start(() => void updateSocialPost(post.id, { text }))}
+        placeholder="Texto corto que se ve en la tarjeta (opcional)"
+        aria-label="Texto de la tarjeta"
+        maxLength={220}
+        className="h-9 w-full basis-full"
+      />
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={pending}
+        onClick={() =>
+          start(async () => {
+            const r = await refreshSocialPost(post.id)
+            setMsg(r.message ?? '')
+          })
+        }
+      >
+        <RefreshCw />
+        Actualizar foto
+      </Button>
+      {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
       <label className="flex items-center gap-2 text-sm">
         <Switch checked={post.active} disabled={pending} onChange={() => start(() => void updateSocialPost(post.id, { active: !post.active }))} label="Visible en el sitio" />
         Visible

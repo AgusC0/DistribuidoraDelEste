@@ -1050,21 +1050,94 @@ async function resolveFacebookShare(raw: string): Promise<string> {
   }
 }
 
+
+const decodeHtml = (s: string) =>
+  s
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;|&#39;|&#x27;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+
+/**
+ * Trae la foto y el texto de una publicación (las etiquetas og: que Facebook e Instagram dan a los
+ * "previsualizadores" de links) y guarda la foto en el servidor, porque la de la red vence en días.
+ */
+async function fetchSocialPreview(url: string): Promise<Pick<SocialPost, 'image' | 'text' | 'video'>> {
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': 'facebookexternalhit/1.1' }, signal: AbortSignal.timeout(8000) })
+    const html = await res.text()
+    const meta = (prop: string) => {
+      const m = html.match(new RegExp(`<meta[^>]+property="og:${prop}"[^>]+content="([^"]*)"`, 'i'))
+      return m ? decodeHtml(m[1]) : ''
+    }
+    const desc = meta('description')
+      .replace(/^[\d.,]+[KkMm]?\s+(likes?|Me gusta)[^:]*:\s*/i, '')
+      .replace(/^"|"\.?$/g, '')
+      .trim()
+    const video = /\/(reel|videos|watch|tv)\b/.test(url) || meta('type').includes('video')
+    let image: string | undefined
+    const imgUrl = meta('image')
+    if (imgUrl) {
+      const imgRes = await fetch(imgUrl, { signal: AbortSignal.timeout(10000) })
+      if (imgRes.ok) {
+        const webp = await sharp(Buffer.from(await imgRes.arrayBuffer()))
+          .rotate()
+          .resize({ width: 900, height: 900, fit: 'cover' })
+          .webp({ quality: 80 })
+          .toBuffer()
+        await fs.mkdir(UPLOADS_DIR, { recursive: true })
+        const name = `redes-${newId().slice(0, 10)}.webp`
+        await fs.writeFile(path.join(/*turbopackIgnore: true*/ UPLOADS_DIR, name), webp)
+        image = `/media/${name}`
+      }
+    }
+    return { image, text: desc.slice(0, 220) || undefined, video }
+  } catch {
+    return {}
+  }
+}
+
+async function removeMedia(src?: string) {
+  if (src?.startsWith('/media/')) await fs.rm(path.join(/*turbopackIgnore: true*/ UPLOADS_DIR, path.basename(src)), { force: true })
+}
+
 export async function addSocialPost(_prev: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin()
   const parsed = parseSocialUrl(await resolveFacebookShare(str(fd, 'url', 600)))
   if (!parsed) return { message: 'Pegá el link de una publicación de Facebook o Instagram (empieza con https://).' }
+  const preview = await fetchSocialPreview(parsed.url)
   await mutateDb((db) => {
     const list = db.settings.socialPosts ?? []
     // La más nueva va primero.
-    db.settings = { ...db.settings, socialPosts: [{ id: newId(), ...parsed, active: true }, ...list.filter((p) => p.url !== parsed.url)] }
+    db.settings = { ...db.settings, socialPosts: [{ id: newId(), ...parsed, ...preview, active: true }, ...list.filter((p) => p.url !== parsed.url)] }
   })
+  if (!preview.image) return { ok: true, message: 'Publicación agregada, pero no se pudo traer la foto. Probá "Actualizar foto" o revisá que sea pública.' }
   refreshSite()
   revalidatePath('/admin/redes')
   return { ok: true, message: 'Publicación agregada. Ya se ve en la portada.' }
 }
 
-export async function updateSocialPost(id: string, patch: { active?: boolean; url?: string }): Promise<FormState> {
+/** Vuelve a traer la foto y el texto de una publicación (por ejemplo, si se cargó antes de esta función). */
+export async function refreshSocialPost(id: string): Promise<FormState> {
+  await requireAdmin()
+  const db = await readDb()
+  const post = (db.settings.socialPosts ?? []).find((p) => p.id === id)
+  if (!post) return { message: 'No se encontró la publicación.' }
+  const preview = await fetchSocialPreview(post.url)
+  if (!preview.image) return { message: 'No se pudo traer la foto. Revisá que la publicación sea pública.' }
+  await removeMedia(post.image)
+  await mutateDb((d) => {
+    d.settings = { ...d.settings, socialPosts: (d.settings.socialPosts ?? []).map((p) => (p.id === id ? { ...p, ...preview, text: p.text || preview.text } : p)) }
+  })
+  refreshSite()
+  revalidatePath('/admin/redes')
+  return { ok: true, message: 'Foto actualizada.' }
+}
+
+export async function updateSocialPost(id: string, patch: { active?: boolean; url?: string; text?: string }): Promise<FormState> {
   await requireAdmin()
   const parsed = patch.url !== undefined ? parseSocialUrl(await resolveFacebookShare(patch.url)) : null
   if (patch.url !== undefined && !parsed) return { message: 'Ese link no es de una publicación de Facebook o Instagram.' }
@@ -1072,7 +1145,14 @@ export async function updateSocialPost(id: string, patch: { active?: boolean; ur
     db.settings = {
       ...db.settings,
       socialPosts: (db.settings.socialPosts ?? []).map((p) =>
-        p.id !== id ? p : { ...p, ...(parsed ?? {}), ...(patch.active !== undefined && { active: patch.active }) },
+        p.id !== id
+          ? p
+          : {
+              ...p,
+              ...(parsed ?? {}),
+              ...(patch.active !== undefined && { active: patch.active }),
+              ...(patch.text !== undefined && { text: patch.text.trim().slice(0, 220) }),
+            },
       ),
     }
   })
@@ -1097,9 +1177,12 @@ export async function moveSocialPost(id: string, dir: -1 | 1) {
 
 export async function deleteSocialPost(id: string) {
   await requireAdmin()
+  let removed: SocialPost | undefined
   await mutateDb((db) => {
+    removed = (db.settings.socialPosts ?? []).find((p) => p.id === id)
     db.settings = { ...db.settings, socialPosts: (db.settings.socialPosts ?? []).filter((p) => p.id !== id) }
   })
+  await removeMedia(removed?.image)
   refreshSite()
   revalidatePath('/admin/redes')
 }

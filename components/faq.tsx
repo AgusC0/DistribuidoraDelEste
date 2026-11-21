@@ -18,8 +18,8 @@ export function Faq({ groups: all }: { groups: FaqGroup[] }) {
   const total = all.reduce((n, g) => n + g.items.length, 0)
   const groups = showAll || !all.length ? all : [{ ...all[0], items: all[0].items.slice(0, VISIBLE) }]
   return (
-    <section id="preguntas" aria-label="Preguntas frecuentes" className="scroll-mt-16 bg-secondary/40 py-14 md:scroll-mt-20 md:py-20">
-      <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 sm:px-6 md:gap-24 lg:px-8">
+    <section id="preguntas" aria-label="Preguntas frecuentes" className="scroll-mt-16 py-10 md:scroll-mt-20 md:py-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="flex flex-col gap-16 rounded-[1.75rem] bg-card p-6 shadow-sm ring-1 ring-border/60 md:gap-24 md:p-10">
         {groups.map((group, gi) => (
           <div key={group.title} className="grid grid-cols-1 items-start gap-8 md:gap-12 lg:grid-cols-12 lg:gap-16">
             <FadeIn className="flex flex-col gap-4 lg:sticky lg:top-28 lg:col-span-4">
@@ -74,6 +74,7 @@ export function Faq({ groups: all }: { groups: FaqGroup[] }) {
             </Accordion.Root>
           </div>
         ))}
+        </div>
       </div>
     </section>
   )
