@@ -6,6 +6,7 @@ import { ArrowRight, Plus } from 'lucide-react'
 import { FadeIn } from '@/components/fade-in'
 import { WaLink } from '@/components/wa-link'
 import type { FaqGroup } from '@/lib/faq'
+import { Eyebrow } from '@/components/brand-waves'
 
 /** Preguntas frecuentes: título fijo a la izquierda y respuestas desplegables a la derecha. */
 const VISIBLE = 4
@@ -23,7 +24,7 @@ export function Faq({ groups: all }: { groups: FaqGroup[] }) {
         {groups.map((group, gi) => (
           <div key={group.title} className="grid grid-cols-1 items-start gap-8 md:gap-12 lg:grid-cols-12 lg:gap-16">
             <FadeIn className="flex flex-col gap-4 lg:sticky lg:top-28 lg:col-span-4">
-              {gi === 0 && <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Preguntas frecuentes</p>}
+              {gi === 0 && <Eyebrow>Preguntas frecuentes</Eyebrow>}
               <h2 className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground md:text-4xl">{group.title}</h2>
               <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
                 {group.description}{' '}

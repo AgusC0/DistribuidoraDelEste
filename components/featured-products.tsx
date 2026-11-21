@@ -10,6 +10,7 @@ import { useCatalog } from '@/components/catalog-provider'
 import { categoryUrl, rootCategories } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
+import { Eyebrow } from '@/components/brand-waves'
 
 const MAX = 8
 
@@ -35,6 +36,7 @@ export function FeaturedProducts({ lists }: { lists: Record<Tab, Product[]> }) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-2">
+            <Eyebrow>Catálogo</Eyebrow>
             <h2 id="catalogo-title" className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
               Productos
             </h2>

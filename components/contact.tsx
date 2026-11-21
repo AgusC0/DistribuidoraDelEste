@@ -13,6 +13,7 @@ import { useCatalog } from '@/components/catalog-provider'
 import { submitLead } from '@/app/actions'
 import { callPhone, waLink } from '@/lib/site'
 import { track, trackAd } from '@/lib/track'
+import { Eyebrow, WavesBackdrop } from '@/components/brand-waves'
 
 const GENERAL = 'Consulta general'
 
@@ -54,10 +55,11 @@ export function Contact() {
   }
 
   return (
-    <section id="contacto" aria-labelledby="contacto-title" className="scroll-mt-16 md:scroll-mt-20 bg-brand-blue py-16 md:py-24">
+    <section id="contacto" aria-labelledby="contacto-title" className="relative isolate scroll-mt-16 overflow-hidden md:scroll-mt-20 bg-brand-blue py-16 md:py-24">
+      <WavesBackdrop className="-z-10 text-white/[0.06]" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mb-10 flex flex-col gap-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-aqua">Contacto</p>
+          <Eyebrow light>Contacto</Eyebrow>
           <h2
             id="contacto-title"
             className="font-heading text-3xl font-bold uppercase tracking-tight text-primary-foreground text-balance sm:text-4xl"

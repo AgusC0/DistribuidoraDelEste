@@ -9,6 +9,7 @@ import { WaLink } from '@/components/wa-link'
 import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { cn } from '@/lib/utils'
 import type { GalleryItem } from '@/lib/types'
+import { Eyebrow } from '@/components/brand-waves'
 
 const card = cn(
   'group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-muted antialiased',
@@ -47,7 +48,7 @@ export function Showcase({
     <section id="local" aria-labelledby="local-title" className="scroll-mt-16 pb-6 pt-10 md:scroll-mt-20 md:pt-14">
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 sm:px-6 lg:px-8">
         <FadeIn className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Conocé el local</p>
+          <Eyebrow>Conocé el local</Eyebrow>
           <h2 id="local-title" className="mt-2 font-heading text-3xl font-bold uppercase tracking-tight text-foreground text-balance sm:text-4xl">
             Todo lo que buscás, en un solo lugar
           </h2>

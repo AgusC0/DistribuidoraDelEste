@@ -12,28 +12,36 @@ export function Hero({ settings }: { settings: Settings }) {
   return (
     <section
       id="inicio"
-      className="relative isolate flex min-h-[calc(100svh-4rem)] scroll-mt-16 flex-col overflow-hidden rounded-b-[2rem] bg-[#0b1220] md:rounded-b-[3rem] md:min-h-[calc(100svh-5rem)] md:scroll-mt-20"
+      className="relative isolate flex min-h-[78svh] scroll-mt-16 flex-col overflow-hidden rounded-b-[2rem] bg-[#0b1220] md:rounded-b-[3rem] md:min-h-[calc(100svh-5rem)] md:scroll-mt-20"
     >
       <div className="hero-bg pointer-events-none absolute inset-0 -z-10 select-none">
         <Image
-          src="/images/local/local-distribuidora-del-este-villa-maria.jpg"
+          src="/images/local/hero-celular-distribuidora-del-este.webp"
           alt="Fachada del local de Distribuidora del Este en Av. Presidente Perón 1001, Villa María"
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[65%_center]"
+          className="object-cover object-[center_70%] md:hidden"
+        />
+        <Image
+          src="/images/local/local-distribuidora-del-este-villa-maria.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="hidden object-cover object-[65%_center] md:block"
         />
       </div>
       {/* Oscurece a la izquierda (donde va el texto) y abajo (datos), dejando ver el local a la derecha. */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b1220] via-[#0b1220]/80 to-[#0b1220]/10" />
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0b1220] via-transparent to-[#0b1220]/40" />
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-between gap-12 px-4 pb-10 pt-16 sm:px-6 md:pt-24 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-between gap-8 px-4 pb-8 pt-10 sm:px-6 md:gap-12 md:pb-10 md:pt-24 lg:px-8">
         <div className="flex max-w-3xl flex-col items-start">
           <p className="hero-rise text-sm font-semibold uppercase tracking-[0.2em] text-aqua" style={d(0.2)}>
             Sanitarista en Villa María
           </p>
-          <h1 className="mt-5 text-[2.6rem] font-normal leading-[1.05] tracking-[-0.025em] text-white text-balance sm:text-6xl lg:text-7xl">
+          <h1 className="mt-4 text-[2.2rem] font-normal leading-[1.05] tracking-[-0.025em] text-white text-balance sm:text-6xl lg:text-7xl">
             <span className="hero-rise block" style={d(0.35)}>
               {settings.heroTitle}
             </span>
@@ -41,10 +49,10 @@ export function Hero({ settings }: { settings: Settings }) {
               en Villa María.
             </span>
           </h1>
-          <p className="hero-rise mt-6 max-w-md text-base leading-relaxed text-white/70 text-pretty sm:text-lg" style={d(0.95)}>
+          <p className="hero-rise mt-6 hidden max-w-md text-base sm:block leading-relaxed text-white/70 text-pretty sm:text-lg" style={d(0.95)}>
             {settings.heroSubtitle}
           </p>
-          <div className="hero-rise mt-8 flex flex-col gap-3 sm:flex-row" style={d(1.15)}>
+          <div className="hero-rise mt-7 flex w-full flex-col gap-3 sm:w-auto sm:flex-row" style={d(1.15)}>
             <WaLink
               source="hero"
               className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-md bg-white px-5 text-[15px] font-medium text-neutral-900 shadow-[0_1px_3px_rgba(0,0,0,0.25),0_4px_16px_rgba(0,0,0,0.18)] transition-[transform,background-color] duration-150 hover:bg-neutral-100 active:scale-[0.97]"
@@ -63,7 +71,7 @@ export function Hero({ settings }: { settings: Settings }) {
         </div>
 
         <div className="flex flex-col-reverse gap-8 sm:flex-row sm:items-end sm:justify-between">
-          <dl className="flex flex-wrap gap-x-10 gap-y-5">
+          <dl className="flex flex-wrap gap-x-8 gap-y-4 md:gap-x-10 md:gap-y-5">
             <div className="hero-rise flex flex-col gap-1" style={d(1.4)}>
               <dt className="flex items-center gap-2 text-[13px] text-white/50">
                 <Clock aria-hidden="true" className="size-3.5" />
@@ -80,7 +88,7 @@ export function Hero({ settings }: { settings: Settings }) {
               </dt>
               <dd className="text-[15px] font-semibold tabular-nums text-white">{settings.phoneDisplay}</dd>
             </div>
-            <div className="hero-rise flex flex-col gap-1" style={d(1.64)}>
+            <div className="hero-rise hidden flex-col gap-1 sm:flex" style={d(1.64)}>
               <dt className="flex items-center gap-2 text-[13px] text-white/50">
                 <MapPin aria-hidden="true" className="size-3.5" />
                 Dirección
@@ -88,7 +96,7 @@ export function Hero({ settings }: { settings: Settings }) {
               <dd className="text-[15px] font-semibold text-white">{settings.address}</dd>
             </div>
           </dl>
-          <p className="hero-rise max-w-sm text-base leading-relaxed text-white/85 text-pretty sm:text-right" style={d(1.75)}>
+          <p className="hero-rise hidden max-w-sm text-base leading-relaxed text-white/85 text-pretty sm:block sm:text-right" style={d(1.75)}>
             Todo para la conducción de agua, gas y cloacas. Termotanques, calefactores, puertas plegadizas, repuestos sanitarios con
             asesoramiento.
           </p>

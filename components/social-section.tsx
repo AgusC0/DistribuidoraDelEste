@@ -5,6 +5,7 @@ import { Play } from 'lucide-react'
 import { FadeIn } from '@/components/fade-in'
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
 import type { SocialPost } from '@/lib/types'
+import { Eyebrow } from '@/components/brand-waves'
 
 /** Dirección del "embed" oficial, solo para publicaciones cargadas sin foto (antes de traer la vista previa). */
 function embedUrl(post: SocialPost) {
@@ -80,7 +81,7 @@ export function SocialSection({ posts, instagram, facebook }: { posts: SocialPos
         <div className="rounded-[1.75rem] bg-card p-6 shadow-sm ring-1 ring-border/60 md:p-10">
           <FadeIn className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Seguinos</p>
+              <Eyebrow>Seguinos</Eyebrow>
               <h2 id="redes-title" className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
                 Lo último en nuestras redes
               </h2>

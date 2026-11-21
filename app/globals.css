@@ -46,6 +46,7 @@
   --color-brand-blue: var(--brand-blue);
   --color-brand-blue-foreground: var(--brand-blue-foreground);
   --color-aqua: var(--aqua);
+  --color-brand-teal: var(--brand-teal);
   --color-ink: var(--ink);
   --color-ink-bg: var(--ink-bg);
   --color-ink-accent: var(--ink-accent);
@@ -100,6 +101,7 @@
   --brand-blue: oklch(0.33 0.06 250);
   --brand-blue-foreground: oklch(0.99 0.005 240);
   --aqua: oklch(0.78 0.11 220);
+  --brand-teal: #2f8f99;
   --aqua-foreground: oklch(0.25 0.06 250);
   /* whatsapp green */
   --whatsapp: oklch(0.62 0.16 150);

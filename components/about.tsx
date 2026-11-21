@@ -6,6 +6,7 @@ import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
 import { groupHours } from '@/lib/site'
 import type { Settings } from '@/lib/types'
+import { Eyebrow } from '@/components/brand-waves'
 
 const REASONS = [
   'Calidad garantizada en cada producto',
@@ -95,7 +96,7 @@ export function About({ settings }: { settings: Settings }) {
     <section id="nosotros" aria-labelledby="nosotros-title" className="scroll-mt-16 md:scroll-mt-20 bg-background py-16 md:py-24">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
         <FadeIn className="flex flex-col gap-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Nosotros</p>
+          <Eyebrow>Nosotros</Eyebrow>
           <h2
             id="nosotros-title"
             className="font-heading text-3xl font-bold uppercase tracking-tight text-foreground text-balance sm:text-4xl"
