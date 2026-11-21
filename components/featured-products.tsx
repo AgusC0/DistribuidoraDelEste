@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FadeIn } from '@/components/fade-in'
 import { ProductCard } from '@/components/product-card'
@@ -22,9 +22,11 @@ const TABS: { value: Tab; label: string }[] = [
 
 /** Portada: accesos por categoría y una selección del catálogo (las promociones van en su propia sección, arriba). */
 /** Las listas y las marcas se calculan en el servidor (ver la portada): acá sólo llegan 8 productos por pestaña. */
-export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product[]>; brands: string[] }) {
+export function FeaturedProducts({ lists }: { lists: Record<Tab, Product[]> }) {
   const { categories, categoryCounts, totalProducts } = useCatalog()
   const [tab, setTab] = useState<Tab>('destacados')
+  const rowRef = useRef<HTMLDivElement>(null)
+  const scroll = (dir: number) => rowRef.current?.scrollBy({ left: dir * rowRef.current.clientWidth * 0.8, behavior: 'smooth' })
   const tabs = TABS.filter((t) => lists[t.value].length >= (t.value === 'mas-vistos' ? 4 : 1))
   const current = tabs.some((t) => t.value === tab) ? tab : 'destacados'
 
@@ -82,9 +84,11 @@ export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product
           ))}
         </div>
         {/* Una sola fila deslizable: la portada muestra una muestra, el catálogo completo está a un toque. */}
+        <div className="relative mt-6">
         <div
+          ref={rowRef}
           role="tabpanel"
-          className="-mx-4 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:mx-0 sm:px-0"
+          className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
         >
           {lists[current].map((product) => (
             <div key={product.id} className="w-[46%] shrink-0 snap-start sm:w-[31%] lg:w-[calc(25%-12px)]">
@@ -92,24 +96,28 @@ export function FeaturedProducts({ lists, brands }: { lists: Record<Tab, Product
             </div>
           ))}
         </div>
-
-        {brands.length > 1 && (
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-baseline sm:gap-8">
-            <h3 className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Marcas que trabajamos</h3>
-            <ul className="flex flex-wrap gap-x-7 gap-y-3">
-              {brands.map((b) => (
-                <li key={b}>
-                  <Link
-                    href={`/productos?marca=${encodeURIComponent(b)}`}
-                    className="font-heading text-lg font-semibold uppercase tracking-wide text-foreground/70 transition-colors hover:text-primary"
-                  >
-                    {b}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+        {/* Flechas en la compu (en el celular se desliza con el dedo); sin barra de desplazamiento a la vista. */}
+        {lists[current].length > 4 && (
+          <>
+            <button
+              type="button"
+              onClick={() => scroll(-1)}
+              aria-label="Ver productos anteriores"
+              className="absolute -left-5 top-[38%] hidden size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md transition-colors hover:text-primary lg:flex"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scroll(1)}
+              aria-label="Ver más productos"
+              className="absolute -right-5 top-[38%] hidden size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md transition-colors hover:text-primary lg:flex"
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          </>
         )}
+        </div>
 
         <div className="mt-8 flex justify-center">
           <Button size="lg" nativeButton={false} className="h-12 px-8 text-base" render={<Link href="/productos" />}>

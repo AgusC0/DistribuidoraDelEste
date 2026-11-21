@@ -2,6 +2,7 @@ import { Hero } from '@/components/hero'
 import { BannersSection } from '@/components/banners-section'
 import { TilesSection } from '@/components/tiles-section'
 import { PromotionsSection } from '@/components/promotions-section'
+import { BrandMarquee } from '@/components/brand-marquee'
 import { FeaturedProducts } from '@/components/featured-products'
 import { Features } from '@/components/features'
 import { LocalInfo } from '@/components/about'
@@ -48,8 +49,8 @@ export default async function Page() {
       <PromotionsSection />
       <FeaturedProducts
         lists={{ destacados: lists.destacados.map(leanProduct), novedades: lists.novedades.map(leanProduct), 'mas-vistos': lists['mas-vistos'].map(leanProduct) }}
-        brands={brands}
       />
+      <BrandMarquee brands={brands} />
       <SocialSection posts={(settings.socialPosts ?? []).filter((p) => p.active)} instagram={settings.instagram} facebook={settings.facebook} />
       <Showcase local={gallery.local} videos={gallery.videos} equipo={gallery.equipo} address={settings.address} />
       <LocalInfo settings={settings} />
