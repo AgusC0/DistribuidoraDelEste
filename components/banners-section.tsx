@@ -57,7 +57,7 @@ export function BannersSection() {
   return (
     <section
       aria-label="Promociones"
-      className="w-full"
+      className="w-full pt-6 md:pt-10"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

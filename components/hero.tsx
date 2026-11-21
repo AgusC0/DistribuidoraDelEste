@@ -12,7 +12,7 @@ export function Hero({ settings }: { settings: Settings }) {
   return (
     <section
       id="inicio"
-      className="relative isolate flex min-h-[calc(100svh-4rem)] scroll-mt-16 flex-col overflow-hidden bg-[#0b1220] md:min-h-[calc(100svh-5rem)] md:scroll-mt-20"
+      className="relative isolate flex min-h-[calc(100svh-4rem)] scroll-mt-16 flex-col overflow-hidden rounded-b-[2rem] bg-[#0b1220] md:rounded-b-[3rem] md:min-h-[calc(100svh-5rem)] md:scroll-mt-20"
     >
       <div className="hero-bg pointer-events-none absolute inset-0 -z-10 select-none">
         <Image

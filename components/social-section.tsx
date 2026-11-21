@@ -5,8 +5,8 @@ import { FadeIn } from '@/components/fade-in'
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
 import type { SocialPost } from '@/lib/types'
 
-const WIDTH = 320
-const HEIGHT = 420
+const WIDTH = 300
+const HEIGHT = 400
 
 /** Dirección del "embed" oficial de cada red para mostrar la publicación dentro de la web. */
 export function embedUrl(post: SocialPost) {
@@ -31,26 +31,43 @@ function Embed({ post }: { post: SocialPost }) {
     io.observe(el)
     return () => io.disconnect()
   }, [])
+  const isIg = post.network === 'instagram'
+  // Los videos de Facebook ya vienen del alto justo; al resto se le recorta lo de abajo (likes, comentarios).
+  const frameH = !isIg && /\/(reel|videos|watch)\b|[?&]v=/.test(post.url) ? HEIGHT : HEIGHT + 220
+  const Icon = isIg ? InstagramIcon : FacebookIcon
   return (
-    <div
-      ref={ref}
-      className="shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
-      style={{ width: WIDTH, height: HEIGHT }}
-    >
-      {visible ? (
-        <iframe
-          src={embedUrl(post)}
-          title={post.network === 'instagram' ? 'Publicación de Instagram' : 'Publicación de Facebook'}
-          width={WIDTH}
-          height={HEIGHT}
-          loading="lazy"
-          className="size-full border-0"
-          allow="encrypted-media; clipboard-write; picture-in-picture"
-        />
-      ) : (
-        <div className="size-full animate-pulse bg-muted" />
-      )}
-    </div>
+    <article ref={ref} className="flex shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm" style={{ width: WIDTH }}>
+      {/* Ventana fija: el contenido de Facebook/Instagram se recorta abajo para que todas las tarjetas midan igual. */}
+      <div className="relative overflow-hidden bg-muted" style={{ height: HEIGHT }}>
+        {visible ? (
+          <iframe
+            src={embedUrl(post)}
+            title={isIg ? 'Publicación de Instagram' : 'Publicación de Facebook'}
+            width={WIDTH}
+            height={frameH}
+            loading="lazy"
+            scrolling="no"
+            className="block border-0"
+            style={{ width: WIDTH, height: frameH }}
+            allow="encrypted-media; clipboard-write; picture-in-picture"
+          />
+        ) : (
+          <div className="size-full animate-pulse" />
+        )}
+      </div>
+      <a
+        href={post.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-between gap-2 border-t border-border px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary hover:text-primary"
+      >
+        <span className="flex items-center gap-2">
+          <Icon className="size-4" />
+          Ver en {isIg ? 'Instagram' : 'Facebook'}
+        </span>
+        <span aria-hidden="true">→</span>
+      </a>
+    </article>
   )
 }
 
