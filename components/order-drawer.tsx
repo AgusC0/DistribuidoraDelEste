@@ -17,21 +17,27 @@ import { cn } from '@/lib/utils'
 /** Botón del encabezado + panel lateral con el pedido. */
 export function OrderButton({ className }: { className?: string }) {
   const { count, setOpen } = useOrder()
+  // Botón con nombre visible ("Mi pedido") y el contador adentro: no depende de un globito
+  // superpuesto que se puede cortar, y con productos cargados se resalta para invitar a terminar el pedido.
   return (
     <button
       type="button"
       onClick={() => setOpen(true)}
       aria-label={count ? `Mi pedido: ${count} ${count === 1 ? 'producto' : 'productos'}` : 'Mi pedido (vacío)'}
       className={cn(
-        'relative flex size-10 items-center justify-center rounded-lg border border-input bg-card text-muted-foreground shadow-xs transition-colors hover:border-ring/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30',
+        'inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-semibold shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30',
+        count
+          ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
+          : 'border-input bg-card text-foreground hover:border-ring/40 hover:text-primary',
         className,
       )}
     >
-      <ClipboardList className="size-4" />
+      <ClipboardList aria-hidden="true" className="size-4" />
+      <span className="hidden lg:inline">Mi pedido</span>
       {count > 0 && (
         <span
           key={count}
-          className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[0.7rem] font-bold tabular-nums text-primary-foreground motion-safe:animate-in motion-safe:zoom-in-50"
+          className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-foreground px-1.5 text-[0.7rem] font-bold tabular-nums text-primary motion-safe:animate-in motion-safe:zoom-in-50"
         >
           {count}
         </span>

@@ -119,17 +119,17 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <SearchDialog className="size-10 justify-center px-0 lg:w-56 lg:justify-start lg:px-3" />
+            <SearchDialog className="size-10 shrink-0 justify-center px-0 xl:w-56 xl:justify-start xl:px-3" />
             <OrderButton />
             <Button
               size="lg"
               nativeButton={false}
-              className="hidden h-10 bg-whatsapp px-4 text-whatsapp-foreground hover:bg-whatsapp/90 sm:inline-flex"
+              className="hidden h-10 shrink-0 bg-whatsapp px-3 text-whatsapp-foreground hover:bg-whatsapp/90 sm:inline-flex xl:px-4"
               render={<WaLink source="header" />}
             >
               <WhatsappIcon className="size-4" />
               <span className="hidden xl:inline">Cotizar por WhatsApp</span>
-              <span className="xl:hidden">Cotizar</span>
+              <span className="xl:hidden">WhatsApp</span>
             </Button>
 
             <Button

@@ -45,8 +45,8 @@ export function SearchDialog({ className }: { className?: string }) {
         aria-label="Buscar productos"
       >
         <Search aria-hidden="true" className="size-4 shrink-0" />
-        <span className="hidden flex-1 truncate whitespace-nowrap text-left lg:inline">Buscar productos…</span>
-        <kbd className="hidden rounded border border-border bg-muted px-1.5 font-sans text-[0.7rem] font-medium lg:inline">
+        <span className="hidden flex-1 truncate whitespace-nowrap text-left xl:inline">Buscar productos…</span>
+        <kbd className="hidden rounded border border-border bg-muted px-1.5 font-sans text-[0.7rem] font-medium xl:inline">
           {isMac ? '⌘' : 'Ctrl'} K
         </kbd>
       </Dialog.Trigger>
