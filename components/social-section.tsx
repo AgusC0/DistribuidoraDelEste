@@ -5,13 +5,19 @@ import { FadeIn } from '@/components/fade-in'
 import { FacebookIcon, InstagramIcon } from '@/components/social-icons'
 import type { SocialPost } from '@/lib/types'
 
-const WIDTH = 340
-const HEIGHT = 560
+const WIDTH = 320
+const HEIGHT = 420
 
 /** Dirección del "embed" oficial de cada red para mostrar la publicación dentro de la web. */
 export function embedUrl(post: SocialPost) {
-  if (post.network === 'instagram') return `${post.url}embed/captioned/`
-  return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(post.url)}&width=${WIDTH}&show_text=true`
+  // Sin el texto largo: queda una tarjeta casi cuadrada con la foto o el video bien visible.
+  if (post.network === 'instagram') return `${post.url}embed/`
+  const href = encodeURIComponent(post.url)
+  // Videos y reels de Facebook usan otro "embed" que las publicaciones comunes.
+  if (/\/(reel|videos|watch)\b|[?&]v=/.test(post.url)) {
+    return `https://www.facebook.com/plugins/video.php?href=${href}&width=${WIDTH}&height=${HEIGHT}&show_text=false`
+  }
+  return `https://www.facebook.com/plugins/post.php?href=${href}&width=${WIDTH}&show_text=false`
 }
 
 /** La publicación se carga recién cuando el visitante llega a esta parte (Facebook e Instagram pesan). */

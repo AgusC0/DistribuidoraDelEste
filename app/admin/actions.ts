@@ -1023,9 +1023,36 @@ function parseSocialUrl(raw: string): Pick<SocialPost, 'network' | 'url'> | null
   return null
 }
 
+/**
+ * Los links "Compartir" de Facebook (facebook.com/share/…) no sirven para mostrar la publicación:
+ * se sigue la redirección para obtener el link real (…/reel/123, …/posts/…).
+ */
+async function resolveFacebookShare(raw: string): Promise<string> {
+  try {
+    const u = new URL(raw.trim())
+    if (!/(^|\.)facebook\.com$/.test(u.hostname) && u.hostname !== 'fb.watch') return raw
+    if (!u.pathname.startsWith('/share/') && u.hostname !== 'fb.watch') return raw
+    let url = u.toString()
+    for (let i = 0; i < 4; i++) {
+      const res = await fetch(url, {
+        redirect: 'manual',
+        headers: { 'User-Agent': 'facebookexternalhit/1.1' },
+        signal: AbortSignal.timeout(6000),
+      })
+      const next = res.headers.get('location')
+      if (!next) break
+      url = new URL(next, url).toString()
+      if (!new URL(url).pathname.startsWith('/share/')) break
+    }
+    return url
+  } catch {
+    return raw
+  }
+}
+
 export async function addSocialPost(_prev: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin()
-  const parsed = parseSocialUrl(str(fd, 'url', 600))
+  const parsed = parseSocialUrl(await resolveFacebookShare(str(fd, 'url', 600)))
   if (!parsed) return { message: 'Pegá el link de una publicación de Facebook o Instagram (empieza con https://).' }
   await mutateDb((db) => {
     const list = db.settings.socialPosts ?? []
@@ -1039,7 +1066,7 @@ export async function addSocialPost(_prev: FormState, fd: FormData): Promise<For
 
 export async function updateSocialPost(id: string, patch: { active?: boolean; url?: string }): Promise<FormState> {
   await requireAdmin()
-  const parsed = patch.url !== undefined ? parseSocialUrl(patch.url) : null
+  const parsed = patch.url !== undefined ? parseSocialUrl(await resolveFacebookShare(patch.url)) : null
   if (patch.url !== undefined && !parsed) return { message: 'Ese link no es de una publicación de Facebook o Instagram.' }
   await mutateDb((db) => {
     db.settings = {

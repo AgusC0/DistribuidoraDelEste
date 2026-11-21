@@ -13,6 +13,8 @@ const VISIBLE = 4
 export function Faq({ groups: all }: { groups: FaqGroup[] }) {
   // Primero solo 4 preguntas: el resto se abre con "Ver más" para que la portada no quede larga.
   const [showAll, setShowAll] = useState(false)
+  // Controlado: tocar de nuevo una pregunta abierta la cierra.
+  const [open, setOpen] = useState<string[]>([])
   const total = all.reduce((n, g) => n + g.items.length, 0)
   const groups = showAll || !all.length ? all : [{ ...all[0], items: all[0].items.slice(0, VISIBLE) }]
   return (
@@ -33,9 +35,9 @@ export function Faq({ groups: all }: { groups: FaqGroup[] }) {
               </p>
             </FadeIn>
 
-            <Accordion.Root className="w-full lg:col-span-8">
+            <Accordion.Root className="w-full lg:col-span-8" multiple value={open} onValueChange={(v) => setOpen(v as string[])}>
               {group.items.map((item) => (
-                <Accordion.Item key={item.question} className="border-b border-border/80">
+                <Accordion.Item key={item.question} value={item.question} className="border-b border-border/80">
                   <Accordion.Header>
                     <Accordion.Trigger className="group flex w-full items-center justify-between gap-6 py-5 text-left text-lg font-medium text-foreground transition-colors hover:text-primary md:text-xl">
                       {item.question}
