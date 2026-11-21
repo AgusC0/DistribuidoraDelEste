@@ -12,7 +12,7 @@ import { WhatsappIcon } from '@/components/whatsapp-icon'
 import { useCatalog } from '@/components/catalog-provider'
 import { submitLead } from '@/app/actions'
 import { callPhone, waLink } from '@/lib/site'
-import { track } from '@/lib/track'
+import { track, trackAd } from '@/lib/track'
 
 const GENERAL = 'Consulta general'
 
@@ -246,6 +246,7 @@ export function Contact() {
 
               <a
                 href={callPhone(settings).href}
+                onClick={() => trackAd({ type: 'call' })}
                 className="flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
               >
                 <Phone aria-hidden="true" className="mt-0.5 size-6 shrink-0 text-primary" />

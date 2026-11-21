@@ -304,6 +304,22 @@ export function SettingsForm({ settings, emailReady }: { settings: Settings; ema
       </Panel>
 
       <Panel>
+        <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Meta (Facebook e Instagram)</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Para las publicidades: Meta sabe quién tocó WhatsApp, agregó al pedido o pidió presupuesto, y así muestra los anuncios a gente parecida.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Text
+            name="metaPixelId"
+            label="ID del Píxel de Meta"
+            defaultValue={settings.metaPixelId ?? ''}
+            hint="business.facebook.com → Administrador de eventos → tu píxel. Son solo números."
+            error={e.metaPixelId}
+          />
+        </div>
+      </Panel>
+
+      <Panel>
         <h2 className="font-heading text-base font-semibold uppercase tracking-wide">Google</h2>
         <p className="mb-4 text-sm text-muted-foreground">Medí las visitas y aparecé mejor en las búsquedas y en Google Maps.</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

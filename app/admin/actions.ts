@@ -21,6 +21,7 @@ import type {
   CategoryFilter,
   Database,
   Banner,
+  SocialPost,
   GalleryItem,
   GallerySection,
   LeadStatus,
@@ -694,6 +695,8 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
   if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(notifyEmail)) errors.notifyEmail = 'Email inválido.'
   const gaId = str(fd, 'gaId', 20).toUpperCase()
   if (gaId && !/^G-[A-Z0-9]{4,}$/.test(gaId)) errors.gaId = 'Tiene que empezar con G- (ej: G-AB12CD34EF).'
+  const metaPixelId = str(fd, 'metaPixelId', 30).replace(/\s/g, '')
+  if (metaPixelId && !/^\d{10,20}$/.test(metaPixelId)) errors.metaPixelId = 'Son solo números (entre 10 y 20). Lo encontrás en el Administrador de eventos de Meta.'
   const hours = Array.from({ length: 7 }, (_, d) => str(fd, `hours-${d}`, 80)) as WeeklyHours
   hours.forEach((h, d) => {
     if (h && !/\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}/.test(h)) errors[`hours-${d}`] = 'Formato: 08:00-12:00, 15:00-19:00'
@@ -724,6 +727,7 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
     installmentsInterestFree: fd.get('installmentsInterestFree') === 'on',
     notifyEmail,
     gaId,
+    metaPixelId,
     googleVerification: str(fd, 'googleVerification', 120).replace(/^.*content="([^"]+)".*$/, '$1'),
     googleReviewUrl: str(fd, 'googleReviewUrl', 300),
     logoHeader: isLogoChoice(fd.get('logoHeader')) ? (fd.get('logoHeader') as LogoChoice) : DEFAULT_HEADER_LOGO,
@@ -731,7 +735,7 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
   }
   await mutateDb((db) => {
     // "Mostrar precios" se maneja con su propio switch; el formulario de ajustes no lo toca.
-    db.settings = { ...settings, showPrices: db.settings.showPrices, gallery: db.settings.gallery, banners: db.settings.banners, tiles: db.settings.tiles }
+    db.settings = { ...settings, showPrices: db.settings.showPrices, gallery: db.settings.gallery, banners: db.settings.banners, tiles: db.settings.tiles, socialPosts: db.settings.socialPosts }
   })
   refreshSite()
   return { ok: true, message: 'Ajustes guardados. El sitio ya muestra los cambios.' }
@@ -989,4 +993,86 @@ export async function deleteBanner(kind: BannerKind, id: string) {
   }
   refreshSite()
   revalidatePath('/admin/banners')
+}
+
+/* ---------- Publicaciones de redes en la portada ---------- */
+
+/** Reconoce links de publicaciones de Facebook o Instagram y los deja limpios (sin parámetros de rastreo). */
+function parseSocialUrl(raw: string): Pick<SocialPost, 'network' | 'url'> | null {
+  let u: URL
+  try {
+    u = new URL(raw.trim())
+  } catch {
+    return null
+  }
+  if (u.protocol !== 'https:') return null
+  const host = u.hostname.replace(/^(www\.|m\.|web\.)/, '')
+  if (host === 'instagram.com') {
+    const m = u.pathname.match(/^\/(?:[\w.]+\/)?(p|reel|tv)\/([\w-]+)/)
+    return m ? { network: 'instagram', url: `https://www.instagram.com/${m[1]}/${m[2]}/` } : null
+  }
+  if (host === 'facebook.com' || host === 'fb.watch') {
+    const keep = new URLSearchParams()
+    for (const k of ['story_fbid', 'id', 'v', 'fbid']) {
+      const v = u.searchParams.get(k)
+      if (v) keep.set(k, v)
+    }
+    const q = keep.toString()
+    return { network: 'facebook', url: `https://www.facebook.com${u.pathname}${q ? `?${q}` : ''}` }
+  }
+  return null
+}
+
+export async function addSocialPost(_prev: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin()
+  const parsed = parseSocialUrl(str(fd, 'url', 600))
+  if (!parsed) return { message: 'Pegá el link de una publicación de Facebook o Instagram (empieza con https://).' }
+  await mutateDb((db) => {
+    const list = db.settings.socialPosts ?? []
+    // La más nueva va primero.
+    db.settings = { ...db.settings, socialPosts: [{ id: newId(), ...parsed, active: true }, ...list.filter((p) => p.url !== parsed.url)] }
+  })
+  refreshSite()
+  revalidatePath('/admin/redes')
+  return { ok: true, message: 'Publicación agregada. Ya se ve en la portada.' }
+}
+
+export async function updateSocialPost(id: string, patch: { active?: boolean; url?: string }): Promise<FormState> {
+  await requireAdmin()
+  const parsed = patch.url !== undefined ? parseSocialUrl(patch.url) : null
+  if (patch.url !== undefined && !parsed) return { message: 'Ese link no es de una publicación de Facebook o Instagram.' }
+  await mutateDb((db) => {
+    db.settings = {
+      ...db.settings,
+      socialPosts: (db.settings.socialPosts ?? []).map((p) =>
+        p.id !== id ? p : { ...p, ...(parsed ?? {}), ...(patch.active !== undefined && { active: patch.active }) },
+      ),
+    }
+  })
+  refreshSite()
+  revalidatePath('/admin/redes')
+  return { ok: true }
+}
+
+export async function moveSocialPost(id: string, dir: -1 | 1) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    const list = [...(db.settings.socialPosts ?? [])]
+    const i = list.findIndex((p) => p.id === id)
+    const j = i + dir
+    if (i < 0 || j < 0 || j >= list.length) return
+    ;[list[i], list[j]] = [list[j], list[i]]
+    db.settings = { ...db.settings, socialPosts: list }
+  })
+  refreshSite()
+  revalidatePath('/admin/redes')
+}
+
+export async function deleteSocialPost(id: string) {
+  await requireAdmin()
+  await mutateDb((db) => {
+    db.settings = { ...db.settings, socialPosts: (db.settings.socialPosts ?? []).filter((p) => p.id !== id) }
+  })
+  refreshSite()
+  revalidatePath('/admin/redes')
 }

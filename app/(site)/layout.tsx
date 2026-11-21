@@ -101,6 +101,12 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
         />
+        {/* Píxel de Meta: el ID (solo números) se valida al guardarlo en Ajustes. Los eventos salen de lib/track.ts. */}
+        {settings.metaPixelId && /^\d+$/.test(settings.metaPixelId) && process.env.NODE_ENV === 'production' && (
+          <Script id="meta-pixel" strategy="afterInteractive">
+            {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${settings.metaPixelId}');fbq('track','PageView');`}
+          </Script>
+        )}
         {/* Google Analytics 4: el ID se valida al guardarlo en Ajustes (G-XXXX). */}
         {settings.gaId && process.env.NODE_ENV === 'production' && (
           <>

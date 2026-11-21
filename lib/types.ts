@@ -158,6 +158,8 @@ export type Settings = {
   notifyEmail: string
   /** ID de Google Analytics 4 (G-XXXXXXX). */
   gaId: string
+  /** ID del Píxel de Meta (Facebook e Instagram Ads). Vacío = no se carga. */
+  metaPixelId?: string
   /** Código de verificación de Google Search Console (meta google-site-verification). */
   googleVerification: string
   /** Enlace para dejar una reseña en Google. */
@@ -171,6 +173,17 @@ export type Settings = {
   banners?: Banner[]
   /** Tarjetas con foto y título debajo de los banners (Repuestos, Accesorios…). */
   tiles?: Banner[]
+  /** Publicaciones de Facebook o Instagram elegidas para mostrar en la portada (se pega el link). */
+  socialPosts?: SocialPost[]
+}
+
+/** Publicación de una red social que se muestra embebida en la web. */
+export type SocialPost = {
+  id: string
+  network: 'facebook' | 'instagram'
+  /** Link público de la publicación, tal como se copia desde la red. */
+  url: string
+  active: boolean
 }
 
 /** Banner de la portada: imagen (y versión para celular) que lleva a un link. */

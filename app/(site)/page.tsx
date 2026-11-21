@@ -6,6 +6,7 @@ import { FeaturedProducts } from '@/components/featured-products'
 import { Features } from '@/components/features'
 import { LocalInfo } from '@/components/about'
 import { Contact } from '@/components/contact'
+import { SocialSection } from '@/components/social-section'
 import { Showcase } from '@/components/showcase'
 import { Faq } from '@/components/faq'
 import { buildFaq, faqJsonLd } from '@/lib/faq'
@@ -47,6 +48,7 @@ export default async function Page() {
         brands={brands}
       />
       {tiles.length ? <TilesSection tiles={tiles} /> : <Features categories={categories} counts={categoryCounts} />}
+      <SocialSection posts={(settings.socialPosts ?? []).filter((p) => p.active)} instagram={settings.instagram} facebook={settings.facebook} />
       <Showcase local={gallery.local} videos={gallery.videos} equipo={gallery.equipo} address={settings.address} />
       <LocalInfo settings={settings} />
       <Faq groups={faq} />

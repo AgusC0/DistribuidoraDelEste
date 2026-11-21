@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useOrder } from '@/components/order-provider'
 import { cn } from '@/lib/utils'
 import type { Product, Variant } from '@/lib/types'
+import { trackAd } from '@/lib/track'
 
 /** Suma el producto (y la variante elegida) al pedido, con confirmación visual. */
 export function AddToOrderButton({
@@ -37,6 +38,7 @@ export function AddToOrderButton({
       size={size}
       onClick={() => {
         add(product, variant, quantity)
+        trackAd({ type: 'add_to_order', productId: product.id, name: product.name, price: variant ? variant.price : product.price, quantity })
         setAdded(true)
       }}
       aria-live="polite"
