@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 /**
@@ -7,7 +6,7 @@ import Link from 'next/link'
  */
 export function BrandMarquee({ brands }: { brands: string[] }) {
   if (brands.length < 2) return null
-  const items = [...brands, 'Asesoramiento en el local', 'Atención personalizada']
+  const items = brands
   const row = (hidden: boolean) =>
     items.map((b, i) => {
       const isBrand = i < brands.length
@@ -38,10 +37,6 @@ export function BrandMarquee({ brands }: { brands: string[] }) {
           {row(false)}
           {row(true)}
         </ul>
-      </div>
-      {/* Sello circular, como garantía de marca */}
-      <div className="pointer-events-none absolute left-4 top-1/2 hidden size-24 -translate-y-1/2 items-center justify-center rounded-full border-4 border-white bg-[#3d7a35] shadow-lg sm:flex md:left-10 md:size-28">
-        <Image src="/images/logo/marca-blanco.webp" alt="" width={72} height={72} className="h-auto w-14 md:w-16" />
       </div>
     </section>
   )

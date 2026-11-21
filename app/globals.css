@@ -394,11 +394,10 @@ body:has(#contacto) .footer-wrap {
   color: var(--foreground);
 }
 
-/* Franja de marcas que corre sola (estilo cinta). Se pausa al pasar el mouse y respeta "reducir movimiento". */
+/* Franja de marcas que corre sola (estilo cinta). Corre siempre y respeta "reducir movimiento". */
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
 .animate-marquee { animation: marquee 40s linear infinite; }
-.group:hover .animate-marquee { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .animate-marquee { animation: none; } }

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import type { Banner } from '@/lib/types'
 import { Eyebrow } from '@/components/brand-waves'
 
-function Tile({ tile }: { tile: Banner }) {
+function Tile({ tile, wide }: { tile: Banner; wide?: boolean }) {
   const body = (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -15,12 +15,13 @@ function Tile({ tile }: { tile: Banner }) {
         className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
       <span aria-hidden="true" className="absolute inset-0 bg-black/25 transition-colors duration-300 group-hover:bg-black/35" />
-      <span className="relative px-3 text-center text-base font-extrabold uppercase leading-tight tracking-wide text-[#fbe9c9] drop-shadow-[0_1px_6px_rgba(0,0,0,0.45)] sm:text-xl">
+      <span className="relative px-2 text-center text-sm font-extrabold uppercase leading-tight tracking-wide text-[#fbe9c9] drop-shadow-[0_1px_6px_rgba(0,0,0,0.45)] sm:px-3 sm:text-lg md:text-xl">
         {tile.title}
       </span>
     </>
   )
-  const cls = 'group relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-muted shadow-sm'
+  // En el celular, si queda una tarjeta sola en la última fila ocupa todo el ancho (más baja) en vez de dejar un hueco.
+  const cls = cn('group relative flex items-center justify-center overflow-hidden rounded-2xl bg-muted shadow-sm', wide ? 'col-span-2 aspect-[2/1] sm:col-span-1 sm:aspect-square' : 'aspect-square')
   if (!tile.link) return <div className={cls}>{body}</div>
   return /^https?:\/\//i.test(tile.link) ? (
     <a href={tile.link} target="_blank" rel="noopener noreferrer" className={cls}>
@@ -53,8 +54,8 @@ export function TilesSection({ tiles }: { tiles: Banner[] }) {
           </p>
         </FadeIn>
         <div className={cn('grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4', cols)}>
-          {tiles.map((t) => (
-            <Tile key={t.id} tile={t} />
+          {tiles.map((t, i) => (
+            <Tile key={t.id} tile={t} wide={tiles.length % 2 === 1 && i === tiles.length - 1} />
           ))}
         </div>
       </div>
